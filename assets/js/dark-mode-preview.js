@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const cssFile = document.querySelector('[rel="stylesheet"]')
   const originalCssRef = cssFile.getAttribute("href")
   const darkModeCssRef = originalCssRef.replace(
-    "java-boot-camp.css",
+    "spring-boot-camp.css",
     "dark-mode-preview.css"
   )
   const buttonCopy = ["Return to the light side", "Preview dark color scheme"]

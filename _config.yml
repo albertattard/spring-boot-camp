@@ -1,6 +1,6 @@
-title: Java Boot Camp
-description: Java Boot Camp
-baseurl: "/java-boot-camp" # the subpath of your site, e.g. /blog
+title: Spring Boot Camp
+description: Spring Boot Camp
+baseurl: "/spring-boot-camp" # the subpath of your site, e.g. /blog
 url: "https://albertattard.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 permalink: pretty
@@ -22,7 +22,7 @@ exclude:
   ]
 
 # Set a path/url to a logo that will be displayed instead of the title
-#logo: "/assets/images/java-boot-camp.png"
+#logo: "/assets/images/spring-boot-camp.png"
 
 # Enable or disable the site search
 search_enabled: true
@@ -35,8 +35,8 @@ heading_anchors: true
 
 # Aux links for the upper right navigation
 aux_links:
-  "Java Boot Camp on GitHub":
-    - "https://github.com/albertattard/java-boot-camp"
+  "Spring Boot Camp on GitHub":
+    - "https://github.com/albertattard/spring-boot-camp"
 
 # Footer content appears at the bottom of every page's main content
 footer_content: 'Copyright &copy; 2020-2020 Albert Attard. Distributed by an <a href="https://opensource.org/licenses/MIT">MIT license.</a>'

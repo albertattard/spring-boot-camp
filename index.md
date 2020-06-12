@@ -2,11 +2,11 @@
 layout: default
 title: Home
 nav_exclude: true
-description: "Java Boot Camp"
+description: "Spring Boot Camp"
 permalink: /
 ---
 
-# Java Boot Camp
+# Spring Boot Camp
 {: .fs-9 }
 
-Boot Camp for programmers interested to learn Java.
+Boot Camp for programmers interested to learn Spring and Spring Boot.

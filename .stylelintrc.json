@@ -1,6 +1,6 @@
 {
   "ignoreFiles": [
-    "assets/css/java-boot-camp.scss",
+    "assets/css/spring-boot-camp.scss",
     "assets/css/dark-mode-preview.scss",
     "_sass/vendor/**/*.scss"
   ],

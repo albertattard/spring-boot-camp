@@ -1,3 +1,11 @@
+---
+layout: default
+title: Topics
+permalink: /topics
+nav_exclude: true
+search_exclude: true
+---
+
 # Topics
 
 Some topics to explore

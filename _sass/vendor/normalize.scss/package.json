@@ -2,7 +2,7 @@
   "_args": [
     [
       "normalize.scss",
-      "/Users/albertattard/_projects/java-boot-camp"
+      "/Users/albertattard/_projects/spring-boot-camp"
     ]
   ],
   "_from": "normalize.scss@*",
@@ -32,7 +32,7 @@
   "_shasum": "4a21dc25bd4c019c857785f829b658aba2a8f9ab",
   "_shrinkwrap": null,
   "_spec": "normalize.scss",
-  "_where": "/Users/albertattard/_projects/java-boot-camp",
+  "_where": "/Users/albertattard/_projects/spring-boot-camp",
   "author": "",
   "bugs": {
     "url": "https://github.com/guerrero/normalize.scss/issues"

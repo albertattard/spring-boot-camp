@@ -1,10 +1,10 @@
 {
-  "name": "java-boot-camp",
+  "name": "spring-boot-camp",
   "version": "1.0.0",
-  "description": "Java Boot Camp",
-  "repository": "albertattard/java-boot-camp",
+  "description": "Spring Boot Camp",
+  "repository": "albertattard/spring-boot-camp",
   "license": "MIT",
-  "bugs": "https://github.com/albertattard/java-boot-camp/issues",
+  "bugs": "https://github.com/albertattard/spring-boot-camp/issues",
   "devDependencies": {
     "@primer/css": "^14.3.0",
     "prettier": "^2.0.5",
