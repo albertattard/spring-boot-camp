@@ -12,8 +12,8 @@
     <div class="copy-code-container">
         <button class="copy-code-button"
                 aria-label="Copy code block to your clipboard"
-                data-code="{{ include.code | escape }}"
-                onclick="copyCode"
+                data-code="{{ include.code | escape | newline_to_br }}"
+                onclick="copyCode(this)"
         ></button>
     </div>
     {% endunless %}
