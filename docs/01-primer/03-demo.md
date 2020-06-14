@@ -99,8 +99,10 @@ We need to carry out the following tasks
 - [ ] Health endpoint
 - [ ] OpenAPI
 - [ ] Return one office contact details
-- [ ] Return all offices contact details
 - [ ] Dockerize application
+- [ ] Return all offices contact details
+
+The application is dockerized as soon as we have something working (return one office).  This approach allows us to deploy pur application and make sure that it works in production before we invest any further by adding more funcitonality.  You will be surprised by the challenges you may encounter.
 
 ## Create project
 
@@ -548,8 +550,8 @@ The health endpoint is implemented and tested
 - [X] Health endpoint
 - [ ] OpenAPI
 - [ ] Return one office contact details
-- [ ] Return all offices contact details
 - [ ] Dockerize application
+- [ ] Return all offices contact details
 
 ## Return one office address
 
@@ -801,8 +803,8 @@ The office endpoint is implemented and tested with one contact
 - [X] Health endpoint
 - [ ] OpenAPI
 - [X] Return one office contact details
-- [ ] Return all offices contact details
 - [ ] Dockerize application
+- [ ] Return all offices contact details
 
 ## OpenApi (swagger)
 
@@ -836,8 +838,8 @@ The application endpoints are exposed through OpenAPI
 - [X] Health endpoint
 - [X] OpenAPI
 - [X] Return one office contact details
-- [ ] Return all offices contact details
 - [ ] Dockerize application
+- [ ] Return all offices contact details
 
 ## Dockerize the application
 
@@ -919,6 +921,16 @@ The application endpoints are exposed through OpenAPI
    [{"office":"ThoughtWorks Köln","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
    ```
 
-## Add more TW offices details
+### Tasks status
+
+The application can now be deployed as a docker image
+
+- [X] Health endpoint
+- [X] OpenAPI
+- [X] Return one office contact details
+- [X] Dockerize application
+- [ ] Return all offices contact details
+
+## Add all TW offices contact details
 
 Pending!!
