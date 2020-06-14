@@ -26,52 +26,86 @@ permalink: docs/primer/demo/
    1. [Spring framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html) (_dependency injection_)
    1. [Spring Boot](https://spring.io/projects/spring-boot)
    1. [Spring Web](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html) (not reactive) and [REST](https://en.wikipedia.org/wiki/Representational_state_transfer)
+   1. [Spring Actuator](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html)
 1. [OpenApi](https://www.openapis.org/) (_Swagger_)
 1. [Lombok](https://projectlombok.org/) ([Lombok Plugin](https://github.com/mplushnikov/lombok-intellij-plugin))
 1. [PIT](https://pitest.org/)
 1. [Mockito](https://site.mockito.org/)
 
+**The technology stack is shown first as this helps the reader understand what technologies are used in this demo.  Never pick the technology before understanding the problem being solved first!!**
+
 ## Scenario
 
 Our company, ThoughWorks, is thinking in building an API to provide information about its offices and different ways a potential customer can reach out.  This API will not have any frontend UI but will simply provide a set of endpoints.
 
-The first endpoint that we need to build is a `GET` request to the e`/offices`, as shown in th following example.
+1. Expose a health endpoint
 
-```bash
-curl GET "http://localhost:8080/offices"
-```
+   This endpoint will be used by [Kubernetes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) to verify that our application is up and running.  It takes the form of `GET` request to the `/health`, as shown in th following example.
 
-This should return an array of objects as shown next.
+   ```bash
+   $ curl -v "http://localhost:8080/health"
+   ```
 
-``` json
-[
-  {
-    "office": "string",
-    "address": "string",
-    "phone": "string",
-    "email": "string"
-  }
-]
-```
+   Our application needs to return [an HTTP `200` response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/200), as shown next.
 
-Following is an example of an office contact information.
+   ```bash
+   ...
+   < HTTP/1.1 200
+   ...
+   ```
 
-```json
-[
-  {
-    "office": "ThoughtWorks Köln",
-    "address": "Lichtstr. 43i, 50825 Cologne, Germany",
-    "phone": "+49 221 64 30 70 63",
-    "email": "contact-de@thoughtworks.com"
-  }
-]
-```
+   The content returned by the response does not matter much.
 
-The application needs to be deployed as a docker image.
+1. Return the list of offices
+
+   The second endpoint that we need to build is a `GET` request to the e`/offices`, as shown in th following example.
+
+   ```bash
+   $ curl "http://localhost:8080/offices"
+   ```
+
+   This should return a [JSON](https://www.json.org/json-en.html) array of objects as shown next.
+
+   ``` json
+   [
+     {
+       "office": "string",
+       "address": "string",
+       "phone": "string",
+       "email": "string"
+     }
+   ]
+   ```
+
+   Following is an example of an office contact information.
+
+   ```json
+   [
+     {
+       "office": "ThoughtWorks Köln",
+       "address": "Lichtstr. 43i, 50825 Cologne, Germany",
+       "phone": "+49 221 64 30 70 63",
+       "email": "contact-de@thoughtworks.com"
+     }
+   ]
+   ```
+
+   The application needs to be deployed as a docker image.
+
+### Tasks
+
+We need to carry out the following tasks
+
+- [ ] Create health endpoint
+- [ ] Return one office contact details
+- [ ] Return all offices contact details
+- [ ] Dockerize application
 
 ## Create project
 
 1. Access [Spring initializr https://start.spring.io/](https://start.spring.io/)
+
+1. Configure the application
 
    ![Spring initializr]({{ 'assets/images/Spring-Initializr.png' | absolute_url }})
 
@@ -100,11 +134,19 @@ The application needs to be deployed as a docker image.
    | Lombok       |
    | Spring Web   |
 
+1. (_Optional_) Explore the project
+
    Click _EXPLORE_ to view the project
+
+   ![Spring initializr]({{ 'assets/images/Spring-Initializr.png' | absolute_url }})
+
+1. Download (or generate) the project
+
+   Click _DOWNLOAD_ (or _GENERATE_) to download the zip file
 
    ![Spring initializr Explore]({{ 'assets/images/Spring-Initializr-Explore.png' | absolute_url }})
 
-   Click _DOWNLOAD_ to download the zip file
+The application can also downloaded from [contact-us.zip]({{ 'assets/startes/contact-us.zip' | absolute_url }})
 
 ## Configure the project
 
@@ -199,6 +241,8 @@ The application needs to be deployed as a docker image.
 
    This is a matter of preference as the application can be configured either using `.properties` or `.yaml`.
 
+   Note that the examples shown in this demo make use of `yaml`.
+
 1. Open the project in the IDE
 
    ```bash
@@ -243,9 +287,6 @@ The application needs to be deployed as a docker image.
      testImplementation('org.springframework.boot:spring-boot-starter-test') {
       exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
      }
-
-     /* Spring/OpenApi */
-     implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
    }
 
    test {
@@ -270,7 +311,7 @@ The application needs to be deployed as a docker image.
 
 ## Run the application
 
-1. Run the application using the Spring boot Gradle task `bootRun`
+1. Run the application using the [Spring boot Gradle task `bootRun`](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/api/org/springframework/boot/gradle/tasks/run/BootRun.html)
 
    ```bash
    $ ./gradlew bootRun
@@ -307,11 +348,13 @@ The application needs to be deployed as a docker image.
 
    ![Whitelabel Error Page]({{ 'assets/images/Whitelabel-Error-Page.png' | absolute_url }})
 
+   The application does not expose any endpoints and we have no custom error handling.
+
 1. Stop the application
 
    Use `[control] + [c]` to stop the application
 
-## (Optional) Change the ASCII art (the `banner.txt` file)
+## (_Optional_) Change the ASCII art (the `banner.txt` file)
 
 1. Create a banner ([Ascii Art](http://patorjk.com/software/taag/#p=display&f=Big&t=Contact%20Us))
 
@@ -344,6 +387,167 @@ The application needs to be deployed as a docker image.
    ```
 
    Use `[control] + [c]` to stop the application
+
+## Health endpoint (actuator)
+
+1. Create a test
+
+   Update the file `src/test/java/demo/games/ContactUsApplicationTests.java` from
+
+   ```java
+   package demo.boot;
+
+   import org.junit.jupiter.api.Test;
+   import org.springframework.boot.test.context.SpringBootTest;
+
+   @SpringBootTest
+   class ContactUsApplicationTests {
+
+     @Test
+     void contextLoads() {
+     }
+   }
+   ```
+
+   to
+
+   ```java
+   package demo.boot;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.context.SpringBootTest;
+   import org.springframework.boot.test.web.client.TestRestTemplate;
+   import org.springframework.http.HttpStatus;
+
+   import static org.assertj.core.api.Assertions.assertThat;
+   import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+
+   @DisplayName( "Contact Us application" )
+   @SpringBootTest( webEnvironment = WebEnvironment.RANDOM_PORT )
+   public class ContactUsApplicationTests {
+
+     @Autowired
+     private TestRestTemplate restTemplate;
+
+     @Test
+     @DisplayName( "should return 200 when the health endpoint is accessed" )
+     public void shouldReturn200HealthEndpoint() {
+       assertThat( restTemplate.getForEntity( "/health", String.class ) )
+         .matches( r -> r.getStatusCode() == HttpStatus.OK );
+     }
+   }
+   ```
+
+   Run the test.
+
+   ```bash
+   $ ./gradlew clean test
+   ```
+
+   The test will fail as we have not yet added the health endpoint.
+
+   ```bash
+   ...
+   Contact Us application > should return 200 when the health endpoint is accessed FAILED
+       java.lang.AssertionError at ContactUsApplicationTests.java:24
+   ...
+
+   1 test completed, 1 failed
+
+   > Task :test FAILED
+   ```
+
+1. Add the [actuator dependency](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html)
+
+   ```groovy
+   dependencies {
+     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+   }
+   ```
+
+1. Change the health endpoint path mapping
+
+   By default, [the health endpoint is exposed at `/actuator/health`](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-endpoints).  We can change the path through the application properties.
+
+   Update the file `src/main/resources/application.yaml`
+
+   ```yaml
+   management:
+     endpoints:
+       web:
+         base-path:
+         path-mapping:
+           health: /health
+   ```
+
+   Following is the equivalent in properties format.
+
+   ```properties
+   management.endpoints.web.base-path=
+   management.endpoints.web.path-mapping.health=/ping/me
+   ```
+
+1. Run the test again
+
+   ```bash
+   $ ./gradlew clean test
+   ```
+
+   The test should pass now.
+
+    ```bash
+    ...
+    Contact Us application > should return 200 when the health endpoint is accessed PASSED
+    ...
+
+    BUILD SUCCESSFUL in 6s
+    5 actionable tasks: 5 executed
+    ```
+
+1. Start the application
+
+   ```bash
+   $  ./gradlew bootRun
+   ```
+
+1. Access the health endpoint: [http://localhost:8080/health](http://localhost:8080/health)
+
+   ```bash
+   $ curl http://localhost:8080/health
+   ```
+
+   This should return
+
+   ```json
+   {"status":"UP"}
+   ```
+
+1. Stop the application
+
+   Use `[control] + [c]` to stop the application
+
+### View application endpoint mapping (IntelliJ)
+
+1. Run the application from IntelliJ
+
+   ![Run Application from IntelliJ]({{ 'assets/images/Run-Application-IntelliJ.png' | absolute_url }})
+
+1. Explore the Application Endpoints
+
+   ![Explore the Application Endpoints]({{ 'assets/images/IntelliJ-Application-Endpoints.png' | absolute_url }})
+
+1. Stop the application
+
+### Tasks status
+
+
+
+- [X] Create health endpoint
+- [ ] Return one office contact details
+- [ ] Return all offices contact details
+- [ ] Dockerize application
 
 ## Return one office address
 
@@ -388,7 +592,7 @@ The application needs to be deployed as a docker image.
 
 1. Update the application tests
 
-   Our application should accept a `GET` request to `/offices` and respond with the following [JSON](https://www.json.org/json-en.html).
+   Our application should accept a `GET` request to `/offices` and respond with the following JSON.
 
    ```json
    [
@@ -588,7 +792,7 @@ The application needs to be deployed as a docker image.
 
 ## OpenApi (swagger)
 
-1. Verify that [OpenApi dependency](https://github.com/springdoc/springdoc-openapi) is part of the dependencies
+1. Add that [OpenApi dependency](https://github.com/springdoc/springdoc-openapi) dependency
 
    ```groovy
    dependencies {
@@ -596,8 +800,6 @@ The application needs to be deployed as a docker image.
     implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
    }
    ```
-
-   The above dependency should have been in there already.
 
 1. Start the application (_if not already started_)
 
@@ -607,7 +809,7 @@ The application needs to be deployed as a docker image.
 
 1. Access the OpenApi from browser: [http://localhost:8080/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config](http://localhost:8080/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config)
 
-   ![OpenApi Offices Endpoint]({{ 'assets/images/OpenApi-Offices-Endpoint.gif' | absolute_url }})
+   ![OpenApi Offices Endpoint]({{ 'assets/images/OpenApi-Offices-Endpoint.png' | absolute_url }})
 
    You can try the API too.
 
