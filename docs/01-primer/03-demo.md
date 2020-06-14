@@ -32,15 +32,15 @@ permalink: docs/primer/demo/
 1. [Mockito](https://site.mockito.org/)
 1. [PIT](https://pitest.org/) (_pending_)
 
-**The technology stack is shown first as this helps the reader understand what technologies are used in this demo.  Never pick the technology before understanding the problem being solved first!!**
+The technology stack is shown first as this helps the reader understand what technologies are used in this demo and whether this demo is what the reader is looking for or not.  **Never pick the technology before understanding the problem being solved first!!**
 
 ## Scenario
 
-Our company, ThoughWorks, is thinking in building an API to provide information about its offices and different ways a potential customer can reach out.  This API will not have any frontend UI but will simply provide a set of endpoints.
+Our company, [ThoughtWorks](https://www.thoughtworks.com/), is thinking in building an API to provide information about its offices around the globe.  This API will not have any frontend UI but will simply provide a set of [REST endpoints](https://de.wikipedia.org/wiki/Representational_State_Transfer).
 
-1. Expose a health endpoint
+1. Expose the health endpoint
 
-   This endpoint will be used by [Kubernetes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) to verify that our application is up and running.  It takes the form of `GET` request to the `/health`, as shown in th following example.
+   This endpoint will be used by [Kubernetes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) to verify that our application is up and running.  It takes the form of `GET` request to the `/health`, as shown in the following example.
 
    ```bash
    $ curl -v "http://localhost:8080/health"
@@ -58,7 +58,7 @@ Our company, ThoughWorks, is thinking in building an API to provide information 
 
 1. Return the list of offices
 
-   The second endpoint that we need to build is a `GET` request to the e`/offices`, as shown in th following example.
+   The second endpoint that we need to build is a `GET` request to the `/offices`, as shown in the following example.
 
    ```bash
    $ curl "http://localhost:8080/offices"
@@ -77,7 +77,7 @@ Our company, ThoughWorks, is thinking in building an API to provide information 
    ]
    ```
 
-   Following is an example of an office contact information.
+   Following is an example of the [Cologne office contact information](https://www.thoughtworks.com/locations/cologne).
 
    ```json
    [
@@ -102,7 +102,7 @@ We need to carry out the following tasks
 - [ ] Dockerize application
 - [ ] Return all offices contact details
 
-The application is dockerized as soon as we have something working (return one office).  This approach allows us to deploy pur application and make sure that it works in production before we invest any further by adding more funcitonality.  You will be surprised by the challenges you may encounter.
+The application is dockerized as soon as we have something working (returning one office).  This approach allows us to deploy our application and make sure that it works in production before we invest any further by adding more functionality.  You will be surprised by the challenges you may encounter.
 
 ## Create project
 
@@ -126,7 +126,7 @@ The application is dockerized as soon as we have something working (return one o
    | Artifact     | contact-us      |
    | Name         | contact-us      |
    | Description  | Contact Us Demo |
-   | Package name | demo.games      |
+   | Package name | demo.boot       |
    | Packaging    | jar             |
    | Java         | 14              |
 
@@ -149,7 +149,7 @@ The application is dockerized as soon as we have something working (return one o
 
    ![Spring initializr Explore]({{ 'assets/images/Spring-Initializr-Explore.png' | absolute_url }})
 
-The application can also downloaded from [contact-us.zip]({{ 'assets/starters/contact-us/contact-us.zip' | absolute_url }})
+The application can also downloaded from [contact-us.zip]({{ 'assets/demo/contact-us/contact-us.zip' | absolute_url }})
 
 ## Configure the project
 
@@ -195,22 +195,22 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/starters/co
    ├── HELP.md
    ├── build.gradle
    ├── gradle
-   │   └── wrapper
-   │       ├── gradle-wrapper.jar
-   │       └── gradle-wrapper.properties
+   │   └── wrapper
+   │       ├── gradle-wrapper.jar
+   │       └── gradle-wrapper.properties
    ├── gradlew
    ├── gradlew.bat
    ├── settings.gradle
    └── src
       ├── main
-      │   ├── java
-      │   │   └── demo
-      │   │       └── boot
-      │   │           └── ContactUsApplication.java
-      │   └── resources
-      │       ├── application.properties
-      │       ├── static
-      │       └── templates
+      │   ├── java
+      │   │   └── demo
+      │   │       └── boot
+      │   │           └── ContactUsApplication.java
+      │   └── resources
+      │       ├── application.properties
+      │       ├── static
+      │       └── templates
       └── test
           └── java
               └── demo
@@ -570,21 +570,21 @@ The health endpoint is implemented and tested
    .
    ├── build.gradle
    ├── gradle
-   │   └── wrapper
-   │       ├── gradle-wrapper.jar
-   │       └── gradle-wrapper.properties
+   │   └── wrapper
+   │       ├── gradle-wrapper.jar
+   │       └── gradle-wrapper.properties
    ├── gradlew
    ├── gradlew.bat
    ├── settings.gradle
    └── src
       ├── main
-      │   ├── java
-      │   │   └── demo
-      │   │       └── boot
-      │   │           └── ContactUsApplication.java
-      │   └── resources
-      │       ├── application.yaml
-      │       └── banner.txt
+      │   ├── java
+      │   │   └── demo
+      │   │       └── boot
+      │   │           └── ContactUsApplication.java
+      │   └── resources
+      │       ├── application.yaml
+      │       └── banner.txt
       └── test
           └── java
               └── demo
@@ -697,7 +697,7 @@ The health endpoint is implemented and tested
 
    There are two options.
 
-   1. Use the [`@RestController`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html), which as introduced in [Spring 4.0](https://docs.spring.io/spring/docs/4.1.5.RELEASE/spring-framework-reference/html/new-in-4.0.html#_general_web_improvements) (*preferred option*)
+   1. Use the [`@RestController`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html), which was introduced in [Spring 4.0](https://docs.spring.io/spring/docs/4.1.5.RELEASE/spring-framework-reference/html/new-in-4.0.html#_general_web_improvements) (*preferred option*)
 
       ```java
       package demo.boot;
@@ -941,7 +941,7 @@ The application can now be deployed as a docker image
 
 1. Save the offices details in a csv file.
 
-   Download the file [offices.csv]({{ 'assets/starters/contact-us/offices.csv' | absolute_url }}) and save it to file: `src/main/resources/offices.csv`
+   Download the file [offices.csv]({{ 'assets/demo/contact-us/offices.csv' | absolute_url }}) and save it to file: `src/main/resources/offices.csv`
 
 1. Add the [commons-csv dependency](https://mvnrepository.com/artifact/org.apache.commons/commons-csv)
 
@@ -1126,13 +1126,13 @@ The application can now be deployed as a docker image
    }
    ```
 
-   The test expects the same office that the current controller returns.  Furthermore, the tests expectes an interaciton with the service too, something that it is not happening yet.  Run the tests.
+   The test expects the same office that the current controller returns.  Furthermore, the tests expects an interaction with the service too, something that it is not happening yet.  Run the tests.
 
    ```bash
    $ ./gradlew clean test
    ```
 
-   The tests should fail as the controller is not interecting with the service yet.
+   The tests should fail as the controller is not interacting with the service yet.
 
    ```bash
    Office controller > should return the list of offices returned by the service FAILED
@@ -1161,7 +1161,7 @@ The application can now be deployed as a docker image
    public class ContactUsService { /* ... */ }
    ```
 
-1. Add the service to the controller
+1. Use the service from the controller
 
    Update the file `src/main/java/demo/boot/OfficeController.java`
 
@@ -1191,7 +1191,9 @@ The application can now be deployed as a docker image
 
    Spring will create one instance of the service and pass it to the controller.
 
-1. Update the `ContactUsApplicationTests` as this is expecting only one office
+   Note that when the class has only one constructor, no other annotations are required.  Alternatively, the [`@Autowired`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/annotation/Autowired.html) can be used.
+
+1. Update the test `ContactUsApplicationTests`, as this is expecting only one office
 
    Update file `src/test/java/demo/boot/ContactUsApplicationTests.java`
 
@@ -1234,6 +1236,8 @@ The application can now be deployed as a docker image
    }
    ```
 
+   Instead of checking for all offices, the test just makes sure that the Cologne office is returned with the correct information.
+
 1. Run the tests
 
    ```bash
@@ -1263,3 +1267,11 @@ The application now returns all offices found in the CSV file
 - [X] Return one office contact details
 - [X] Dockerize application
 - [X] Return all offices contact details
+
+## Mutation Testing
+
+Pending!!
+
+## Solution
+
+The above solution can be downloaded from: [solution.zip]({{ 'assets/demo/contact-us/solution.zip' | absolute_url }}) and save it to file: `src/main/resources/offices.csv`
