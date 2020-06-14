@@ -552,13 +552,25 @@ Pending!!
 
     ![One Office Result]({{ 'assets/images/One-Office-Result.png' | absolute_url }})
 
-## OpenAPI (swagger)
+## OpenApi (swagger)
 
+1. Verify that [OpenApi dependency](https://github.com/springdoc/springdoc-openapi) is part of the dependencies
 
-1. Start the application
+    ```groovy
+    dependencies {
+      /* Spring/OpenApi */
+      implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
+    }
+    ```
+
+    The above dependency should have been in there already.
+
+1. Start the application (_if not already started_)
 
     ```bash
     $ ./gradlew bootRun
     ```
 
 1. Access the OpenApi from browser: [http://localhost:8080/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config](http://localhost:8080/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config)
+
+    ![OpenApi Demo]({{ 'assets/gifs/OpenApi-Demo.gif' | absolute_url }})
