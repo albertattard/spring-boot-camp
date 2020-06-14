@@ -33,7 +33,41 @@ permalink: docs/primer/demo/
 
 ## Scenario
 
-Pending!!
+Our company, ThoughWorks, is thinking in building an API to provide information about its offices and different ways a potential customer can reach out.  This API will not have any frontend UI but will simply provide a set of endpoints.
+
+The first endpoint that we need to build is a `GET` request to the e`/offices`, as shown in th following example.
+
+```bash
+curl GET "http://localhost:8080/offices"
+```
+
+This should return an array of objects as shown next.
+
+``` json
+[
+  {
+    "office": "string",
+    "address": "string",
+    "phone": "string",
+    "email": "string"
+  }
+]
+```
+
+Following is an example of an office contact information.
+
+```json
+[
+  {
+    "office": "ThoughtWorks Köln",
+    "address": "Lichtstr. 43i, 50825 Cologne, Germany",
+    "phone": "+49 221 64 30 70 63",
+    "email": "contact-de@thoughtworks.com"
+  }
+]
+```
+
+The application needs to be deployed as a docker image.
 
 ## Create project
 
