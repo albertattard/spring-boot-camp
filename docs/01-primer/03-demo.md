@@ -149,7 +149,7 @@ The application is dockerized as soon as we have something working (return one o
 
    ![Spring initializr Explore]({{ 'assets/images/Spring-Initializr-Explore.png' | absolute_url }})
 
-The application can also downloaded from [contact-us.zip]({{ 'assets/startes/contact-us.zip' | absolute_url }})
+The application can also downloaded from [contact-us.zip]({{ 'assets/starters/contact-us/contact-us.zip' | absolute_url }})
 
 ## Configure the project
 
@@ -933,4 +933,137 @@ The application can now be deployed as a docker image
 
 ## Add all TW offices contact details
 
-Pending!!
+1. Introduce a service layer
+
+   ![Controller-Service-CSV-Flow.png]({{ 'assets/images/Controller-Service-CSV-Flow.png' | absolute_url }})
+
+   The service layer will us to test the controller without having to worry about the actual data.  Also, we can then replace the CSV data file with a database without having to change the controller or its tests.
+
+1. Save the offices details in a csv file.
+
+   Download the file [offices.csv]({{ 'assets/starters/contact-us/offices.csv' | absolute_url }}) and save it to file: `src/main/resources/offices.csv`
+
+1. Add the [commons-csv dependency](https://mvnrepository.com/artifact/org.apache.commons/commons-csv)
+
+   ```groovy
+   dependencies {
+     /* CSV */
+     implementation: 'org.apache.commons:commons-csv:1.8'
+   }
+   ```
+
+1. Add test
+
+   Create the test file: `src/test/java/demo/boot/ContactUsServiceTest.java`
+
+   ```java
+   package demo.boot;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+
+   import java.util.List;
+
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   import static org.junit.jupiter.api.Assertions.assertTrue;
+
+   @DisplayName( "Contact us service" )
+   public class ContactUsServiceTest {
+
+     @Test
+     @DisplayName( "should parse the offices from CSV file" )
+     public void shouldParseCsv() {
+       final ContactUsService service = new ContactUsService();
+       final List<Office> offices = service.list();
+
+       final Office cologne = new Office( "ThoughtWorks Cologne", "Lichtstr. 43i, 50825 Cologne, Germany", "+49 221 64 30 70 63", "contact-de@thoughtworks.com" );
+       final Office london = new Office( "ThoughtWorks London", "76 Wardour Street, London W1F 0UR, UK", "+44 (0)20 3437 0990", null );
+
+       assertEquals( 6, offices.size() );
+       assertEquals( cologne, offices.get( 0 ) );
+       assertEquals( london, offices.get( 4 ) );
+     }
+   }
+   ```
+
+   Add the service skeleton (_just enough to make the test compiles_).
+
+   Create file `src/main/java/demo/boot/ContactUsService.java`
+
+   ```java
+   package demo.boot;
+
+   import java.util.List;
+
+   public class ContactUsService {
+
+     public List<Office> list() {
+       throw new UnsupportedOperationException();
+     }
+   }
+   ```
+
+   Run the test.
+
+   ```bash
+   $ ./gradlew clean test
+
+   ...
+   Contact us service > should parse the offices from CSV file FAILED
+   ...
+   ```
+
+   The test should fail.
+
+1. Implement the service
+
+   Update file `src/main/java/demo/boot/ContactUsService.java`
+
+   ```java
+   package demo.boot;
+
+   import org.apache.commons.csv.CSVFormat;
+   import org.apache.commons.csv.CSVRecord;
+
+   import java.io.BufferedReader;
+   import java.io.IOException;
+   import java.io.InputStreamReader;
+   import java.nio.charset.StandardCharsets;
+   import java.util.List;
+   import java.util.stream.Collectors;
+
+   public class ContactUsService {
+
+     public List<Office> list() {
+       try ( final BufferedReader reader = readCsv() ) {
+         return CSVFormat.DEFAULT
+           .withFirstRecordAsHeader()
+           .withNullString( "" )
+           .parse( reader )
+           .getRecords()
+           .stream()
+           .map( this::parseOffice )
+           .collect( Collectors.toList() );
+       } catch ( IOException e ) {
+         throw new RuntimeException( "Failed to read and parse offices", e );
+       }
+     }
+
+     private Office parseOffice( final CSVRecord record ) {
+       return new Office( record.get( "Office" ),
+         record.get( "Address" ),
+         record.get( "Phone" ),
+         record.get( "Email" ) );
+     }
+
+     private BufferedReader readCsv() {
+       return new BufferedReader(
+         new InputStreamReader(
+           getClass().getResourceAsStream( "/offices.csv" ),
+           StandardCharsets.UTF_8 )
+       );
+     }
+   }
+   ```
+
+1. Use the service from the controller
