@@ -29,8 +29,8 @@ permalink: docs/primer/demo/
    1. [Spring Actuator](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html)
 1. [OpenApi](https://www.openapis.org/) (_Swagger_)
 1. [Lombok](https://projectlombok.org/) ([Lombok Plugin](https://github.com/mplushnikov/lombok-intellij-plugin))
-1. [PIT](https://pitest.org/)
 1. [Mockito](https://site.mockito.org/)
+1. [PIT](https://pitest.org/) (_pending_)
 
 **The technology stack is shown first as this helps the reader understand what technologies are used in this demo.  Never pick the technology before understanding the problem being solved first!!**
 
@@ -82,7 +82,7 @@ Our company, ThoughWorks, is thinking in building an API to provide information 
    ```json
    [
      {
-       "office": "ThoughtWorks Köln",
+       "office": "ThoughtWorks Cologne",
        "address": "Lichtstr. 43i, 50825 Cologne, Germany",
        "phone": "+49 221 64 30 70 63",
        "email": "contact-de@thoughtworks.com"
@@ -601,7 +601,7 @@ The health endpoint is implemented and tested
    ```json
    [
      {
-      "office": "ThoughtWorks Köln",
+      "office": "ThoughtWorks Cologne",
       "address": "Lichtstr. 43i, 50825 Cologne, Germany",
       "phone": "+49 221 64 30 70 63",
       "email": "contact-de@thoughtworks.com"
@@ -641,7 +641,7 @@ The health endpoint is implemented and tested
      @DisplayName( "should return the offices" )
      public void shouldReturnTheOffices() {
        final Office[] offices = {
-         new Office( "ThoughtWorks Köln",
+         new Office( "ThoughtWorks Cologne",
            "Lichtstr. 43i, 50825 Cologne, Germany",
            "+49 221 64 30 70 63",
            "contact-de@thoughtworks.com" )
@@ -714,7 +714,7 @@ The health endpoint is implemented and tested
         public List<Office> offices() {
           return List.of(
             new Office(
-              "ThoughtWorks Köln",
+              "ThoughtWorks Cologne",
               "Lichtstr. 43i, 50825 Cologne, Germany",
               "+49 221 64 30 70 63",
               "contact-de@thoughtworks.com"
@@ -743,7 +743,7 @@ The health endpoint is implemented and tested
         public List<Office> offices() {
           return List.of(
             new Office(
-              "ThoughtWorks Köln",
+              "ThoughtWorks Cologne",
               "Lichtstr. 43i, 50825 Cologne, Germany",
               "+49 221 64 30 70 63",
               "contact-de@thoughtworks.com"
@@ -789,7 +789,7 @@ The health endpoint is implemented and tested
    This should return the office
 
    ```json
-   [{"office":"ThoughtWorks Köln","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
+   [{"office":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
    ```
 
    Access the endpoint from a browser: [http://localhost:8080/offices](http://localhost:8080/offices)
@@ -915,10 +915,10 @@ The application endpoints are exposed through OpenAPI
    $ curl http://localhost:8080/offices
    ```
 
-   You should get the contact details of the Köln office
+   You should get the contact details of the Cologne office
 
    ```json
-   [{"office":"ThoughtWorks Köln","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
+   [{"office":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
    ```
 
 ### Tasks status
@@ -1067,3 +1067,199 @@ The application can now be deployed as a docker image
    ```
 
 1. Use the service from the controller
+
+   Create test file `src/test/java/demo/boot/OfficeControllerTest.java`
+
+   ```java
+   package demo.boot;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+   import org.springframework.boot.test.mock.mockito.MockBean;
+   import org.springframework.test.web.servlet.MockMvc;
+
+   import java.util.List;
+
+   import static org.hamcrest.Matchers.hasSize;
+   import static org.hamcrest.Matchers.is;
+   import static org.mockito.Mockito.times;
+   import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.when;
+   import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+   import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+   import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+   @DisplayName( "Office controller" )
+   @WebMvcTest( OfficeController.class )
+   public class OfficeControllerTest {
+
+     @Autowired
+     private MockMvc mockMvc;
+
+     @MockBean
+     private ContactUsService service;
+
+     @Test
+     @DisplayName( "should return the list of offices returned by the service" )
+     public void shouldReturnTheOffices() throws Exception {
+       final Office cologne =
+         new Office( "ThoughtWorks Cologne",
+           "Lichtstr. 43i, 50825 Cologne, Germany",
+           "+49 221 64 30 70 63",
+           "contact-de@thoughtworks.com" );
+       when( service.list() ).thenReturn( List.of( cologne ) );
+
+       mockMvc.perform( get( "/offices" ) )
+         .andExpect( status().isOk() )
+         .andExpect( jsonPath( "$" ).isArray() )
+         .andExpect( jsonPath( "$", hasSize( 1 ) ) )
+         .andExpect( jsonPath( "$.[0].office", is( cologne.getOffice() ) ) )
+         .andExpect( jsonPath( "$.[0].address", is( cologne.getAddress() ) ) )
+         .andExpect( jsonPath( "$.[0].phone", is( cologne.getPhone() ) ) )
+         .andExpect( jsonPath( "$.[0].email", is( cologne.getEmail() ) ) )
+       ;
+
+       verify( service, times( 1 ) ).list();
+     }
+   }
+   ```
+
+   The test expects the same office that the current controller returns.  Furthermore, the tests expectes an interaciton with the service too, something that it is not happening yet.  Run the tests.
+
+   ```bash
+   $ ./gradlew clean test
+   ```
+
+   The tests should fail as the controller is not interecting with the service yet.
+
+   ```bash
+   Office controller > should return the list of offices returned by the service FAILED
+       org.mockito.exceptions.verification.WantedButNotInvoked at OfficeControllerTest.java:51
+   ```
+
+1. Annotate the service with the [`@Service` annotation](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html)
+
+   Update the file `src/main/java/demo/boot/ContactUsService.java`
+
+   ```java
+   package demo.boot;
+
+   import org.apache.commons.csv.CSVFormat;
+   import org.apache.commons.csv.CSVRecord;
+   import org.springframework.stereotype.Service;
+
+   import java.io.BufferedReader;
+   import java.io.IOException;
+   import java.io.InputStreamReader;
+   import java.nio.charset.StandardCharsets;
+   import java.util.List;
+   import java.util.stream.Collectors;
+
+   @Service
+   public class ContactUsService { /* ... */ }
+   ```
+
+1. Add the service to the controller
+
+   Update the file `src/main/java/demo/boot/OfficeController.java`
+
+   ```java
+   package demo.boot;
+
+   import org.springframework.web.bind.annotation.GetMapping;
+   import org.springframework.web.bind.annotation.RestController;
+
+   import java.util.List;
+
+   @RestController
+   public class OfficeController {
+
+     private final ContactUsService service;
+
+     public OfficeController( final ContactUsService service ) {
+       this.service = service;
+     }
+
+     @GetMapping( "/offices" )
+     public List<Office> offices() {
+       return service.list();
+     }
+   }
+   ```
+
+   Spring will create one instance of the service and pass it to the controller.
+
+1. Update the `ContactUsApplicationTests` as this is expecting only one office
+
+   Update file `src/test/java/demo/boot/ContactUsApplicationTests.java`
+
+   ```java
+   package demo.boot;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.context.SpringBootTest;
+   import org.springframework.boot.test.web.client.TestRestTemplate;
+   import org.springframework.http.HttpStatus;
+
+   import static org.assertj.core.api.Assertions.assertThat;
+   import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+
+   @DisplayName( "Contact Us application" )
+   @SpringBootTest( webEnvironment = WebEnvironment.RANDOM_PORT )
+   public class ContactUsApplicationTests {
+
+     @Autowired
+     private TestRestTemplate restTemplate;
+
+     @Test
+     @DisplayName( "should return 200 when the health endpoint is accessed" )
+     public void shouldReturn200HealthEndpoint() { /* ... */ }
+
+     @Test
+     @DisplayName( "should return the offices" )
+     public void shouldReturnTheOffices() {
+       final Office cologne =
+         new Office( "ThoughtWorks Cologne",
+           "Lichtstr. 43i, 50825 Cologne, Germany",
+           "+49 221 64 30 70 63",
+           "contact-de@thoughtworks.com" );
+
+       assertThat( restTemplate.getForObject( "/offices", Office[].class ) )
+         .contains( cologne );
+     }
+   }
+   ```
+
+1. Run the tests
+
+   ```bash
+   $ ./gradlew clean test
+   ```
+
+   All four tests should pass
+
+   ```bash
+   ...
+   Contact Us application > should return the offices PASSED
+
+   Contact Us application > should return 200 when the health endpoint is accessed PASSED
+
+   Office controller > should return the list of offices returned by the service PASSED
+
+   Contact us service > should parse the offices from CSV file PASSED
+   ...
+   ```
+
+### Tasks status
+
+The application now returns all offices found in the CSV file
+
+- [X] Health endpoint
+- [X] OpenAPI
+- [X] Return one office contact details
+- [X] Dockerize application
+- [X] Return all offices contact details
