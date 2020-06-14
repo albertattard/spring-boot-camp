@@ -96,7 +96,8 @@ Our company, ThoughWorks, is thinking in building an API to provide information 
 
 We need to carry out the following tasks
 
-- [ ] Create health endpoint
+- [ ] Health endpoint
+- [ ] OpenAPI
 - [ ] Return one office contact details
 - [ ] Return all offices contact details
 - [ ] Dockerize application
@@ -486,7 +487,7 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
 
    ```properties
    management.endpoints.web.base-path=
-   management.endpoints.web.path-mapping.health=/ping/me
+   management.endpoints.web.path-mapping.health=/health
    ```
 
 1. Run the test again
@@ -542,9 +543,10 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
 
 ### Tasks status
 
+The health endpoint is implemented and tested
 
-
-- [X] Create health endpoint
+- [X] Health endpoint
+- [ ] OpenAPI
 - [ ] Return one office contact details
 - [ ] Return all offices contact details
 - [ ] Dockerize application
@@ -607,24 +609,7 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
 
    The response does not need to be formatted as shown above.
 
-   Update the file `src/test/java/demo/games/ContactUsApplicationTests.java` from
-
-   ```java
-   package demo.boot;
-
-   import org.junit.jupiter.api.Test;
-   import org.springframework.boot.test.context.SpringBootTest;
-
-   @SpringBootTest
-   class ContactUsApplicationTests {
-
-     @Test
-     void contextLoads() {
-     }
-   }
-   ```
-
-   to
+   Update the file `src/test/java/demo/games/ContactUsApplicationTests.java` and add the new test.
 
    ```java
    package demo.boot;
@@ -634,6 +619,7 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
    import org.springframework.beans.factory.annotation.Autowired;
    import org.springframework.boot.test.context.SpringBootTest;
    import org.springframework.boot.test.web.client.TestRestTemplate;
+   import org.springframework.http.HttpStatus;
 
    import static org.assertj.core.api.Assertions.assertThat;
    import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -646,17 +632,21 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
      private TestRestTemplate restTemplate;
 
      @Test
+     @DisplayName( "should return 200 when the health endpoint is accessed" )
+     public void shouldReturn200HealthEndpoint() { /* ... */ }
+
+     @Test
      @DisplayName( "should return the offices" )
      public void shouldReturnTheOffices() {
-      final Office[] offices = {
-        new Office( "ThoughtWorks Köln",
-          "Lichtstr. 43i, 50825 Cologne, Germany",
-          "+49 221 64 30 70 63",
-          "contact-de@thoughtworks.com" )
-      };
+       final Office[] offices = {
+         new Office( "ThoughtWorks Köln",
+           "Lichtstr. 43i, 50825 Cologne, Germany",
+           "+49 221 64 30 70 63",
+           "contact-de@thoughtworks.com" )
+       };
 
-      assertThat( restTemplate.getForObject( "/offices", Office[].class ) )
-        .isEqualTo( offices );
+       assertThat( restTemplate.getForObject( "/offices", Office[].class ) )
+         .isEqualTo( offices );
      }
    }
    ```
@@ -684,7 +674,7 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
    }
    ```
 
-   The above example makes use of [Lombok](https://projectlombok.org/) to reduce the boilerplate code.
+   The above example makes use of [Lombok](https://projectlombok.org/) to reduce the boilerplate code.  Make sure that the [Lombok IntelliJ plugin](https://plugins.jetbrains.com/plugin/6317-lombok) is also installed, as otherwise IntelliJ will not work as expected.
 
    Running the test, will fail as we have not yet implemented the endpoint.
 
@@ -704,6 +694,33 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
    Create file: `src/main/java/demo/games/OfficeController.java`
 
    There are two options.
+
+   1. Use the [`@RestController`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html), which as introduced in [Spring 4.0](https://docs.spring.io/spring/docs/4.1.5.RELEASE/spring-framework-reference/html/new-in-4.0.html#_general_web_improvements) (*preferred option*)
+
+      ```java
+      package demo.boot;
+
+      import org.springframework.web.bind.annotation.GetMapping;
+      import org.springframework.web.bind.annotation.RestController;
+
+      import java.util.List;
+
+      @RestController
+      public class OfficeController {
+
+        @GetMapping( "/offices" )
+        public List<Office> offices() {
+          return List.of(
+            new Office(
+              "ThoughtWorks Köln",
+              "Lichtstr. 43i, 50825 Cologne, Germany",
+              "+49 221 64 30 70 63",
+              "contact-de@thoughtworks.com"
+            )
+          );
+        }
+      }
+      ```
 
    1. Use the [`@Controller`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/stereotype/Controller.html) together with [`@ResponseBody`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/ResponseBody.html) annotations
 
@@ -734,34 +751,7 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
       }
       ```
 
-   1. Use the [`@RestController`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html), which as introduced in [Spring 4.0](https://docs.spring.io/spring/docs/4.1.5.RELEASE/spring-framework-reference/html/new-in-4.0.html#_general_web_improvements) (*preferred option*)
-
-      ```java
-      package demo.boot;
-
-      import org.springframework.web.bind.annotation.GetMapping;
-      import org.springframework.web.bind.annotation.RestController;
-
-      import java.util.List;
-
-      @RestController
-      public class OfficeController {
-
-        @GetMapping( "/offices" )
-        public List<Office> offices() {
-          return List.of(
-            new Office(
-              "ThoughtWorks Köln",
-              "Lichtstr. 43i, 50825 Cologne, Germany",
-              "+49 221 64 30 70 63",
-              "contact-de@thoughtworks.com"
-            )
-          );
-        }
-      }
-      ```
-
-   Both options will yield the same the results, with the second approach uses fewer annotations.
+   Both options will yield the same the results, with the first approach uses fewer annotations.
 
    Run the tests.
 
@@ -770,6 +760,8 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
 
    ...
    Contact Us application > should return the offices PASSED
+
+   Contact Us application > should return 200 when the health endpoint is accessed PASSED
    ...
 
    BUILD SUCCESSFUL in 6s
@@ -786,9 +778,31 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
    $ ./gradlew bootRun
    ```
 
-   Access the endpoint: [http://localhost:8080/offices](http://localhost:8080/offices)
+   Access the new endpoint from the command line
+
+   ```bash
+   $ curl http://localhost:8080/offices
+   ```
+
+   This should return the office
+
+   ```json
+   [{"office":"ThoughtWorks Köln","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
+   ```
+
+   Access the endpoint from a browser: [http://localhost:8080/offices](http://localhost:8080/offices)
 
    ![One Office Result]({{ 'assets/images/One-Office-Result.png' | absolute_url }})
+
+### Tasks status
+
+The office endpoint is implemented and tested with one contact
+
+- [X] Health endpoint
+- [ ] OpenAPI
+- [X] Return one office contact details
+- [ ] Return all offices contact details
+- [ ] Dockerize application
 
 ## OpenApi (swagger)
 
@@ -814,6 +828,16 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/startes/con
    You can try the API too.
 
    ![OpenApi Demo]({{ 'assets/gifs/OpenApi-Demo.gif' | absolute_url }})
+
+### Tasks status
+
+The application endpoints are exposed through OpenAPI
+
+- [X] Health endpoint
+- [X] OpenAPI
+- [X] Return one office contact details
+- [ ] Return all offices contact details
+- [ ] Dockerize application
 
 ## Dockerize the application
 
