@@ -40,9 +40,26 @@ This will allow us to use [`JdbcTemplate`](https://docs.spring.io/spring-framewo
 
 ## What are Spring beans?
 
-Pending!!
+"_In Spring, the objects that form the backbone of your application and that are managed by the Spring IoC container are called beans. A bean is an object that is instantiated, assembled, and otherwise managed by a Spring IoC container. Otherwise, a bean is simply one of many objects in your application. Beans, and the dependencies among them, are reflected in the configuration metadata used by a container._"<br/>
+([reference](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-introduction))
 
-## What is the difference between the Spring Framework and Spring boot?
+The _Spring IoC container_ is a module from the _Spring Framework_ and these two are used interchangeably.
+
+Let's see Spring beans through an example.  The following image shows a web application that contains five classes.
+
+![Web Application Layout]({{ '/assets/images/Web-Application-Layout.png' | absolute_url }})
+
+The application comprises, two REST controllers, a service and to two repositories, connected as shown above.  The REST controllers do not talk to the repositories directly, but they do this through the service.  The repositories connect to the database to read and persist data.
+
+### How will we create and connect these classes together?
+
+We can initialise each class when our application starts and manage the lifecycle of each class.  We also need to connect the classes together and make sure that each class is initialised once and not multiple times.  For example, both REST controllers make use of the same service and not two separate instances.  This is quite important especially if we need to coordinate things.
+
+Alternatively, we can make use from Spring Framework and its IoC container to initialise and handle the lifecycle of our classes.  Each of our five classes will be considered as a Spring Bean as this is initialised and managed by the Spring Framework.
+
+In summary, a Spring Bean is an object that is managed by the Spring Framework.
+
+## What is the difference between Spring Framework and Spring Boot?
 
 The Spring Framework and [Spring Boot](https://spring.io/projects/spring-boot) are two popular projects from the many projects within the Spring ecosystem.  Spring Framework provides _Inversion of Control_, also referred to as _Dependency Injection_ amongst other things, while Spring Boot simplifies the usage and integration of various parts of an application.
 
@@ -77,6 +94,8 @@ The above request returns the list of countries in [JSON](https://www.json.org/)
 
 The [repository](https://github.com/albertattard/spring-with-and-without-boot) contains two applications, one built without Spring Boot and the other with Spring Boot.  Both application do the same thing, that is, implement one REST endpoint that lists the countries where ThoughtWorks has an office in.
 
+Do not worry if all of this is new, as each part will be explained in more depth at a later stage.  The scope of this example is to simply show the difference between an application without Spring Boot and the equivalent application with Spring Boot.  Unfortunately we had to bring in some things that were not yet introduced.
+
 Let's compare both applications.
 
 ### Spring Framework without Spring Boot
@@ -105,7 +124,7 @@ spring-without-boot
 
 Two XML files are required to configure our application.
 
-1. The [`spring-servlet.xml`](https://github.com/albertattard/spring-with-and-without-boot/blob/master/spring-without-boot/src/main/webapp/WEB-INF/spring-servlet.xml) file configures the Spring Framework
+1. The [`spring-servlet.xml` file](https://github.com/albertattard/spring-with-and-without-boot/blob/master/spring-without-boot/src/main/webapp/WEB-INF/spring-servlet.xml) configures the Spring Framework
 
    ```xml
    <?xml version="1.0" encoding="UTF-8"?>
@@ -132,7 +151,7 @@ Two XML files are required to configure our application.
 
    The above file sets the base package and enables annotation processing.
 
-1. The [`web.xml`](https://github.com/albertattard/spring-with-and-without-boot/blob/master/spring-without-boot/src/main/webapp/WEB-INF/spring-servlet.xml) is typical to all [Servlet based applications](https://javaee.github.io/servlet-spec/)
+1. The [`web.xml` file](https://github.com/albertattard/spring-with-and-without-boot/blob/master/spring-without-boot/src/main/webapp/WEB-INF/spring-servlet.xml) is typical to all [Servlet based applications](https://javaee.github.io/servlet-spec/)
 
    ```xml
    <?xml version="1.0" encoding="UTF-8"?>
