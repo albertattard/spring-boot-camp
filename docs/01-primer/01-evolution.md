@@ -77,6 +77,8 @@ There are several application or web servers available.  The following table sho
 | [WebSphere](https://www.ibm.com/cloud/websphere-application-server)      | Application Server | IBM               |
 | [WebLogic](https://www.oracle.com/middleware/technologies/weblogic.html) | Application Server | Oracle            |
 
+Webservers, such as Apache Tomcat, are also referred to as _web containers_.  The terms _webservers_ and _web containers_ are used interchangeably.
+
 Our application will be running together with other applications on the same application or web server.  Containers were not popular in the late 1990s, and this was the best approach available.
 
 This approach has several challenges.  The application shares the same Java process with other applications.  If one application misbehaves, the other applications on the same Java process may suffer.  Another issue that the above approach has is that each application needs to work with the provided infrastructure.  Say that our application needs to move to a newer version of Java.  In the above approach all applications deployed to the same application or web server will have to be upgraded to run on the new version.
@@ -93,7 +95,7 @@ In the new approach, the application or web server is part of our application an
 $ java -jar application.jar
 ```
 
-Our FatJAR contains all our code, the code of our dependencies and the application or web server.  Following are some options that we can use. 
+Our FatJAR contains all our code, the code of our dependencies and the application or web server.  Following are some options that we can use.
 
 | Name                                                  | Vendor                 |
 | ----------------------------------------------------- | ---------------------- |
