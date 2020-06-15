@@ -38,6 +38,10 @@ dependencies {
 
 This will allow us to use [`JdbcTemplate`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/jdbc/core/JdbcTemplate.html) to interact with the database in a safe manner within our application.
 
+## What are Spring beans?
+
+Pending!!
+
 ## What is the difference between the Spring Framework and Spring boot?
 
 The Spring Framework and [Spring Boot](https://spring.io/projects/spring-boot) are two popular projects from the many projects within the Spring ecosystem.  Spring Framework provides _Inversion of Control_, also referred to as _Dependency Injection_ amongst other things, while Spring Boot simplifies the usage and integration of various parts of an application.
@@ -235,4 +239,39 @@ Consider an application that needs a database access, communicates to an LDAP se
 
 Nowadays, it is uncommon to have Spring Framework without Spring Boot.  Most tutorials available nowadays make use of Spring Boot as this removed the need of configuration.
 
-## How does spring boot works?
+## How does Spring Boot works?
+
+Any Java library, referred to in this section as _dependency_, can take advantage of Spring Boot to improve its adoption.  Take for example the [Axon Framework](https://axoniq.io/), a [CQRS framework](https://martinfowler.com/bliki/CQRS.html).  This dependency takes advantage of Spring Boot to simplify the adoption of the same dependency.
+
+Consider the applications mentioned in the [previous section](#what-is-the-difference-between-the-spring-framework-and-spring-boot), when we compare an application without Spring Boot with the same version of the application that makes use of Spring boot.
+
+1. Without Spring Boot, we simply imported the dependency.
+
+   ```groovy
+   dependencies {
+     implementation 'org.springframework:spring-webmvc:5.2.7.RELEASE'
+   }
+   ```
+
+1. In the second example, when using Spring Boot, we imported the Spring-Boot version of the dependency.
+
+   ```groovy
+   dependencies {
+     implementation 'org.springframework.boot:spring-boot-starter-web'
+   }
+   ```
+
+Spring Boot does not know how to configure anything.  Instead, Spring Boot provides the means for each dependency to configure itself.  Consider the following image.
+
+![Spring-Boot-Library-Components.png]({{ '/assets/images/Spring-Boot-Library-Components.png' | absolute_url }})
+
+The dotted boxes represent two libraries provided by Spring Boot.  A dependency (shown in blue in the above image), that need to be auto configured by Spring Boot, needs to provide two additional projects (shown in green and orange in the above image).
+
+1. **Autoconfigure** is responsible from configuring the dependency and creates the required beans
+1. **Starter** connects our configuration to Spring Boot
+
+This is how Spring Boot reduces the configuration.  It simply shifts the configuration of the dependency to the developers of the same dependency as shown next.
+
+![Spring Boot Move Configuration]({{ '/assets/images/Spring-Boot-Move-Configuration.png' | absolute_url}})
+
+By importing the starter project, we will take advantage of the configuration defined in the autoconfigure project and also use the dependency itself.
