@@ -60,6 +60,8 @@ Will leverage Spring Boot to connect to an in-memory database and manage the dat
 
 1. Provide the database connection properties
 
+   {% include not_recommended.html details="Do not save production passwords as plain text" %}
+
    Update file: `src/main/resources/application.yaml`
 
    ```yaml
