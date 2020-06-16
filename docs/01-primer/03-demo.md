@@ -1165,29 +1165,57 @@ The application can now be deployed as a docker image
 
    Update the file `src/main/java/demo/boot/OfficeController.java`
 
-   ```java
-   package demo.boot;
+   1. Use Lombok (_preferred approach_)
 
-   import org.springframework.web.bind.annotation.GetMapping;
-   import org.springframework.web.bind.annotation.RestController;
+      ```java
+      package demo.boot;
 
-   import java.util.List;
+      import lombok.AllArgsConstructor;
+      import org.springframework.web.bind.annotation.GetMapping;
+      import org.springframework.web.bind.annotation.RestController;
 
-   @RestController
-   public class OfficeController {
+      import java.util.List;
 
-     private final ContactUsService service;
+      @RestController
+      @AllArgsConstructor
+      public class OfficeController {
 
-     public OfficeController( final ContactUsService service ) {
-       this.service = service;
-     }
+        private final ContactUsService service;
 
-     @GetMapping( "/offices" )
-     public List<Office> offices() {
-       return service.list();
-     }
-   }
-   ```
+        @GetMapping( "/offices" )
+        public List<Office> offices() {
+          return service.list();
+        }
+      }
+      ```
+
+   1. Create the constructor manually
+
+      ```java
+      package demo.boot;
+
+      import org.springframework.web.bind.annotation.GetMapping;
+      import org.springframework.web.bind.annotation.RestController;
+
+      import java.util.List;
+
+      @RestController
+      public class OfficeController {
+
+        private final ContactUsService service;
+
+        public OfficeController( final ContactUsService service ) {
+          this.service = service;
+        }
+
+        @GetMapping( "/offices" )
+        public List<Office> offices() {
+          return service.list();
+        }
+      }
+      ```
+
+   Both approaches yield the same thing.  In the first example, Lombok created the constructor for us, while in the second example we create the constructor.
 
    Spring will create one instance of the service and pass it to the controller.
 
