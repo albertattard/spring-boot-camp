@@ -1,9 +1,9 @@
 ---
 layout: default
-title: React
+title: OAuth2
 nav_order: 8
 has_children: true
-permalink: docs/react/
+permalink: docs/oauth2/
 ---
 
-# React
+# OAuth2

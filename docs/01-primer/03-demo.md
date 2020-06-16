@@ -110,7 +110,7 @@ The application is dockerized as soon as we have something working (returning on
 
 1. Configure the application
 
-   ![Spring initializr]({{ 'assets/images/Spring-Initializr.png' | absolute_url }})
+   ![Spring initializr]({{ '/assets/images/Spring-Initializr.png' | absolute_url }})
 
    | Option      | Selection      |
    | ----------- | -------------- |
@@ -141,15 +141,15 @@ The application is dockerized as soon as we have something working (returning on
 
    Click _EXPLORE_ to view the project
 
-   ![Spring initializr]({{ 'assets/images/Spring-Initializr.png' | absolute_url }})
+   ![Spring initializr]({{ '/assets/images/Spring-Initializr.png' | absolute_url }})
 
 1. Download (or generate) the project
 
    Click _DOWNLOAD_ (or _GENERATE_) to download the zip file
 
-   ![Spring initializr Explore]({{ 'assets/images/Spring-Initializr-Explore.png' | absolute_url }})
+   ![Spring initializr Explore]({{ '/assets/images/Spring-Initializr-Explore.png' | absolute_url }})
 
-The application can also downloaded from [contact-us.zip]({{ 'assets/demo/contact-us/contact-us.zip' | absolute_url }})
+The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-primer/contact-us.zip' | absolute_url }})
 
 ## Configure the project
 
@@ -349,7 +349,7 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/demo/contac
 
 1. Access the application: [http://localhost:8080/](http://localhost:8080/)
 
-   ![Whitelabel Error Page]({{ 'assets/images/Whitelabel-Error-Page.png' | absolute_url }})
+   ![Whitelabel Error Page]({{ '/assets/images/Whitelabel-Error-Page.png' | absolute_url }})
 
    The application does not expose any endpoints and we have no custom error handling.
 
@@ -535,11 +535,11 @@ The application can also downloaded from [contact-us.zip]({{ 'assets/demo/contac
 
 1. Run the application from IntelliJ
 
-   ![Run Application from IntelliJ]({{ 'assets/images/Run-Application-IntelliJ.png' | absolute_url }})
+   ![Run Application from IntelliJ]({{ '/assets/images/Run-Application-IntelliJ.png' | absolute_url }})
 
 1. Explore the Application Endpoints
 
-   ![Explore the Application Endpoints]({{ 'assets/images/IntelliJ-Application-Endpoints.png' | absolute_url }})
+   ![Explore the Application Endpoints]({{ '/assets/images/IntelliJ-Application-Endpoints.png' | absolute_url }})
 
 1. Stop the application
 
@@ -794,7 +794,7 @@ The health endpoint is implemented and tested
 
    Access the endpoint from a browser: [http://localhost:8080/offices](http://localhost:8080/offices)
 
-   ![One Office Result]({{ 'assets/images/One-Office-Result.png' | absolute_url }})
+   ![One Office Result]({{ '/assets/images/One-Office-Result.png' | absolute_url }})
 
 ### Tasks status
 
@@ -825,11 +825,11 @@ The office endpoint is implemented and tested with one contact
 
 1. Access the OpenApi from browser: [http://localhost:8080/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config](http://localhost:8080/swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config)
 
-   ![OpenApi Offices Endpoint]({{ 'assets/images/OpenApi-Offices-Endpoint.png' | absolute_url }})
+   ![OpenApi Offices Endpoint]({{ '/assets/images/OpenApi-Offices-Endpoint.png' | absolute_url }})
 
    You can try the API too.
 
-   ![OpenApi Demo]({{ 'assets/gifs/OpenApi-Demo.gif' | absolute_url }})
+   ![OpenApi Demo]({{ '/assets/gifs/OpenApi-Demo.gif' | absolute_url }})
 
 ### Tasks status
 
@@ -935,13 +935,13 @@ The application can now be deployed as a docker image
 
 1. Introduce a service layer
 
-   ![Controller-Service-CSV-Flow.png]({{ 'assets/images/Controller-Service-CSV-Flow.png' | absolute_url }})
+   ![Controller-Service-CSV-Flow.png]({{ '/assets/images/Controller-Service-CSV-Flow.png' | absolute_url }})
 
    The service layer will us to test the controller without having to worry about the actual data.  Also, we can then replace the CSV data file with a database without having to change the controller or its tests.
 
 1. Save the offices details in a csv file.
 
-   Download the file [offices.csv]({{ 'assets/demo/contact-us/offices.csv' | absolute_url }}) and save it to file: `src/main/resources/offices.csv`
+   Download the file [offices.csv]({{ '/assets/demo/01-primer/offices.csv' | absolute_url }}) and save it to file: `src/main/resources/offices.csv`
 
 1. Add the [commons-csv dependency](https://mvnrepository.com/artifact/org.apache.commons/commons-csv)
 
@@ -1307,7 +1307,7 @@ One of these approaches is [mutation testing](https://en.wikipedia.org/wiki/Muta
    $ open build/reports/pitest/demo.boot/index.html
    ```
 
-   ![Pit Test Coverage Report With Lombok.png]({{ 'assets/images/Pit-Test-Coverage-Report-With-Lombok.png' | absolute_url  }})
+   ![Pit Test Coverage Report With Lombok.png]({{ '/assets/images/Pit-Test-Coverage-Report-With-Lombok.png' | absolute_url  }})
 
    Note that the report includes the `Office` class shown next.
 
@@ -1352,16 +1352,16 @@ One of these approaches is [mutation testing](https://en.wikipedia.org/wiki/Muta
    $ open build/reports/pitest/demo.boot/index.html
    ```
 
-   ![Pit Test Coverage Report Without Lombok.png]({{ 'assets/images/Pit-Test-Coverage-Report-Without-Lombok.png' | absolute_url }})
+   ![Pit Test Coverage Report Without Lombok.png]({{ '/assets/images/Pit-Test-Coverage-Report-Without-Lombok.png' | absolute_url }})
 
    The `Office` class is now excluded.
 
 1. Analyse the report
 
-   ![Pit Test Coverage Report Analyse Report.png]({{ 'assets/images/Pit-Test-Coverage-Report-Analyse-Report.png' | absolute_url }})
+   ![Pit Test Coverage Report Analyse Report.png]({{ '/assets/images/Pit-Test-Coverage-Report-Analyse-Report.png' | absolute_url }})
 
    Note that our service class, `ContactUsService`, is not well covered.  The reader may throw an exception which is not covered by a test.
 
 ## Solution
 
-The above solution can be downloaded from: [solution.zip]({{ 'assets/demo/contact-us/solution.zip' | absolute_url }}).
+The above solution can be downloaded from: [solution.zip]({{ '/assets/demo/01-primer/solution.zip' | absolute_url }}).
