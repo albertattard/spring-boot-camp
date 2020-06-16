@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Database
+title: REST
 nav_order: 3
 has_children: true
-permalink: docs/database/
+permalink: docs/rest/
 ---
 
-# Database
+# REST

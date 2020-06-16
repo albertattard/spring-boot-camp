@@ -1,9 +1,9 @@
 ---
 layout: default
-title: REST
+title: Spring Data
 nav_order: 2
 has_children: true
-permalink: docs/rest/
+permalink: docs/data/
 ---
 
-# REST
+# Spring Data
