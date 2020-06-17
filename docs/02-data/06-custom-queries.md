@@ -9,7 +9,9 @@ permalink: docs/data/custom-queries/
 # Custom Query
 {: .no_toc }
 
-We are able to return all office using the provided [`findAll()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findAll--) method.  In this section we will introduce custom queries and take advantage of [Spring Repositories](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.repositories).
+We are able to return all offices using the provided [`findAll()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findAll--) method.  In this section we will introduce custom queries and take advantage of [Spring Repositories](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.repositories).
+
+For the time being we will not expose any of the features added here to the front-end as this is covered at a later stage.
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -21,13 +23,13 @@ We are able to return all office using the provided [`findAll()`](https://docs.s
 
 ## Scenario
 
-Customers using our API came back with feedback.  They would like to filter offices by country.  For example, given the country, `"germany"`, our repository should return all offices that belong to this country, case-insensitive.
+Customers using our API came back with feedback.  They would like to filter offices by country.  For example, given the country, `"germany"`, our repository should return all offices that belong to this country, case insensitive.
 
 ## Filter by a property (JPA query methods)
 
 [Spring Data JPA](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/) provides [query method](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods) that we can take advantage from.
 
-We can acheive filtering by simply adding a new method to our repository as shown next.
+We can achieve filtering by simply adding a new method to our repository as shown next.
 
 ```java
 List<OfficeEntity> findAllByCountryIgnoreCase( final String country );
@@ -35,16 +37,18 @@ List<OfficeEntity> findAllByCountryIgnoreCase( final String country );
 
 That's it!!
 
-No need to add code, as Spring Data JPA will take care of the rest.  The method name is not random and Spring is using the method name to determine what needs to be done.  Following is a breakdown of the method name (`findAllByCountryIgnoreCase`)
+No need to add code, as Spring Data JPA will take care of the rest.  The method name is not random, and Spring Data JPA is using the method name to determine what needs to be done.  Following is a breakdown of the method name (`findAllByCountryIgnoreCase`)
 
 1. `findAll` (or just `find`): indicates that this method will query the table.  We can prefix the method name with: `read…By`, `query…By`, and `get…By` instead.
 1. `By`: indicates that a set of filters will follow
 1. `Country`: the property name (not necessarily the column name) by which we will filter
 1. `IgnoreCase`: indicate that the filter should be case-insensitive
 
-Note that while we are not adding actual code, the method name has logic bound to it and thus it needs to be tested like any other code.
+Note that while we are not adding any actual code, the method name has logic bound to it and thus it needs to be tested like any other code.
 
-1. Create a repository (integration) test
+1. Create a repository (**integration**) test
+
+   Note that our new test will interact with a PostgreSQL database, thus it is an integration test.
 
    Create file `src/test-integration/java/demo/boot/OfficesRepositoryTest.java`
 
@@ -121,7 +125,7 @@ Note that while we are not adding actual code, the method name has logic bound t
       @AutoConfigureTestDatabase( replace = AutoConfigureTestDatabase.Replace.NONE )
       ```
 
-      These two annotations prepares our application for tests.  Usually we can do with just the [`@DataJpaTest`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/orm/jpa/DataJpaTest.html) (_super_) annotation, but given that we do not want to swap the actual database with an embedded one (such as [H2](https://www.h2database.com/)), we need to fine tune our test setup.  Without the [`@AutoConfigureTestDatabase`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/jdbc/AutoConfigureTestDatabase.html) annotation will test will fail to run due to the following exception.
+      These two annotations prepare our application for the repository test.  Usually we can do with just the [`@DataJpaTest`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/orm/jpa/DataJpaTest.html) annotation, but given that we do not want to swap the actual database with an embedded one (such as [H2](https://www.h2database.com/)), we need to fine tune our test setup.  Without the [`@AutoConfigureTestDatabase`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/jdbc/AutoConfigureTestDatabase.html) annotation, this test will fail to run due to the following exception.
 
       ```bash
       Caused by: java.lang.IllegalStateException: Failed to replace DataSource with an embedded database for tests. If you want an embedded database please put a supported one on the classpath or tune the replace attribute of @AutoConfigureTestDatabase.
@@ -133,9 +137,9 @@ Note that while we are not adding actual code, the method name has logic bound t
           ... 115 more
       ```
 
-      Using the `@AutoConfigureTestDatabase` annotation we can customise the test setup and use the original PostgreSQL database.
+      Using the `@AutoConfigureTestDatabase` annotation we can customise the test setup and use the original PostgreSQL database, by setting the [`replace`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/jdbc/AutoConfigureTestDatabase.html#replace--) parameter to [`AutoConfigureTestDatabase.Replace.NONE`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/jdbc/AutoConfigureTestDatabase.Replace.html#NONE).
 
-      One of the great advantages of `@DataJpaTest` is that it includes [`@Transactional`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/annotation/Transactional.html) annotation.  When used within tests, the `@Transactional` rollbacks at the end of each test, and thus any changes made will be ignored.  For example if we delete all from a table, these will be only deleted for the tests only and these changes will be rolled back after each test.
+      One of the great advantages of `@DataJpaTest` annotation is that it includes [`@Transactional`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/annotation/Transactional.html) annotation.  When used within tests, the `@Transactional` annotation rollbacks the database transaction at the end of each test, and thus any changes made will be ignored.  For example, if we delete all data from a table, these will be only deleted for the duration of the test and these changes are rolled back after each test.  This is quite convenient as the database is left in the same state as it was before the test is started.
 
    1. Entity Manager
 
@@ -144,7 +148,9 @@ Note that while we are not adding actual code, the method name has logic bound t
         private EntityManager entityManager;
       ```
 
-      An [`EntityManager`](https://docs.oracle.com/javaee/7/api/javax/persistence/EntityManager.html) is responsible for the lifecycle of entities.  Our application is using an instance of `EntityManager` to read data from the `offices` table.  It is used within this test to be able to empty the table and add new offices to prepare the test data for our tests.
+      An [`EntityManager`](https://docs.oracle.com/javaee/7/api/javax/persistence/EntityManager.html) is responsible for the lifecycle of entities.  Our application is using an instance of `EntityManager` under the hood, to read data from the `offices` table.  The repositories interact with an instance of the `EntityManager` which is conveniently setup and configured by [Spring Boot](https://spring.io/projects/spring-boot).  The `EntityManager` is used within this test to be able to empty the table and add new offices to prepare the test data for our tests.
+
+   We can interact with the database directly using SQL, but that may produce unexpected results.  The `EntityManager` may cache data and when the database is modified outside of the `EntityManager`, the repository may be dealing stale data.
 
    1. Setup the data
 
@@ -173,213 +179,299 @@ Note that while we are not adding actual code, the method name has logic bound t
         }
       ```
 
-      This test makes sure that our method name, `findAllByCountryIgnoreCase`, works as expected.
+      This test makes sure that our method name, `findAllByCountryIgnoreCase`, works as expected, returns all offices in the given country.
 
-   Unfortunately, this is a case where the number of lines of test code is far too many when compare to the code being tested.  In this example we have a `1:60` relation.  With that said, this ensures that our code is behaving as it is expected.
+   Unfortunately, this is a case where the number of lines of test code is far too many when compare to the code being tested.  In this example we have a `1:60` line-relation.  With that said, this ensures that our code is behaving as it is expected.
 
-## More
+   Note that the above test cannot yet run as we still need to add the new method to our repository.
 
-```java
-package demo.boot;
+1. Add the `findAllByCountryIgnoreCase()` method
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+   Update file: `src/main/java/demo/boot/OfficesRepository.java`
 
-import java.util.List;
+   ```java
+   package demo.boot;
 
-@Repository
-public interface OfficesRepository extends JpaRepository<OfficeEntity, String> {
+   import org.springframework.data.jpa.repository.JpaRepository;
+   import org.springframework.stereotype.Repository;
 
-  List<OfficeEntity> findAllByCountryIgnoreCase( String country );
-}
-```
+   import java.util.List;
 
+   @Repository
+   public interface OfficesRepository extends JpaRepository<OfficeEntity, String> {
 
-```java
-package demo.boot;
+     List<OfficeEntity> findAllByCountryIgnoreCase( final String country );
+   }
+   ```
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+1. Make sure that PostgreSQL is running
 
-import java.util.List;
+   ```bash
+   $ docker ps
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+   ...
+   CONTAINER ID        IMAGE                 COMMAND                  CREATED             STATUS                 PORTS                           NAMES
+   5a8316ce8655        postgres:11.1         "docker-entrypoint.s…"   4 hours ago         Up 4 hours (healthy)   0.0.0.0:5432->5432/tcp          contact-us
+   363fe0c321cb        dpage/pgadmin4:4.22   "/entrypoint.sh"         4 hours ago         Up 4 hours             443/tcp, 0.0.0.0:8000->80/tcp   pgadmin4
+   ```
 
-@DisplayName( "JPA contact us service" )
-public class JpaContactUsServiceTest {
+   You can start the services using the following command, if these are not running.
 
-  @Test
-  @DisplayName( "should return all offices returned by the repository" )
-  public void shouldReturnOffices() { /* ... */ }
+   ```bash
+   $ docker-compose up -d
+   ```
 
-  @Test
-  @DisplayName( "should return all offices in a given country" )
-  public void shouldReturnOfficesInACountry() {
-    final List<OfficeEntity> entities = List.of(
-      new OfficeEntity( "a1", "a2", "a3", "a4", "a5", "a6" ),
-      new OfficeEntity( "b1", "b2", "b3", "b4", "b5", "b6" )
-    );
+1. Run the integration tests
 
-    final String country = "Germany";
+   ```bash
+   $ ./gradlew clean integrationTest
 
-    final OfficesRepository repository = mock( OfficesRepository.class );
-    when( repository.findAllByCountryIgnoreCase( eq( country ) ) ).thenReturn( entities );
+   ...
+   BUILD SUCCESSFUL in 18s
+   6 actionable tasks: 6 executed
+   ```
 
-    final ContactUsService service = new JpaContactUsService( repository );
-    final List<Office> offices = service.listInCountry( country );
+   The integration tests should all pass
 
-    final List<Office> expected = List.of(
-      new Office( "a1", "a2", "a4", "a5" ),
-      new Office( "b1", "b2", "b4", "b5" )
-    );
+## Can we query the repository based on what the user inputs?
 
-    assertEquals( expected, offices );
+**Yes**.  Spring Data JPA provides more elaborate filtering abilities.  We can make use of [`ExampleMatcher`](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#query-by-example.matchers) to create more elaborate queries based on the needs at hand.
 
-    verify( repository, times( 1 ) ).findAllByCountryIgnoreCase( country );
-  }
-}
-```
+The `ExampleMatcher` can be customised based on the needs at hand.  We can replace the previous example with the following code.
 
 ```java
-package demo.boot;
+    final OfficeEntity office = new OfficeEntity();
+    office.setCountry( "germany" );
 
-import java.util.List;
+    final ExampleMatcher matcher = ExampleMatcher.matching()
+      .withIgnoreNullValues()
+      .withIgnoreCase();
 
-public interface ContactUsService {
-
-  List<Office> list();
-
-  List<Office> listInCountry( String country );
-}
+    final Example<OfficeEntity> example = Example.of( office, matcher );
+    final List<OfficeEntity> offices = repository.findAll( example );
 ```
 
-```java
-package demo.boot;
+This is an overkill for our example but shows how we can fine tune the query to the required need.
 
-import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Service;
+## Invoke custom query from service
 
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+A new method will be added to the `ContactUsService`, named `listInCountry( String )`, that will interact with the repository to return only the offices for the given country.
 
-@Service
-@Primary
-@AllArgsConstructor
-public class JpaContactUsService implements ContactUsService {
+1. Add a new test method
 
-  private final OfficesRepository repository;
+   Update file: `src/test/java/demo/boot/JpaContactUsServiceTest.java`
 
-  @Override
-  public List<Office> list() { /* ... */ }
+   ```java
+   package demo.boot;
 
-  @Override
-  public List<Office> listInCountry( final String country ) {
-    throw new UnsupportedOperationException();
-  }
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
 
-  private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
-}
-```
+   import java.util.List;
 
-```bash
-$ ./gradlew clean test
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   import static org.mockito.ArgumentMatchers.eq;
+   import static org.mockito.Mockito.mock;
+   import static org.mockito.Mockito.times;
+   import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.when;
 
-...
-BUILD FAILED in 9s
-5 actionable tasks: 5 executed
-```
+   @DisplayName( "JPA contact us service" )
+   public class JpaContactUsServiceTest {
 
-```java
-package demo.boot;
+     @Test
+     @DisplayName( "should return all offices returned by the repository" )
+     public void shouldReturnOffices() { /* ... */ }
 
-import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Service;
+     @Test
+     @DisplayName( "should return all offices in a given country" )
+     public void shouldReturnOfficesInACountry() {
+       final List<OfficeEntity> entities = List.of(
+         new OfficeEntity( "a1", "a2", "a3", "a4", "a5", "a6" ),
+         new OfficeEntity( "b1", "b2", "b3", "b4", "b5", "b6" )
+       );
 
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+       final String country = "Germany";
 
-@Service
-@Primary
-@AllArgsConstructor
-public class JpaContactUsService implements ContactUsService {
+       final OfficesRepository repository = mock( OfficesRepository.class );
+       when( repository.findAllByCountryIgnoreCase( eq( country ) ) ).thenReturn( entities );
 
-  private final OfficesRepository repository;
+       final ContactUsService service = new JpaContactUsService( repository );
+       final List<Office> offices = service.listInCountry( country );
 
-  @Override
-  public List<Office> list() { /* ... */ }
+       final List<Office> expected = List.of(
+         new Office( "a1", "a2", "a4", "a5" ),
+         new Office( "b1", "b2", "b4", "b5" )
+       );
 
-  @Override
-  public List<Office> listInCountry( final String country ) {
-    return repository
-      .findAllByCountryIgnoreCase( country )
-      .stream()
-      .map( mapToOffice() )
-      .collect( Collectors.toList() );
-  }
+       assertEquals( expected, offices );
 
-  private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
-}
-```
+       verify( repository, times( 1 ) ).findAllByCountryIgnoreCase( country );
+     }
+   }
+   ```
 
-```bash
-$ ./gradlew clean test
+   Add the new method to the `ContactUsService` interface.  We will be adding more methods to this interface and that's why we never declared the interface as a [`@FunctionalInterface`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/lang/FunctionalInterface.html).
 
-...
-BUILD SUCCESSFUL in 5s
-5 actionable tasks: 5 executed
-```
+   Update file: `src/main/java/demo/boot/ContactUsService.java`
 
-```java
-package demo.boot;
+   ```java
+   package demo.boot;
 
-import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Service;
+   import java.util.List;
 
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+   public interface ContactUsService {
 
-@Service
-@Primary
-@AllArgsConstructor
-public class JpaContactUsService implements ContactUsService {
+     List<Office> list();
 
-  private final OfficesRepository repository;
+     List<Office> listInCountry( final String country );
+   }
+   ```
 
-  @Override
-  public List<Office> list() {
-    return mapToOffices( repository.findAll() );
-  }
+   Implement the missing method, just enough to make the test compile.
 
-  @Override
-  public List<Office> listInCountry( final String country ) {
-    return mapToOffices( repository.findAllByCountryIgnoreCase( country ) );
-  }
+   Update file: `src/main/java/demo/boot/JpaContactUsService.java`
 
-  private List<Office> mapToOffices( List<OfficeEntity> entities ) {
-    return entities
-      .stream()
-      .map( mapToOffice() )
-      .collect( Collectors.toList() );
-  }
+   ```java
+   package demo.boot;
 
-  private Function<OfficeEntity, Office> mapToOffice() {
-    return entity -> new Office(
-      entity.getOffice(),
-      entity.getAddress(),
-      entity.getPhone(),
-      entity.getEmail()
-    );
-  }
-}
-```
+   import lombok.AllArgsConstructor;
+   import org.springframework.context.annotation.Primary;
+   import org.springframework.stereotype.Service;
+
+   import java.util.List;
+   import java.util.function.Function;
+   import java.util.stream.Collectors;
+
+   @Service
+   @Primary
+   @AllArgsConstructor
+   public class JpaContactUsService implements ContactUsService {
+
+     private final OfficesRepository repository;
+
+     @Override
+     public List<Office> list() { /* ... */ }
+
+     @Override
+     public List<Office> listInCountry( final String country ) {
+       throw new UnsupportedOperationException();
+     }
+
+     private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
+   }
+   ```
+
+   Run the test
+
+   ```bash
+   $ ./gradlew clean test
+
+   ...
+   BUILD FAILED in 9s
+   5 actionable tasks: 5 executed
+   ```
+
+   As expected, the test failed.
+
+1. Implement the missing functionality
+
+   Update file: `src/main/java/demo/boot/JpaContactUsService.java`
+
+   ```java
+   package demo.boot;
+
+   import lombok.AllArgsConstructor;
+   import org.springframework.context.annotation.Primary;
+   import org.springframework.stereotype.Service;
+
+   import java.util.List;
+   import java.util.function.Function;
+   import java.util.stream.Collectors;
+
+   @Service
+   @Primary
+   @AllArgsConstructor
+   public class JpaContactUsService implements ContactUsService {
+
+     private final OfficesRepository repository;
+
+     @Override
+     public List<Office> list() { /* ... */ }
+
+     @Override
+     public List<Office> listInCountry( final String country ) {
+       return repository
+         .findAllByCountryIgnoreCase( country )
+         .stream()
+         .map( mapToOffice() )
+         .collect( Collectors.toList() );
+     }
+
+     private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
+   }
+   ```
+
+   Run the tests
+
+   ```bash
+   $ ./gradlew clean test
+
+   ...
+   BUILD SUCCESSFUL in 5s
+   5 actionable tasks: 5 executed
+   ```
+
+   All tests should pass.
+
+1. (_Optionally_) Refactor
+
+   We have some code repetition that can be moved to one place.  **The amount of repetition is not that much, and it is perfect to leave things as they are**.  The code is refactored just to show an alternative approach.
+
+   Update file: `src/main/java/demo/boot/JpaContactUsService.java`
+
+   ```java
+   package demo.boot;
+
+   import lombok.AllArgsConstructor;
+   import org.springframework.context.annotation.Primary;
+   import org.springframework.stereotype.Service;
+
+   import java.util.List;
+   import java.util.function.Function;
+   import java.util.stream.Collectors;
+
+   @Service
+   @Primary
+   @AllArgsConstructor
+   public class JpaContactUsService implements ContactUsService {
+
+     private final OfficesRepository repository;
+
+     @Override
+     public List<Office> list() {
+       return mapToOffices( repository.findAll() );
+     }
+
+     @Override
+     public List<Office> listInCountry( final String country ) {
+       return mapToOffices( repository.findAllByCountryIgnoreCase( country ) );
+     }
+
+     private List<Office> mapToOffices( final List<OfficeEntity> entities ) {
+       return entities
+         .stream()
+         .map( mapToOffice() )
+         .collect( Collectors.toList() );
+     }
+
+     private Function<OfficeEntity, Office> mapToOffice() {
+       return entity -> new Office(
+         entity.getOffice(),
+         entity.getAddress(),
+         entity.getPhone(),
+         entity.getEmail()
+       );
+     }
+   }
+   ```
