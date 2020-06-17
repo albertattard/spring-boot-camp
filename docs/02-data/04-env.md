@@ -9,7 +9,7 @@ permalink: docs/data/env/
 # Environment Variables
 {: .no_toc }
 
-In this section we will switch from hardcoded properties to use of [environment variables](https://en.wikipedia.org/wiki/Environment_variable).
+In this section we will switch from hardcoded properties to the use of [environment variables](https://en.wikipedia.org/wiki/Environment_variable).
 
 Environment variables are quite popular means to share configuration details, such as credentials.  While this is a very common approach, it is not the safest approach and technologies, such as [Vault](https://www.vaultproject.io/), are preferred.
 
@@ -23,7 +23,7 @@ Environment variables are quite popular means to share configuration details, su
 
 ## The `.env` file
 
-Say that my application requires several environment variables to run.  When building the application we need to provide these environment variables to gradle so that it can interact with the test database, for example, as shown next.
+Say that the application requires several environment variables to run.  When building the application, we need to provide these environment variables to Gradle so that it can interact with the test database, for example, as shown next.
 
 ```bash
 $ DATABASE_NAME=contact-us \
@@ -35,7 +35,7 @@ $ DATABASE_NAME=contact-us \
   ./gradlew clean build
 ```
 
-This can get a bit ugly especially when we have many environment variables.  Furthermore, if we like to trigger the gradle `build` task from IntelliJ, we need to pass these variables there too.
+This can get a bit ugly especially when we have many environment variables.  Furthermore, if we like to trigger the Gradle `build` task from IntelliJ, we need to pass these variables there too.
 
 Another approach is to use an `.env` file as shown next.
 
@@ -50,7 +50,7 @@ DATABASE_USERNAME=tw-data
 DATABASE_PASSWORD=SomeRandomPassword
 ```
 
-Note that the above example only contains development and test credentials.  While that may seem fine, given that we are working with a dev environment, there may be cases where this may have serious implications.  There are cases where the development and test environments work with sensitive information.  In this case, we always need to secure the credentials to such resources (such as databases) and make sure to destroy such resources when we are done with them.
+Note that the above example only contains development and test credentials.  While that may seem fine, given that we are working with a development environment, there may be cases where this may have serious implications.  There are cases where the development and test environments work with sensitive data.  In such cases, we always need to secure the credentials to such resources (such as files and databases) and make sure to destroy such resources when we are done with them.
 
 1. Create the `.env` file
 
@@ -65,7 +65,7 @@ Note that the above example only contains development and test credentials.  Whi
    DATABASE_PASSWORD=SomeRandomPassword
    ```
 
-   Note that the H2 in-memory database does not require a port number, yet we defined the `DATABASE_PORT` environment variable, as this will be used later on when we connect to a production grade database.
+   Note that the [H2](https://www.h2database.com/) in-memory database does not require a port number, yet we defined the `DATABASE_PORT` environment variable.  This will be used later on when we connect to a production grade database.
 
 1. Update the properties
 
@@ -80,7 +80,7 @@ Note that the above example only contains development and test credentials.  Whi
        password: ${DATABASE_PASSWORD}
    ```
 
-   Note that all hardcoded values are now replaced by an environment variable.  Spring will replace `${ENV_NAME}` with the value found in the environment variables.
+   Note that all hardcoded values are now replaced by an environment variable.  Spring will replace `${ENV_NAME}` with the value found in the environment variables automatically allowing our application to behave differently based on where this is running.  In a production environment, our application can connect to the production database, while when in development our application will connect to the development database.
 
    Following is the complete example of the `application.yaml` file.
 
@@ -123,13 +123,15 @@ Note that the above example only contains development and test credentials.  Whi
    6 actionable tasks: 6 executed
    ```
 
-   Our application will not build successfully as gradle is not using these environment variables as yet.
+   Our application will not build successfully as Gradle is not using these environment variables as of yet.
+
+Note that the `.env` should not be deployed with the application and is only intended to be used as part of the source to aid development.
 
 ## Integration tests
 
-When we moved the configuration of the database to environment variables, we made our application dependent on external resources, such as the environment variable.  Any tests that depend on things outside of our application should be moved into their own category.
+When we moved the configuration of the database to environment variables, we made our application dependent on external resources, such as the environment variables.  Any tests that depend on resources sitting outside of our application should be moved into their own category (namely _integration tests_).
 
-The test class `ContactUsApplicationTests` requires the application to start, which in turn require the environment variables defined before.  Gradle is very customisable and we can easily have a new set of tests, referred to as _integration tests_ and move any tests into this group.
+The test class `ContactUsApplicationTests` requires the application to start, which in turn require the environment variables defined before.  Gradle is very customisable and we can easily have a new set of tests, referred to as _integration tests_, and move the tests that depend on external resources into this group.
 
 1. Define integration tests
 
@@ -180,7 +182,7 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
    }
    ```
 
-   The name of the file is not very important, as long as you are consistent.  Note that we will use this file name to include the above gradle definition in the `build.gradle` in the next step.
+   The name of the file (`integration-test.gradle`) is not very important, as long as you are consistent.  Note that we will use this file name (`integration-test.gradle`) to include the above Gradle definition in the `build.gradle` in the next step.
 
    The above file deserves some explanation.
 
@@ -213,7 +215,7 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
 
       This is where the integration test files will be saved.
 
-   1. Define the new gradle task
+   1. Define the new Gradle task
 
       ```groovy
       task integrationTest(type: Test) {
@@ -239,7 +241,7 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
       }
       ```
 
-      The environment variables are read from the `.env` file and added the task's environment.
+      The environment variables are read from the `.env` file at the root of the project, and added to the task's environment.
 
       ```groovy
         doFirst {
@@ -250,7 +252,7 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
         }
       ```
 
-      When the integration test run, the environment variable defined in the file are loaded and made available to the integration tests.
+      When the integration test run, the environment variable defined in the `.env` file are loaded and made available to the integration tests.  This is quite convenient as the environment variables are centralised in one place.
 
    1. Make the integration tests part of the check flow
 
@@ -260,16 +262,12 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
       }
       ```
 
-      The `check` task, depends on our `integrationTest` task as shown in the following task tree.
+      The `build` task depends on the `check` task, which in turn it depends on our `integrationTest` task as shown in the following task tree.
 
       ```bash
       $ ./gradlew build taskTree
 
-      > Task :taskTree
-
-      ------------------------------------------------------------
-      Root project
-      ------------------------------------------------------------
+      ...
 
       :build
       +--- :assemble
@@ -316,9 +314,11 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
                      \--- :processTestResources
       ```
 
-   **Why are we creating a second gradle build file?**
+      Note that our `integrationTest` does not depend on the `test` task as we can run each of these Gradle tasks independent.   With that said, the integration test code, depends on the test code and we can reuse classes that are defined in the tests.
 
-   We can simply have all gradle configuration in one file, the `gradle.build` file.  Splitting the definition into multiple files helps organising gradle, keeping each file focused on one thing.  This is a matter of taste too as some like to split gradle into smaller files, while others prefer to have everything in one place.
+   **Why are we creating a second Gradle build file?**
+
+   We can simply have all Gradle configuration in one file, the `gradle.build` file.  Splitting the definition into multiple files helps organising Gradle, keeping each file focused on one thing.  This is a matter of taste too as some like to split Gradle into smaller files, while others prefer to have everything in one place.
 
 1. Import the new definition
 
@@ -329,7 +329,7 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
    apply from: "$rootDir/integration-test.gradle"
    ```
 
-   The above fragment uses the [script plugins](https://docs.gradle.org/current/userguide/plugins.html#sec:script_plugins) to include the gradle configuration from another file.  The file name needs to match the file name used in the previous step.
+   The above fragment uses the [script plugins](https://docs.gradle.org/current/userguide/plugins.html#sec:script_plugins) to include the Gradle configuration from another file.  The file name (`integration-test.gradle`) needs to match the file name used in the previous step.
 
 1. Create the new directory structure
 
@@ -347,25 +347,25 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
    └── resources
    ```
 
-   When you apply the gradle change to IntelliJ, the new folder structure should appear as a source folcer as shown next.
+   When you apply the Gradle change to IntelliJ.  The new folder structure should appear as a source folder as shown next.
 
-![Test Integration Folder Structure]({{ '/assets/images/Test-Integration-Folder-Structure.png' | absolute_url }})
+   ![Test Integration Folder Structure]({{ '/assets/images/Test-Integration-Folder-Structure.png' | absolute_url }})
 
    The folders _main_, _test_ and _test-integration_ have a small blue square indicating that these are source folders.
 
-1. The new `integrationTest` gradle task
+1. The new `integrationTest` Gradle task
 
    ```groovy
    task integrationTest(type: Test) { /* ... */ }
    ```
 
-   List the gradle tasks
+   List the Gradle tasks
 
    ```bash
    $ ./gradlew tasks
    ```
 
-   This will list all gradle tasks available for this project.  Our new gradle task is part of the `verification` group and this it will be part of this group as shown next.
+   This will list all Gradle tasks available for this project.  Our new Gradle task (`integrationTest`) is part of the `verification` group together with `test` and `pitest`, as shown next.
 
    ```bash
    ...
@@ -382,10 +382,10 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
 
    ```bash
    $ mkdir -p src/test-integration/java/demo/boot
-   $ contact-us mv src/test/java/demo/boot/ContactUsApplicationTests.java src/test-integration/java/demo/boot
+   $ mv src/test/java/demo/boot/ContactUsApplicationTests.java src/test-integration/java/demo/boot
    ```
 
-   The other two tests should stay where these were, as shown in the following directory structure.
+   The other two tests, the `JpaContactUsServiceTest.java` and `OfficeControllerTest.java`, should stay where these were, as shown in the following directory structure.
 
    ```bash
    tree src
@@ -393,193 +393,28 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
    ├── main
    ...
    ├── test
-   │   └── java
-   │       └── demo
-   │           └── boot
-   │               ├── JpaContactUsServiceTest.java
-   │               └── OfficeControllerTest.java
+   │   └── java
+   │       └── demo
+   │           └── boot
+   │               ├── JpaContactUsServiceTest.java
+   │               └── OfficeControllerTest.java
    └── test-integration
        └── java
-           └── demo
-               └── boot
-                   └── ContactUsApplicationTests.java
+           └── demo
+               └── boot
+                   └── ContactUsApplicationTests.java
 
    16 directories, 15 files
    ```
 
-```bash
-$ ./gradlew integrationTest
+1. Run the integration test
 
-...
-BUILD SUCCESSFUL in 8s
-5 actionable tasks: 1 executed, 4 up-to-date
-```
+   ```bash
+   $ ./gradlew integrationTest
 
-## PostgreSQL
+   ...
+   BUILD SUCCESSFUL in 8s
+   5 actionable tasks: 1 executed, 4 up-to-date
+   ```
 
-Create file: `docker-compose.yml`
-
-```yaml
-version: "3"
-services:
-  postgres:
-    container_name: ${DATABASE_NAME}
-    image: postgres:11.1
-    restart: unless-stopped
-    networks:
-      - app-net
-    env_file:
-      - .env
-    ports:
-      - ${DATABASE_PORT}:5432
-    environment:
-      PGUSER: ${DATABASE_USERNAME}
-      POSTGRES_USER: ${DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "${DATABASE_NAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-  pgadmin4:
-    container_name: pgadmin4
-    image: dpage/pgadmin4:4.22
-    restart: unless-stopped
-    networks:
-      - app-net
-    env_file:
-      - .env
-    volumes:
-      - ./docker/pgadmin4:/pgadmin4/external
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${DATABASE_USERNAME}
-      PGADMIN_DEFAULT_PASSWORD: ${DATABASE_PASSWORD}
-      PGADMIN_SERVER_JSON_FILE: /pgadmin4/external/servers.json
-    ports:
-      - "8000:80"
-networks:
-  app-net:
-    driver: bridge
-```
-
-
-```properties
-DATABASE_NAME=contact-us
-DATABASE_PORT=5432
-DATABASE_URL=jdbc:postgresql://localhost:5432/contact-us
-DATABASE_DRIVER=org.postgresql.Driver
-DATABASE_USERNAME=tw-data
-DATABASE_PASSWORD=SomeRandomPassword
-```
-
-
-```bash
-$ docker-compose up -d
-
-Creating network "contact-us_game-net" with driver "bridge"
-Creating contact-us ... done
-Creating pgadmin4   ... done
-```
-
-```bash
-docker-compose stop && docker system prune -f
-Stopping contact-us ... done
-Stopping pgadmin4   ... done
-Deleted Containers:
-68e15b698c143816149f0463399a394dcf97b6529478d65ae2d1bb1c10a11685
-7c3325978fbf79d1e41f0c60c4901aac7b65a443802d8a7bd7605743f5678396
-
-Deleted Networks:
-contact-us_app-net
-
-Total reclaimed space: 154B
-```
-
-Create file `docker/pgadmin4/servers.json`
-
-```json
-{
-  "Servers": {
-    "1": {
-      "Name": "Contact US DB",
-      "Group": "Servers",
-      "Host": "postgres",
-      "Port": 5432,
-      "MaintenanceDB": "contact-us",
-      "Username": "tw-data",
-      "SSLMode": "prefer",
-      "SSLCert": "<STORAGE_DIR>/.postgresql/postgresql.crt",
-      "SSLKey": "<STORAGE_DIR>/.postgresql/postgresql.key",
-      "SSLCompression": 0,
-      "Timeout": 10,
-      "UseSSHTunnel": 0,
-      "TunnelPort": "22",
-      "TunnelAuthentication": 0
-    }
-  }
-}
-```
-
-```groovy
-  runtimeOnly 'com.h2database:h2'
-```
-
-```groovy
-  runtimeOnly 'org.postgresql:postgresql'
-```
-
-```groovy
-dependencies {
-  /* Lombok */
-  compileOnly 'org.projectlombok:lombok'
-  annotationProcessor 'org.projectlombok:lombok'
-
-  /* Spring */
-  implementation 'org.springframework.boot:spring-boot-starter-web'
-  implementation 'org.springframework.boot:spring-boot-starter-actuator'
-  testImplementation('org.springframework.boot:spring-boot-starter-test') {
-    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-  }
-
-  /* Data */
-  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-  implementation 'org.flywaydb:flyway-core'
-  runtimeOnly 'org.postgresql:postgresql'
-
-  /* OpenApi/Swagger */
-  implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
-}
-```
-
-```bash
-$ ./gradlew integrationTest
-```
-
-![PgAdmin Tables Created]({{ '/assets/images/PgAdmin-Tables-Created.png' | absolute_url }})
-
-
-```bash
-$ ./gradlew bootRun
-
-...
-BUILD FAILED in 4s
-3 actionable tasks: 1 executed, 2 up-to-date
-```
-
-Update file `build.gradle`
-
-```groovy
-bootRun {
-  doFirst {
-    file("$rootDir/.env").readLines().each() {
-      def (key, value) = it.split('=', 2)
-      environment key, value
-    }
-  }
-}
-```
-
-
-
-docker-compose stop && docker system prune -f && docker-compose up -d && ./gradlew clean integrationTest
+   The integration tests are now using the environment variables defined in the `.env` file.
