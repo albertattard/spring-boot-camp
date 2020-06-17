@@ -23,14 +23,14 @@ permalink: docs/primer/demo/
 1. [Gradle](https://gradle.org/) (_single project_)
 1. [Docker](https://www.docker.com/)
 1. [Spring](https://spring.io/)
-   1. [Spring framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html) (_dependency injection_)
+   1. [Spring Framework](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html) (_dependency injection_)
    1. [Spring Boot](https://spring.io/projects/spring-boot)
-   1. [Spring Web](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html) (not reactive) and [REST](https://en.wikipedia.org/wiki/Representational_state_transfer)
+   1. [Spring Web](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html) (_not reactive_) and [REST](https://en.wikipedia.org/wiki/Representational_state_transfer)
    1. [Spring Actuator](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html)
 1. [OpenApi](https://www.openapis.org/) (_Swagger_)
-1. [Lombok](https://projectlombok.org/) ([Lombok Plugin](https://github.com/mplushnikov/lombok-intellij-plugin))
+1. [Lombok](https://projectlombok.org/) (and [Lombok Plugin](https://github.com/mplushnikov/lombok-intellij-plugin))
 1. [Mockito](https://site.mockito.org/)
-1. [PIT](https://pitest.org/) (_pending_)
+1. [PIT](https://pitest.org/)
 
 The technology stack is shown first as this helps the reader understand what technologies are used in this demo and whether this demo is what the reader is looking for or not.  **Never pick the technology before understanding the problem being solved first!!**
 
@@ -518,12 +518,28 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
 1. Access the health endpoint: [http://localhost:8080/health](http://localhost:8080/health)
 
    ```bash
-   $ curl http://localhost:8080/health
+   $ curl -v http://localhost:8080/health
    ```
 
    This should return
 
-   ```json
+   ```bash
+   ➜  ~ curl -v http://localhost:8080/health
+   *   Trying ::1...
+   * TCP_NODELAY set
+   * Connected to localhost (::1) port 8080 (#0)
+   > GET /health HTTP/1.1
+   > Host: localhost:8080
+   > User-Agent: curl/7.64.1
+   > Accept: */*
+   >
+   < HTTP/1.1 200
+   < Content-Type: application/vnd.spring-boot.actuator.v3+json
+   < Transfer-Encoding: chunked
+   < Date: Teu, 27 April 2077 12:34:56 GMT
+   <
+   * Connection #0 to host localhost left intact
+   * Closing connection 0
    {"status":"UP"}
    ```
 

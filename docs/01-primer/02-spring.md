@@ -151,7 +151,7 @@ Two XML files are required to configure our application.
 
    The above file sets the base package and enables annotation processing.
 
-1. The [`web.xml` file](https://github.com/albertattard/spring-with-and-without-boot/blob/master/spring-without-boot/src/main/webapp/WEB-INF/spring-servlet.xml) is typical to all [Servlet based applications](https://javaee.github.io/servlet-spec/)
+1. The [`web.xml` file](https://github.com/albertattard/spring-with-and-without-boot/blob/master/spring-without-boot/src/main/webapp/WEB-INF/web.xml) is typical to all [Servlet based applications](https://javaee.github.io/servlet-spec/)
 
    ```xml
    <?xml version="1.0" encoding="UTF-8"?>

@@ -9,6 +9,8 @@ permalink: docs/primer/evolution/
 # Evolution
 {: .no_toc }
 
+The development of web application has changed a lot in the past years.  The infrastructure has not become part of the application rather than something existing somewhere.
+
 ## Table of contents
 {: .no_toc .text-delta }
 
