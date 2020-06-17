@@ -418,3 +418,60 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
    ```
 
    The integration tests are now using the environment variables defined in the `.env` file.
+
+## IntelliJ
+
+So far we have configured Gradle to use the `.env` file defined before.
+
+1. Run the application from IntelliJ
+
+   ![Run Application from IntelliJ]({{ '/assets/images/IntelliJ-Run-Application.png' | absolute_url }})
+
+   This will fail if the environment variables are missing as shown next.
+
+   ```bash
+   ...
+   Caused by: java.lang.IllegalStateException: Cannot load driver class: ${DATABASE_DRIVER}
+       at org.springframework.util.Assert.state(Assert.java:94) ~[spring-core-5.2.6.RELEASE.jar:5.2.6.RELEASE]
+       at org.springframework.boot.autoconfigure.jdbc.DataSourceProperties.determineDriverClassName(DataSourceProperties.java:223) ~[spring-boot-autoconfigure-2.3.0.RELEASE.jar:2.3.0.RELEASE]
+       at org.springframework.boot.autoconfigure.jdbc.DataSourceProperties.initializeDataSourceBuilder(DataSourceProperties.java:175) ~[spring-boot-autoconfigure-2.3.0.RELEASE.jar:2.3.0.RELEASE]
+       at org.springframework.boot.autoconfigure.jdbc.DataSourceConfiguration.createDataSource(DataSourceConfiguration.java:43) ~[spring-boot-autoconfigure-2.3.0.RELEASE.jar:2.3.0.RELEASE]
+       at org.springframework.boot.autoconfigure.jdbc.DataSourceConfiguration$Hikari.dataSource(DataSourceConfiguration.java:85) ~[spring-boot-autoconfigure-2.3.0.RELEASE.jar:2.3.0.RELEASE]
+       at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+       at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62) ~[na:na]
+       at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+       at java.base/java.lang.reflect.Method.invoke(Method.java:564) ~[na:na]
+       at org.springframework.beans.factory.support.SimpleInstantiationStrategy.instantiate(SimpleInstantiationStrategy.java:154) ~[spring-beans-5.2.6.RELEASE.jar:5.2.6.RELEASE]
+       ... 56 common frames omitted
+   ...
+   ```
+
+1. Open the run configuration
+
+   ![IntelliJ Edit Configuration]({{ '/assets/images/IntelliJ-Edit-Configuration.png' | absolute_url }})
+
+   Import the `env` file
+
+   1. Select the _EnvFile_ tab
+   1. Check the _Enable EnvFile_ checkbox
+   1. Click the _plus_ icon to select the `.env` file
+
+   ![IntelliJ Env File]({{ '/assets/images/IntelliJ-Env-File.png' | absolute_url }})
+
+   Note that the `.env` file is a hidden file and it may not show in the finder.  Press `[command] + [shift] + [.]` to toggle show/hide hidden files.
+
+1. Run the application again
+
+   ```bash
+   ...
+   2077-04-27 12:34:56.413  INFO 54324 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+   2077-04-27 12:34:56.413  INFO 54324 --- [           main] DeferredRepositoryInitializationListener : Triggering deferred initialization of Spring Data repositories…
+   2077-04-27 12:34:56.450  INFO 54324 --- [           main] DeferredRepositoryInitializationListener : Spring Data repositories initialized!
+   2077-04-27 12:34:56.463  INFO 54324 --- [           main] demo.boot.ContactUsApplication           : Started ContactUsApplication in 4.834 seconds (JVM running for 5.82)
+   2077-04-27 12:34:56.684  INFO 54324 --- [-192.168.178.35] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+   2077-04-27 12:34:56.684  INFO 54324 --- [-192.168.178.35] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+   2077-04-27 12:34:56.692  INFO 54324 --- [-192.168.178.35] o.s.web.servlet.DispatcherServlet        : Completed initialization in 7 ms
+   ```
+
+The same `.env` file is used by Gradle and IntelliJ.  This centralised the usage of the environment variables.
+

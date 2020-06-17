@@ -565,7 +565,7 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
 
 1. Run the application from IntelliJ
 
-   ![Run Application from IntelliJ]({{ '/assets/images/Run-Application-IntelliJ.png' | absolute_url }})
+   ![Run Application from IntelliJ]({{ '/assets/images/IntelliJ-Run-Application.png' | absolute_url }})
 
 1. Explore the Application Endpoints
 
