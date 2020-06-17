@@ -193,7 +193,7 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
       }
       ```
 
-   We can have dependencies specific to only integration tests, which extend the test scope.
+      We can have dependencies specific to only integration tests, which extend the test scope.
 
    1. Define the new source set
 
@@ -251,6 +251,70 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
       ```
 
       When the integration test run, the environment variable defined in the file are loaded and made available to the integration tests.
+
+   1. Make the integration tests part of the check flow
+
+      ```groovy
+      check {
+        dependsOn integrationTest
+      }
+      ```
+
+      The `check` task, depends on our `integrationTest` task as shown in the following task tree.
+
+      ```bash
+      $ ./gradlew build taskTree
+
+      > Task :taskTree
+
+      ------------------------------------------------------------
+      Root project
+      ------------------------------------------------------------
+
+      :build
+      +--- :assemble
+      |    +--- :bootJar
+      |    |    \--- :classes
+      |    |         +--- :compileJava
+      |    |         \--- :processResources
+      |    \--- :jar
+      |         \--- :classes
+      |              +--- :compileJava
+      |              \--- :processResources
+      \--- :check
+           +--- :integrationTest
+           |    +--- :classes
+           |    |    +--- :compileJava
+           |    |    \--- :processResources
+           |    +--- :integrationTestClasses
+           |    |    +--- :compileIntegrationTestJava
+           |    |    |    +--- :classes
+           |    |    |    |    +--- :compileJava
+           |    |    |    |    \--- :processResources
+           |    |    |    \--- :testClasses
+           |    |    |         +--- :compileTestJava
+           |    |    |         |    \--- :classes
+           |    |    |         |         +--- :compileJava
+           |    |    |         |         \--- :processResources
+           |    |    |         \--- :processTestResources
+           |    |    \--- :processIntegrationTestResources
+           |    \--- :testClasses
+           |         +--- :compileTestJava
+           |         |    \--- :classes
+           |         |         +--- :compileJava
+           |         |         \--- :processResources
+           |         \--- :processTestResources
+           \--- :test
+                +--- :classes
+                |    +--- :compileJava
+                |    \--- :processResources
+                \--- :testClasses
+                     +--- :compileTestJava
+                     |    \--- :classes
+                     |         +--- :compileJava
+                     |         \--- :processResources
+                     \--- :processTestResources
+      ```
 
    **Why are we creating a second gradle build file?**
 

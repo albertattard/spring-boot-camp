@@ -300,6 +300,18 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
    }
    ```
 
+1. (_Optionally_) include the [task-tree plugin](https://plugins.gradle.org/plugin/com.dorongold.task-tree)
+
+   Update file: `build.gradle`
+
+   ```groovy
+   plugins {
+     id 'com.dorongold.task-tree' version '1.5'
+   }
+   ```
+
+   This will allow us to see which task depends on what.
+
 1. Build the application
 
    ```bash
@@ -311,6 +323,8 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
    ```
 
    Should build without errors
+
+
 
 ## Run the application
 
