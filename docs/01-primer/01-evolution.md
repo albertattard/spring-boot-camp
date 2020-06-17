@@ -19,7 +19,7 @@ permalink: docs/primer/evolution/
 
 ## Application servers
 
-A web application receives HTTP requests and then respond to these requests.  Consider the following HTTP request to Google ([http://www.google.com](http://www.google.com)).
+A web application receives [HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP) requests and then respond to these requests.  Consider the following HTTP request to Google ([http://www.google.com](http://www.google.com)).
 
 ```bash
 $ curl -s -o /dev/null -v http://www.google.com
