@@ -2,7 +2,7 @@
 layout: default
 title: PostgreSQL
 parent: Spring Data
-nav_order: 99
+nav_order: 5
 permalink: docs/data/postgresql/
 ---
 
