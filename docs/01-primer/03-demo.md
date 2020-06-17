@@ -828,7 +828,7 @@ The office endpoint is implemented and tested with one contact
 
    ```groovy
    dependencies {
-    /* Spring/OpenApi */
+    /* OpenApi/Swagger */
     implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
    }
    ```

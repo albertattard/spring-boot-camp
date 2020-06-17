@@ -418,11 +418,36 @@ Our application will only use the database and will not rely on the CSV anymore.
 
 1. Remove the [`commons-csv` dependency](https://mvnrepository.com/artifact/org.apache.commons/commons-csv) from the dependencies as this is not required anymore.
 
-   Update the file `build.gradle`
+   Update the file `build.gradle`, by removing the `org.apache.commons:commons-csv:1.8` dependency.
 
    ```groovy
      /* CSV */
      implementation 'org.apache.commons:commons-csv:1.8'
+   ```
+
+   The following fragment shows the remaining dependencies.
+
+   ```groovy
+   dependencies {
+     /* Lombok */
+     compileOnly 'org.projectlombok:lombok'
+     annotationProcessor 'org.projectlombok:lombok'
+
+     /* Spring */
+     implementation 'org.springframework.boot:spring-boot-starter-web'
+     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+     testImplementation('org.springframework.boot:spring-boot-starter-test') {
+       exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+     }
+
+     /* Data */
+     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+     runtimeOnly 'org.flywaydb:flyway-core'
+     runtimeOnly 'com.h2database:h2'
+
+     /* OpenApi/Swagger */
+     implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
+   }
    ```
 
 1. Build the project

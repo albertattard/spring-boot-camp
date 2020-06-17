@@ -52,7 +52,7 @@ In our example we will use the Spring Data JPA as this allows us to interact wit
 
 ## H2 database
 
-[H2 database](https://www.h2database.com/) is a relational database management system written in Java.  It is very popular as it can be easily embedded in Java applications.  The H2 database can run in-memory, which makes it ideal for testing and prototyping.  With that said, the H2 database is not usually used in production and other databases, such as [PostgreSQL](https://www.postgresql.org/), are used.
+[H2 database](https://www.h2database.com/) is a relational database management system written in Java.  It is very popular as it can be easily embedded in Java applications.  The H2 database can run in-memory, which makes it ideal for testing and prototyping.  With that said, the H2 database is not usually used in production and other databases, such as PostgreSQL, are used.
 
 1. Add the dependency for the [H2 database](https://www.h2database.com/)
 
@@ -97,7 +97,7 @@ In our example we will use the Spring Data JPA as this allows us to interact wit
 
 ## Flyway
 
-The database will change over time.  One way to manage the database is to use a library such as [Flyway](https://flywaydb.org/) or [Liquibase](https://www.liquibase.org/).  ThoughtWorks [technology radar](https://www.thoughtworks.com/radar/) has [Flyway as adopt](https://www.thoughtworks.com/radar/tools/flyway).  Unfortunately, the [technology radar does not mention Liquibase](https://www.thoughtworks.com/radar/a-z#Liquibase), which means that TW has not used this in production.
+The database will change over time.  One way to manage the database is to use a library such as [Flyway](https://flywaydb.org/) or [Liquibase](https://www.liquibase.org/).  ThoughtWorks [technology radar](https://www.thoughtworks.com/radar/) has [Flyway as adopt](https://www.thoughtworks.com/radar/tools/flyway).  Unfortunately, the [technology radar does not mention Liquibase](https://www.thoughtworks.com/radar/a-z#Liquibase), which means that ThoughtWorkers have not used Liquibase in production.
 
 Both libraries share the same popularity according to [Google trends](https://trends.google.com/trends/explore?q=Flyway,Liquibase).
 

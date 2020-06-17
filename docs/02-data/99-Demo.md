@@ -287,7 +287,7 @@ dependencies {
   implementation 'org.flywaydb:flyway-core'
   runtimeOnly 'org.postgresql:postgresql'
 
-  /* Spring/OpenApi */
+  /* OpenApi/Swagger */
   implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
 }
 ```
