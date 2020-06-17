@@ -68,7 +68,7 @@ In our example we will use the Spring Data JPA as this allows us to interact wit
 
    {% include not_recommended.html details="Do not save production passwords as plain text" %}
 
-   Note that later on, we will refactor this code and will make use of environment variables, instead.
+   Note that we will refactor this code and will make use of [environment variables]({{ '/docs/data/env/' | absolute_url }}), instead.
 
    Update file: `src/main/resources/application.yaml`
 
