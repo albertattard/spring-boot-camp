@@ -66,7 +66,7 @@ In our example we will use the Spring Data JPA as this allows us to interact wit
 
 1. Provide the database connection properties
 
-   {% include proceed_with_caution.html details="Do not save production passwords as plain text" %}
+   {% include custom/proceed_with_caution.html details="Do not save production passwords as plain text" %}
 
    Note that we will refactor this code and will make use of [environment variables]({{ '/docs/data/env/' | absolute_url }}), instead.
 

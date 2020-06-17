@@ -39,7 +39,7 @@ This can get a bit ugly especially when we have many environment variables.  Fur
 
 Another approach is to use an `.env` file as shown next.
 
-{% include proceed_with_caution.html details="Do not save production passwords as plain text" %}
+{% include custom/proceed_with_caution.html details="Do not save production passwords as plain text" %}
 
 ```properties
 DATABASE_NAME=contact-us
