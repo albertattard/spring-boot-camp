@@ -21,6 +21,12 @@ Will leverage Spring Boot to connect to an in-memory database and manage the dat
 
 ## Spring Data JPA
 
+[Spring Data](https://spring.io/projects/spring-data) provides an abstraction layer for several data persistence models, such as [Spring Data JPA]().  This promotes consistency across different range of database vendors and access models as shown in the following image.
+
+![Spring-Data-Subprojects.png]({{ '/assets/images/Spring-Data-Subprojects.png' | absolute_url }})
+
+In our example we will use the Spring Data JPA as this allows us to interact with a relational database, such as [MySQL](https://www.mysql.com/) or [PostgreSQL](https://www.postgresql.org/s), without having to write the code that reads from and write to the database.
+
 1. Import the [`spring-boot-starter-data-jpa`](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa) starter dependency
 
    Update file: `build.gradle`
@@ -61,6 +67,8 @@ Will leverage Spring Boot to connect to an in-memory database and manage the dat
 1. Provide the database connection properties
 
    {% include not_recommended.html details="Do not save production passwords as plain text" %}
+
+   Note that later on, we will refactor this code and will make use of environment variables, instead.
 
    Update file: `src/main/resources/application.yaml`
 

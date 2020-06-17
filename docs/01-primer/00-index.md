@@ -8,4 +8,4 @@ permalink: docs/primer/
 
 # Primer
 
-The primer...
+This section acts as an introduction to the Spring Boot Camp.  At the end of the section there is a small demo showing how easy it is to get started with Spring Boot.
