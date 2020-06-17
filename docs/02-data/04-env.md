@@ -127,105 +127,221 @@ Note that the above example only contains development and test credentials.  Whi
 
 ## Integration tests
 
-Create file: `integration-test.gradle`
+When we moved the configuration of the database to environment variables, we made our application dependent on external resources, such as the environment variable.  Any tests that depend on things outside of our application should be moved into their own category.
 
-```groovy
-configurations {
-  integrationTestImplementation.extendsFrom testImplementation
-  integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
-}
+The test class `ContactUsApplicationTests` requires the application to start, which in turn require the environment variables defined before.  Gradle is very customisable and we can easily have a new set of tests, referred to as _integration tests_ and move any tests into this group.
 
-sourceSets {
-  integrationTest {
-    java {
-      compileClasspath += main.output + test.output
-      runtimeClasspath += main.output + test.output
-      srcDir file('src/test-integration/java')
-    }
+1. Define integration tests
 
-    resources.srcDir file('src/test-integration/resources')
-  }
-}
+   Create file: `integration-test.gradle`
 
-task integrationTest(type: Test) {
-  description = 'Runs the integration tests.'
-  group = 'verification'
-  testClassesDirs = sourceSets.integrationTest.output.classesDirs
-  classpath = sourceSets.integrationTest.runtimeClasspath
-  outputs.upToDateWhen { false }
-  mustRunAfter test
+   ```groovy
+   configurations {
+     integrationTestImplementation.extendsFrom testImplementation
+     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+   }
 
-  useJUnitPlatform()
+   sourceSets {
+     integrationTest {
+       java {
+         compileClasspath += main.output + test.output
+         runtimeClasspath += main.output + test.output
+         srcDir file('src/test-integration/java')
+       }
 
-  testLogging {
-    events = ['FAILED', 'PASSED', 'SKIPPED', 'STANDARD_OUT']
-  }
+       resources.srcDir file('src/test-integration/resources')
+     }
+   }
 
-  doFirst {
-    file("$rootDir/.env").readLines().each() {
-      def (key, value) = it.split('=', 2)
-      environment key, value
-    }
-  }
-}
+   task integrationTest(type: Test) {
+     description = 'Runs the integration tests.'
+     group = 'verification'
+     testClassesDirs = sourceSets.integrationTest.output.classesDirs
+     classpath = sourceSets.integrationTest.runtimeClasspath
+     outputs.upToDateWhen { false }
+     mustRunAfter test
 
-check {
-  dependsOn integrationTest
-}
-```
+     useJUnitPlatform()
 
-```groovy
-/* Integration Tests */
-apply from: "$rootDir/integration-test.gradle"
-```
+     testLogging {
+       events = ['FAILED', 'PASSED', 'SKIPPED', 'STANDARD_OUT']
+     }
 
-Create dir structure
+     doFirst {
+       file("$rootDir/.env").readLines().each() {
+         def (key, value) = it.split('=', 2)
+         environment key, value
+       }
+     }
+   }
 
-```bash
-$ tree src/test-integration
-src/test-integration
-├── java
-└── resources
-```
+   check {
+     dependsOn integrationTest
+   }
+   ```
+
+   The name of the file is not very important, as long as you are consistent.  Note that we will use this file name to include the above gradle definition in the `build.gradle` in the next step.
+
+   The above file deserves some explanation.
+
+   1. Create new configuration
+
+      ```groovy
+      configurations {
+        integrationTestImplementation.extendsFrom testImplementation
+        integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+      }
+      ```
+
+   We can have dependencies specific to only integration tests, which extend the test scope.
+
+   1. Define the new source set
+
+      ```groovy
+      sourceSets {
+        integrationTest {
+          java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/test-integration/java')
+          }
+
+          resources.srcDir file('src/test-integration/resources')
+        }
+      }
+      ```
+
+      This is where the integration test files will be saved.
+
+   1. Define the new gradle task
+
+      ```groovy
+      task integrationTest(type: Test) {
+        description = 'Runs the integration tests.'
+        group = 'verification'
+        testClassesDirs = sourceSets.integrationTest.output.classesDirs
+        classpath = sourceSets.integrationTest.runtimeClasspath
+        outputs.upToDateWhen { false }
+        mustRunAfter test
+
+        useJUnitPlatform()
+
+        testLogging {
+          events = ['FAILED', 'PASSED', 'SKIPPED', 'STANDARD_OUT']
+        }
+
+        doFirst {
+          file("$rootDir/.env").readLines().each() {
+            def (key, value) = it.split('=', 2)
+            environment key, value
+          }
+        }
+      }
+      ```
+
+      The environment variables are read from the `.env` file and added the task's environment.
+
+      ```groovy
+        doFirst {
+          file("$rootDir/.env").readLines().each() {
+            def (key, value) = it.split('=', 2)
+            environment key, value
+          }
+        }
+      ```
+
+      When the integration test run, the environment variable defined in the file are loaded and made available to the integration tests.
+
+   **Why are we creating a second gradle build file?**
+
+   We can simply have all gradle configuration in one file, the `gradle.build` file.  Splitting the definition into multiple files helps organising gradle, keeping each file focused on one thing.  This is a matter of taste too as some like to split gradle into smaller files, while others prefer to have everything in one place.
+
+1. Import the new definition
+
+   Update file `build.gradle`
+
+   ```groovy
+   /* Integration Tests */
+   apply from: "$rootDir/integration-test.gradle"
+   ```
+
+   The above fragment uses the [script plugins](https://docs.gradle.org/current/userguide/plugins.html#sec:script_plugins) to include the gradle configuration from another file.  The file name needs to match the file name used in the previous step.
+
+1. Create the new directory structure
+
+   ```bash
+   $ mkdir -p src/test-integration/java
+   $ mkdir -p src/test-integration/resources
+   ```
+
+   The new `test-integration` should have the following sub-directories
+
+   ```bash
+   $ tree src/test-integration
+   src/test-integration
+   ├── java
+   └── resources
+   ```
+
+   When you apply the gradle change to IntelliJ, the new folder structure should appear as a source folcer as shown next.
 
 ![Test Integration Folder Structure]({{ '/assets/images/Test-Integration-Folder-Structure.png' | absolute_url }})
 
-```bash
-$ ./gradlew tasks
-```
+   The folders _main_, _test_ and _test-integration_ have a small blue square indicating that these are source folders.
 
-```bash
-...
-Verification tasks
-------------------
-check - Runs all checks.
-integrationTest - Runs the integration tests.
-pitest - Run PIT analysis for java classes
-test - Runs the unit tests.
-...
-```
+1. The new `integrationTest` gradle task
 
-Move the `ContactUsApplicationTests` to the `test-intergration`
+   ```groovy
+   task integrationTest(type: Test) { /* ... */ }
+   ```
 
-```bash
-tree src
-src
-├── main
-...
-├── test
-│   └── java
-│       └── demo
-│           └── boot
-│               ├── JpaContactUsServiceTest.java
-│               └── OfficeControllerTest.java
-└── test-integration
-    └── java
-        └── demo
-            └── boot
-                └── ContactUsApplicationTests.java
+   List the gradle tasks
 
-16 directories, 15 files
-```
+   ```bash
+   $ ./gradlew tasks
+   ```
+
+   This will list all gradle tasks available for this project.  Our new gradle task is part of the `verification` group and this it will be part of this group as shown next.
+
+   ```bash
+   ...
+   Verification tasks
+   ------------------
+   check - Runs all checks.
+   integrationTest - Runs the integration tests.
+   pitest - Run PIT analysis for java classes
+   test - Runs the unit tests.
+   ...
+   ```
+
+1. Move the `ContactUsApplicationTests` to the `test-intergration`, and retain the package structure
+
+   ```bash
+   $ mkdir -p src/test-integration/java/demo/boot
+   $ contact-us mv src/test/java/demo/boot/ContactUsApplicationTests.java src/test-integration/java/demo/boot
+   ```
+
+   The other two tests should stay where these were, as shown in the following directory structure.
+
+   ```bash
+   tree src
+   src
+   ├── main
+   ...
+   ├── test
+   │   └── java
+   │       └── demo
+   │           └── boot
+   │               ├── JpaContactUsServiceTest.java
+   │               └── OfficeControllerTest.java
+   └── test-integration
+       └── java
+           └── demo
+               └── boot
+                   └── ContactUsApplicationTests.java
+
+   16 directories, 15 files
+   ```
 
 ```bash
 $ ./gradlew integrationTest
