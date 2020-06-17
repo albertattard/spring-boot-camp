@@ -19,15 +19,28 @@ So far we used an [H2](https://www.h2database.com/) in-memory database.  While t
 
 ---
 
-## Docker Compose (PostgreSQL and PgAdmin)
+## PostgreSQL
 
-We can take advantage of [docker](https://docs.docker.com/) and [docker composed](https://docs.docker.com/compose/) to setup third party dependencies, such as PostgreSQL and [PgAdmin](https://www.pgadmin.org/).
+"_PostgreSQL is a very powerful, open source object-relational database system with over 30 years of active development that has earned it a strong reputation for reliability, feature robustness, and performance._"<br />
+([reference](https://www.postgresql.org/about/))
+
+## PgAdmin
+
+[PgAdmin](https://www.pgadmin.org/) is a web application that can be used to manage and access PostgreSQL databases.
+
+![PgAdmin](https://www.pgadmin.org/static/COMPILED/assets/img/screenshots/pgadmin4-welcome.png)
+
+This is a great tool to query our PostgreSQL database.
+
+## Docker Compose (setup PostgreSQL and PgAdmin)
+
+We can take advantage of [docker](https://docs.docker.com/) and [docker composed](https://docs.docker.com/compose/) to setup third party dependencies, such as PostgreSQL and PgAdmin.
 
 1. Create the `docker-compose.yml` file
 
    {% include custom/proceed_with_caution.html details="Do not reuse credentials between different services" %}
 
-   For conveniance, the following example uses the same credentials (`DATABASE_USERNAME` and `DATABASE_PASSWORD`) for both services.  **Do not do this in production**.
+   For convenience, the following example uses the same credentials (`DATABASE_USERNAME` and `DATABASE_PASSWORD`) for both services.  **Do not do this in production**.
 
    Create file: `docker-compose.yml`
 
@@ -171,7 +184,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker composed
 
    ![PgAdmin No Servers]({{ '/assets/images/PgAdmin-No-Servers.png' | absolute_url}})
 
-   Note that PgAdmin is not yet connected to our database.  We can configure the new connection from here, but that's discouraged.
+   Note that PgAdmin is not yet connected to our PostgreSQL database.  We can configure the new connection from here, but that's discouraged.
 
 1. Setup database connection
 
@@ -228,11 +241,11 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker composed
 
 1. Delete the existing containers
 
-   {% include custom/proceed_with_caution.html details="The following commad will delete all stopped containers" %}
+   {% include custom/proceed_with_caution.html details="The following command will delete all stopped containers" %}
 
    If you do not want to delete old containers, please do not run the `docker system prune -f` command.
 
-   PgAdmin is stateful and we need to delete the container first.
+   PgAdmin is stateful and we need to delete the container first to delete any existing state.
 
    ```bash
    $ docker-compose stop
@@ -278,124 +291,100 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker composed
 
    ![PgAdmin Connect]({{ '/assets/images/PgAdmin-Connect.png' | absolute_url }})
 
-1. Connected
+1. Expand the databases and navigate the available objects
 
    ![PgAdmin Connected]({{ '/assets/images/PgAdmin-Connected.png' | absolute_url }})
 
+   Note that we have no tables created for now.  These are automatically created by [Flyway](https://flywaydb.org/) when the integration tests are executed or the application is started.
 
-## Others
+The database is setup and ready to be used by our application.
 
-docker-compose stop && docker system prune -f && docker-compose up -d && ./gradlew clean integrationTest
+## Use PostgreSQL
 
+1. Replace the database dependency
 
+   Update file `build.gradle`, delete the H2 database driver
 
+   ```groovy
+     runtimeOnly 'com.h2database:h2'
+   ```
 
-```bash
-$ docker-compose up -d
+   then add the PostgreSQL database driver
 
-Creating network "contact-us_game-net" with driver "bridge"
-Creating contact-us ... done
-Creating pgadmin4   ... done
-```
+   ```groovy
+     runtimeOnly 'org.postgresql:postgresql'
+   ```
 
-```bash
-docker-compose stop && docker system prune -f
-Stopping contact-us ... done
-Stopping pgadmin4   ... done
-Deleted Containers:
-68e15b698c143816149f0463399a394dcf97b6529478d65ae2d1bb1c10a11685
-7c3325978fbf79d1e41f0c60c4901aac7b65a443802d8a7bd7605743f5678396
+   The following fragment shows the dependencies following the update.
 
-Deleted Networks:
-contact-us_app-net
+   ```groovy
+   dependencies {
+     /* Lombok */
+     compileOnly 'org.projectlombok:lombok'
+     annotationProcessor 'org.projectlombok:lombok'
 
-Total reclaimed space: 154B
-```
+     /* Spring */
+     implementation 'org.springframework.boot:spring-boot-starter-web'
+     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+     testImplementation('org.springframework.boot:spring-boot-starter-test') {
+       exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+     }
 
-Create file `docker/pgadmin4/servers.json`
+     /* Data */
+     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+     implementation 'org.flywaydb:flyway-core'
+     runtimeOnly 'org.postgresql:postgresql'
 
-```json
-{
-  "Servers": {
-    "1": {
-      "Name": "Contact US DB",
-      "Group": "Servers",
-      "Host": "postgres",
-      "Port": 5432,
-      "MaintenanceDB": "contact-us",
-      "Username": "tw-data",
-      "SSLMode": "prefer",
-      "SSLCert": "<STORAGE_DIR>/.postgresql/postgresql.crt",
-      "SSLKey": "<STORAGE_DIR>/.postgresql/postgresql.key",
-      "SSLCompression": 0,
-      "Timeout": 10,
-      "UseSSHTunnel": 0,
-      "TunnelPort": "22",
-      "TunnelAuthentication": 0
-    }
-  }
-}
-```
+     /* OpenApi/Swagger */
+     implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
+   }
+   ```
 
-```groovy
-  runtimeOnly 'com.h2database:h2'
-```
+1. Restart the services (_if these are not running_)
 
-```groovy
-  runtimeOnly 'org.postgresql:postgresql'
-```
+   {% include custom/proceed_with_caution.html details="The following command will delete all stopped containers" %}
 
-```groovy
-dependencies {
-  /* Lombok */
-  compileOnly 'org.projectlombok:lombok'
-  annotationProcessor 'org.projectlombok:lombok'
+   If you do not want to delete old containers, please do not run the `docker system prune -f` command.
 
-  /* Spring */
-  implementation 'org.springframework.boot:spring-boot-starter-web'
-  implementation 'org.springframework.boot:spring-boot-starter-actuator'
-  testImplementation('org.springframework.boot:spring-boot-starter-test') {
-    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-  }
+   ```bash
+   $ docker-compose stop
+   $ docker system prune -f
+   $ docker-compose up -d
+   ```
 
-  /* Data */
-  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-  implementation 'org.flywaydb:flyway-core'
-  runtimeOnly 'org.postgresql:postgresql'
+   Alternatively, as a single command
 
-  /* OpenApi/Swagger */
-  implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
-}
-```
+   ```bash
+   $ docker-compose stop && docker system prune -f && docker-compose up -d
+   ```
 
-```bash
-$ ./gradlew integrationTest
-```
+1. Run the integration tests
 
-![PgAdmin Tables Created]({{ '/assets/images/PgAdmin-Tables-Created.png' | absolute_url }})
+   ```bash
+   $ ./gradlew clean integrationTest
 
+   ...
+   BUILD SUCCESSFUL in 11s
+   6 actionable tasks: 6 executed
+   ```
 
-```bash
-$ ./gradlew bootRun
+   The integration test should pass
 
-...
-BUILD FAILED in 4s
-3 actionable tasks: 1 executed, 2 up-to-date
-```
+1. Expands the tables node
 
-Update file `build.gradle`
+   Note that now we have two tables:
 
-```groovy
-bootRun {
-  doFirst {
-    file("$rootDir/.env").readLines().each() {
-      def (key, value) = it.split('=', 2)
-      environment key, value
-    }
-  }
-}
-```
+   1. `flyway_schema_history`: used by Flyway to manage the database migration state.  This is how Flyway keeps track of which scripts are executed and which scripts are pending.
+   1. `offices`: our table
 
+1. Query the database
 
+   Select the `offices` table and then click _Query Tool_ icon and then run the query
 
-docker-compose stop && docker system prune -f && docker-compose up -d && ./gradlew clean integrationTest
+   ```sql
+   SELECT * FROM "offices";
+   ```
+
+   ![PgAdmin Tables Created]({{ '/assets/images/PgAdmin-Tables-Created.png' | absolute_url }})
+
+   This will display all offices that were populated by Flyway during the migration.

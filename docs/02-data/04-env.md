@@ -419,6 +419,51 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
 
    The integration tests are now using the environment variables defined in the `.env` file.
 
+## Gradle `bootRun` task
+
+1. Start the application using Gradle `bootRun` task
+
+   ```bash
+   $ ./gradlew bootRun
+
+   ...
+   BUILD FAILED in 4s
+   3 actionable tasks: 1 executed, 2 up-to-date
+   ```
+
+   The integration tests are using the `.env` file, but this only applies to this task
+
+1. Use the `.env` file from the `bootRun` task
+
+   Update file `build.gradle`
+
+   ```groovy
+   bootRun {
+     doFirst {
+       file("$rootDir/.env").readLines().each() {
+         def (key, value) = it.split('=', 2)
+         environment key, value
+       }
+     }
+   }
+   ```
+
+   {% include custom/note.html details="I do not know how to reuse the above code fragment" %}
+
+1. Start the application using Gradle `bootRun` task again
+
+   ```bash
+   $ ./gradlew bootRun
+   ...
+   2077-04-27 12:34:56.464  INFO 56351 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoint(s) beneath base path ''
+   2077-04-27 12:34:56.496  INFO 56351 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+   2077-04-27 12:34:56.497  INFO 56351 --- [           main] DeferredRepositoryInitializationListener : Triggering deferred initialization of Spring Data repositories…
+   2077-04-27 12:34:56.535  INFO 56351 --- [           main] DeferredRepositoryInitializationListener : Spring Data repositories initialized!
+   2077-04-27 12:34:56.547  INFO 56351 --- [           main] demo.boot.ContactUsApplication           : Started ContactUsApplication in 3.597 seconds (JVM running for 4.951)
+   ```
+
+   The application should now start and connect to the H2 database using the environment variables defined in the `.env` file.
+
 ## IntelliJ
 
 So far we have configured Gradle to use the `.env` file defined before.
@@ -474,4 +519,3 @@ So far we have configured Gradle to use the `.env` file defined before.
    ```
 
 The same `.env` file is used by Gradle and IntelliJ.  This centralised the usage of the environment variables.
-
