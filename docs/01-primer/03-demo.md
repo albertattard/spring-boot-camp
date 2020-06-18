@@ -391,7 +391,7 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
 1. Running the application will now show the new banner
 
    ```bash
-   $  ./gradlew bootRun
+   $ ./gradlew bootRun
 
    > Task :bootRun
       _____            _             _     _    _
@@ -526,7 +526,7 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
 1. Start the application
 
    ```bash
-   $  ./gradlew bootRun
+   $ ./gradlew bootRun
    ```
 
 1. Access the health endpoint: [http://localhost:8080/health](http://localhost:8080/health)
@@ -873,6 +873,16 @@ The application endpoints are exposed through OpenAPI
 
 ## Dockerize the application
 
+Spring Boot provides a Gradle task `bootBuildImage`.  We cab use this task to create an efficient layered image without having to created a `dockerfile`.
+
+### Dockersize application using Gradle `bootBuildImage` task
+
+```
+$ ./gradlew bootBuildImage --imageName=???
+```
+
+### Dockersize application using `dockerfile`
+
 1. Our application requires Java 14.  We can use the [OpenJDK 14 docker image](https://hub.docker.com/r/adoptopenjdk/openjdk14).
 
 1. Create file `Dockerfile`
@@ -893,7 +903,7 @@ The application endpoints are exposed through OpenAPI
    CMD ["java", "-jar", "application.jar"]
    ```
 
-   The above is an example of a multi-stage docker file that builds the application before creating the second docker image that will run the application.  **Do not use a multi-stage docker file if a pipeline (such as [Jenkins](https://www.jenkins.io/) or [GOCD](https://www.gocd.org/)) is used to build the project**.  The pipeline will orchestrate the build process with better visibility and can use the artefacts produced by the previous stage to create the docker image.
+   The above is an example of a multi-stage docker file to build the application before creating the second docker image that will run the application.  **Do not use a multi-stage docker file to build the application if a pipeline (such as [Jenkins](https://www.jenkins.io/) or [GOCD](https://www.gocd.org/)) is used to build the project**.  The pipeline will orchestrate the build process with better visibility and can use the artefacts produced by the previous stage to create the docker image.
 
 1. Build the docker image
 
@@ -978,7 +988,7 @@ The application can now be deployed as a docker image
    ```groovy
    dependencies {
      /* CSV */
-     implementation: 'org.apache.commons:commons-csv:1.8'
+     implementation 'org.apache.commons:commons-csv:1.8'
    }
    ```
 
