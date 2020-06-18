@@ -324,8 +324,6 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
 
    Should build without errors
 
-
-
 ## Run the application
 
 1. Run the application using the [Spring boot Gradle task `bootRun`](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/api/org/springframework/boot/gradle/tasks/run/BootRun.html)
@@ -570,6 +568,24 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
 1. Explore the Application Endpoints
 
    ![Explore the Application Endpoints]({{ '/assets/images/IntelliJ-Application-Endpoints.png' | absolute_url }})
+
+   IntelliJ may report a warning such as the following.
+
+   ```bash
+   Failed to check application ready state JMX agent not loaded...
+   ```
+
+   Add the following to the _VM options_
+
+   ```bash
+   -Dcom.sun.management.jmxremote.port=9999
+   -Dcom.sun.management.jmxremote.authenticate=false
+   -Dcom.sun.management.jmxremote.ssl=false
+   ```
+
+   ![IntelliJ-Fix-JMX-Agent-Not-Loaded.png]({{ '/assets/images/IntelliJ-Fix-JMX-Agent-Not-Loaded.png' | absolute_url }})
+
+   Please refer to the following [post](https://youtrack.jetbrains.com/issue/IDEA-204797) for more information about this warning.
 
 1. Stop the application
 
@@ -873,15 +889,145 @@ The application endpoints are exposed through OpenAPI
 
 ## Dockerize the application
 
-Spring Boot provides a Gradle task `bootBuildImage`.  We cab use this task to create an efficient layered image without having to created a `dockerfile`.
+Spring Boot provides a [Gradle task `bootBuildImage`](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#build-image), that we can use to build docker images and take full advantage of the docker layers.  To appreciate the benefits of this approach, we need to dive deeper in the docker layers.
 
-### Dockersize application using Gradle `bootBuildImage` task
+### What is a docker layer?
 
+Our application can be dockerized using the following `dockerfile`.
+
+```dockerfile
+FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
+WORKDIR /opt/app
+ADD ./build/libs/*.jar ./application.jar
+CMD ["java", "-jar", "application.jar"]
 ```
-$ ./gradlew bootBuildImage --imageName=???
+
+The above `dockerfile` has four docker commands (lines), each of which is translated as one layer (also referred to as _intermediate image_).  Each docker command creates a new layer by building on the previous one as shown in the following image.
+
+![Docker Layers]({{ '/assets/images/Docker-Layers.png' | absolute_url }})
+
+Let's build the above `dockerfile`.
+
+Make sure to build the application first as the `dockerfile` will use the Fat JAR file produced by the Gradle `build` task.
+
+```bash
+$ ./gradlew clean build
 ```
 
-### Dockersize application using `dockerfile`
+Build the docker image
+
+```bash
+$ docker build . -t contact-us:local
+```
+
+Each layer is represented with a _layer id_.  For example, the layer id for step 1 is `4b6ab0f52b1b`.
+
+```bash
+Sending build context to Docker daemon  24.16MB
+Step 1/4 : FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
+ ---> 4b6ab0f52b1b
+Step 2/4 : WORKDIR /opt/app
+ ---> Using cache
+ ---> e4b34b3167d1
+Step 3/4 : ADD ./build/libs/*.jar ./application.jar
+ ---> 15457ae20ca5
+Step 4/4 : CMD ["java", "-jar", "application.jar"]
+ ---> Running in 5568e3296cfa
+Removing intermediate container 5568e3296cfa
+ ---> 36c3897b8921
+Successfully built 36c3897b8921
+Successfully tagged contact-us:local
+```
+
+If we modify our application and rebuild the docker image, the first two layers are reused and only third and fourth layer recomputed as captured by the following image.
+
+![Docker Repetitive Builds-Layers]({{ '/assets/images/Docker-Repetitive-Builds-Layers.png' | absolute_url }})
+
+The `application.jar` Fat JAR file, copied in step 3, contains our code together with all the dependencies we used.  When we change the code, like when we add new features, we do not necessary change the dependencies.  One small change in the code will cause a new, relatively big, layer to be created.  If, on the other hand, we split our Fat JAR into several layers, that would help us reuse some of the previous layers as shown in the following images.
+
+![Docker Repetitive Efficient Builds-Layers]({{ '/assets/images/Docker-Repetitive-Efficient-Builds-Layers.png' | absolute_url }})
+
+In the above fictitious example, the first three layers are reused and the fourth layer, comprising one with our code, is recomputed.  This is a relatively slim layer and thus a small change in the code, produces new smaller layers.
+
+This approach makes efficient use of the docker layering and caching system.  While we can achieve all this manually, Spring Boot provides a Gradle task for this, names `bootBuildImage`.
+
+[Dive](https://github.com/wagoodman/dive) is a very good command line tool that helps you analyse a given docker image.
+
+![Dive Demo](https://raw.githubusercontent.com/wagoodman/dive/master/.data/demo.gif)
+
+Dive is a great tool for exploring a docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.
+
+### Dockersize application using Gradle `bootBuildImage` task (_recommended approach_)
+
+Spring Boot provides the Gradle `bootBuildImage` task and we can create our docker image using this task.
+
+{% include custom/note.html details="The <code>bootBuildImage</code> Gradle task does not make use of a <code>dockerfile</code>, thus one is not required" %}
+
+1. Build the image using the Gradle `bootBuildImage`
+
+   ```bash
+   $ ./gradlew bootBuildImage --imageName=contact-us:local
+   ```
+
+   The first time we build the image may take up to two minutes, but subsequent runs are much faster.
+
+   ```bash
+   ...
+       [creator]     *** Images (5f0fe880d725):
+       [creator]           docker.io/library/contact-us:local
+
+   Successfully built image 'docker.io/library/contact-us:local'
+
+
+   BUILD SUCCESSFUL in 50s
+   4 actionable tasks: 2 executed, 2 up-to-date
+   ```
+
+1. Run the image
+
+   ```bash
+   $ docker run -p 8080:8080 -it contact-us:local
+   ```
+
+   The docker container should start
+
+   ```bash
+      _____            _             _     _    _
+     / ____|          | |           | |   | |  | |
+    | |     ___  _ __ | |_ __ _  ___| |_  | |  | |___
+    | |    / _ \| '_ \| __/ _` |/ __| __| | |  | / __|
+    | |___| (_) | | | | || (_| | (__| |_  | |__| \__ \
+     \_____\___/|_| |_|\__\__,_|\___|\__|  \____/|___/
+
+   2077-04-27 12:34:54.895  INFO 1 --- [           main] demo.boot.ContactUsApplication           : Starting ContactUsApplication on 6773d5f400b7 with PID 1 (/opt/app/application.jar started by root in /opt/app)
+   2077-04-27 12:34:54.903  INFO 1 --- [           main] demo.boot.ContactUsApplication           : No active profile set, falling back to default profiles: default
+   2077-04-27 12:34:56.653  INFO 1 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+   2077-04-27 12:34:56.690  INFO 1 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+   2077-04-27 12:34:56.690  INFO 1 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.35]
+   2077-04-27 12:34:56.861  INFO 1 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+   2077-04-27 12:34:56.861  INFO 1 --- [           main] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 1854 ms
+   2077-04-27 12:34:57.247  INFO 1 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+   2077-04-27 12:34:58.198  INFO 1 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+   2077-04-27 12:34:58.219  INFO 1 --- [           main] demo.boot.ContactUsApplication           : Started ContactUsApplication in 4.238 seconds (JVM running for 5.127)
+   ```
+
+1. Access the application
+
+   ```bash
+   $ curl http://localhost:8080/offices
+   ```
+
+   You should get the contact details of the Cologne office
+
+   ```json
+   [{"office":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
+   ```
+
+That's it!!
+
+### Dockersize application using `dockerfile` (_not recommended approach_)
+
+{% include custom/note.html details="The approach described in the <a href='#dockersize-application-using-gradle-bootbuildimage-task-recommended-approach'>previous part</a> makes better use of the docker layer and caching system, as described <a href='#what-is-a-docker-layer'>described before</a>" %}
 
 1. Our application requires Java 14.  We can use the [OpenJDK 14 docker image](https://hub.docker.com/r/adoptopenjdk/openjdk14).
 
@@ -1166,7 +1312,7 @@ The application can now be deployed as a docker image
    }
    ```
 
-   The test expects the same office that the current controller returns.  Furthermore, the tests expects an interaction with the service too, something that it is not happening yet.  Run the tests.
+   The test expects the same office that the current controller returns.  Furthermore, the tests expect an interaction with the service too, something that it is not happening yet.  Run the tests.
 
    ```bash
    $ ./gradlew clean test
