@@ -908,7 +908,7 @@ The above `dockerfile` has four docker commands (lines), each of which is transl
 
 Let's build the above `dockerfile`.
 
-Make sure to build the application first as the `dockerfile` will use the Fat JAR file produced by the Gradle `build` task.
+Make sure to build the application first as the `dockerfile` will use the FatJAR file produced by the Gradle `build` task.
 
 ```bash
 $ ./gradlew clean build
@@ -943,7 +943,7 @@ If we modify our application and rebuild the docker image, the first two layers 
 
 ![Docker Repetitive Builds-Layers]({{ '/assets/images/Docker-Repetitive-Builds-Layers.png' | absolute_url }})
 
-The `application.jar` Fat JAR file, copied in step 3, contains our code together with all the dependencies we used.  When we change the code, like when we add new features, we do not necessary change the dependencies.  One small change in the code will cause a new, relatively big, layer to be created.  If, on the other hand, we split our Fat JAR into several layers, that would help us reuse some of the previous layers as shown in the following images.
+The `application.jar` FatJAR file, copied in step 3, contains our code together with all the dependencies we used.  When we change the code, like when we add new features, we do not necessary change the dependencies.  One small change in the code will cause a new, relatively big, layer to be created.  If, on the other hand, we split our FatJAR into several layers, that would help us reuse some of the previous layers as shown in the following images.
 
 ![Docker Repetitive Efficient Builds-Layers]({{ '/assets/images/Docker-Repetitive-Efficient-Builds-Layers.png' | absolute_url }})
 
@@ -1521,7 +1521,7 @@ One of these approaches is [mutation testing](https://en.wikipedia.org/wiki/Muta
    $ open build/reports/pitest/demo.boot/index.html
    ```
 
-   ![Pit Test Coverage Report With Lombok.png]({{ '/assets/images/Pit-Test-Coverage-Report-With-Lombok.png' | absolute_url  }})
+   ![Pit Test Coverage Report With Lombok.png]({{ '/assets/images/Pit-Test-Coverage-Report-With-Lombok.png' | absolute_url }})
 
    Note that the report includes the `Office` class shown next.
 

@@ -131,7 +131,7 @@ The application is now deployed as a container that includes
 
 **It depends!!**
 
-While we can never have a one-size-fits-all answer, containers + Fat JARs that contain the application server seems to be the way to go.  The adoption of Spring Boot is witness to this.
+While we can never have a one-size-fits-all answer, containers + FatJARs that contain the application server seems to be the way to go.  The adoption of Spring Boot is witness to this.
 
 When deciding about technology, I usually head to the [ThoughtWorks technology radar](https://www.thoughtworks.com/radar/) as this combines feedback from many ThoughtWorkers about many technologies and techniques used throughout the industry.  [Spring Boot was moved to _adopt_ in November 2016](https://www.thoughtworks.com/radar/languages-and-frameworks/spring-boot), where it kept this position ever since.  This gives me confidence that other ThoughtWorkers did not see any serious pitfalls that I should be aware of.  I tend to stay away from technologies that are in the _hold category_, such as [OSGi](https://www.thoughtworks.com/radar/platforms/osgi), as this means that others found that this technology brought more challenges than it actually solved.
 

@@ -204,7 +204,6 @@ The solution that makes use of Spring Boot has the following folder structure.
 ```bash
 $ tree spring-with-boot
 spring-with-boot
-├── Dockerfile
 ├── build.gradle
 └── src
     └── main
@@ -215,7 +214,7 @@ spring-with-boot
                     ├── ContactUsController.java
                     └── Country.java
 
-5 directories, 5 files
+5 directories, 4 files
 ```
 
 Note that we have no XML files, but instead we have one extra source file, [`ContactUsApplication`](https://github.com/albertattard/spring-with-and-without-boot/blob/master/spring-with-boot/src/main/java/demo/boot/ContactUsApplication.java).
@@ -244,17 +243,13 @@ $ java -jar application.jar
 
 Spring Boot took care of configuration needed and also packaged Apache Tomcat webserver as part of our application.  Our application is standalone, and it only requires the correct version of Java.
 
-The [`dockerfile`](https://github.com/albertattard/spring-with-and-without-boot/blob/master/spring-with-boot/Dockerfile) used in this version of the application is slightly different as shown next.
+Also, note that this version of the application does not contain a `dockerfile`, as it takes advantage from the [`bootBuildImage` Gradle task](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#build-image) to build the docker image, as shown next.
 
-```dockerfile
-FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
-WORKDIR /opt/app
-ADD build/libs/spring-with-boot-1.0.jar ./application.jar
-EXPOSE 8080
-CMD ["java", "-jar", "application.jar"]
+```bash
+$ ./gradlew bootBuildImage --imageName=spring-with-boot:local
 ```
 
-It uses an OpenJDK14 image instead of an Apache Tomcat and our application starts as any Java application.
+Spring Boot will create a docker image making best use of docker layers and cache.  This is discussed in some depth in the [demo following this page]({{ '/docs/primer/demo/#dockerize-the-application' | absolute_url }}).
 
 ### With or without Spring Boot?
 
@@ -268,7 +263,7 @@ Nowadays, it is uncommon to have Spring Framework without Spring Boot.  Most tut
 
 Any Java library, referred to in this section as _dependency_, can take advantage of Spring Boot to improve its adoption.  Take for example the [Axon Framework](https://axoniq.io/), a [CQRS framework](https://martinfowler.com/bliki/CQRS.html).  This dependency takes advantage of Spring Boot to simplify the adoption of the same dependency.
 
-Consider the applications mentioned in the [previous section](#what-is-the-difference-between-the-spring-framework-and-spring-boot), when we compare an application without Spring Boot with the same version of the application that makes use of Spring boot.
+Consider the applications mentioned in the [previous section](#what-is-the-difference-between-spring-framework-and-spring-boot), when we compare an application without Spring Boot with the same version of the application that makes use of Spring boot.
 
 1. Without Spring Boot, we simply imported the dependency.
 
@@ -297,6 +292,6 @@ The dotted boxes represent two libraries provided by Spring Boot.  A dependency 
 
 This is how Spring Boot reduces the configuration.  It simply shifts the configuration of the dependency to the developers of the same dependency as shown next.
 
-![Spring Boot Move Configuration]({{ '/assets/images/Spring-Boot-Move-Configuration.png' | absolute_url}})
+![Spring Boot Move Configuration]({{ '/assets/images/Spring-Boot-Move-Configuration.png' | absolute_url }})
 
 By importing the starter project, we will take advantage of the configuration defined in the autoconfigure project and also use the dependency itself.
