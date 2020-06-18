@@ -347,8 +347,8 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
     =========|_|==============|___/=/_/_/_/
     :: Spring Boot ::        (v2.3.0.RELEASE)
 
-   2077-04-27 12:34:55.768  INFO 5554 --- [           main] demo.games.GameApplication               : Starting GameApplication on Alberts-MBP.fritz.box with PID 5554 (build/classes/java/main started by albertattard in .)
-   2077-04-27 12:34:55.771  INFO 5554 --- [           main] demo.games.GameApplication               : No active profile set, falling back to default profiles: default
+   2077-04-27 12:34:55.768  INFO 5554 --- [           main] demo.boot.GameApplication               : Starting GameApplication on Alberts-MBP.fritz.box with PID 5554 (build/classes/java/main started by albertattard in .)
+   2077-04-27 12:34:55.771  INFO 5554 --- [           main] demo.boot.GameApplication               : No active profile set, falling back to default profiles: default
    2077-04-27 12:34:56.545  INFO 5554 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
    2077-04-27 12:34:56.556  INFO 5554 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
    2077-04-27 12:34:56.556  INFO 5554 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.35]
@@ -356,7 +356,7 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
    2077-04-27 12:34:56.629  INFO 5554 --- [           main] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 819 ms
    2077-04-27 12:34:56.752  INFO 5554 --- [           main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
    2077-04-27 12:34:56.890  INFO 5554 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
-   2077-04-27 12:34:56.898  INFO 5554 --- [           main] demo.games.GameApplication               : Started GameApplication in 1.508 seconds (JVM running for 1.838)
+   2077-04-27 12:34:56.898  INFO 5554 --- [           main] demo.boot.GameApplication               : Started GameApplication in 1.508 seconds (JVM running for 1.838)
    <=========----> 75% EXECUTING [1m 23s]
    > :bootRun
    ```
@@ -409,7 +409,7 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
 
 1. Create a test
 
-   Update the file `src/test/java/demo/games/ContactUsApplicationTests.java` from
+   Update the file `src/test/java/demo/boot/ContactUsApplicationTests.java` from
 
    ```java
    package demo.boot;
@@ -641,7 +641,7 @@ The health endpoint is implemented and tested
 
    The response does not need to be formatted as shown above.
 
-   Update the file `src/test/java/demo/games/ContactUsApplicationTests.java` and add the new test.
+   Update the file `src/test/java/demo/boot/ContactUsApplicationTests.java` and add the new test.
 
    ```java
    package demo.boot;
@@ -723,7 +723,7 @@ The health endpoint is implemented and tested
 
 1. Create the office controller
 
-   Create file: `src/main/java/demo/games/OfficeController.java`
+   Create file: `src/main/java/demo/boot/OfficeController.java`
 
    There are two options.
 

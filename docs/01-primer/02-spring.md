@@ -23,7 +23,6 @@ Released in [October 2002](https://en.wikipedia.org/wiki/Spring_Framework), [Spr
 
 Similar to Java, the word _Spring_ is overloaded and it is used to mean different things.  This can be a bit confusing.  Spring [comprise several projects](https://spring.io/projects), such as [Spring Data](https://spring.io/projects/spring-data) or [Spring Security](https://spring.io/projects/spring-security) to name just two.  [Spring Framework](https://spring.io/projects/spring-framework) is one of the first projects that itself comprise other modules, such as [Spring MVC](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html)
 
-
 ## How can we use Spring?
 
 Spring comprise several projects and each project can be used independently.  For example, we can use Spring Data independent from the other projects, including the [Spring Framework](https://spring.io/projects/spring-framework), in our application.
@@ -61,7 +60,14 @@ In summary, a Spring Bean is an object that is managed by the Spring Framework.
 
 ## What is the difference between Spring Framework and Spring Boot?
 
-The Spring Framework and [Spring Boot](https://spring.io/projects/spring-boot) are two popular projects from the many projects within the Spring ecosystem.  Spring Framework provides _Inversion of Control_, also referred to as _Dependency Injection_ amongst other things, while Spring Boot simplifies the usage and integration of various parts of an application.
+[Phillip Webb](https://spring.io/team/pwebb), [Spring Boot](https://spring.io/projects/spring-boot) co-creator, gave a very good analogy when introducing Spring Boot.  Consider the following image.
+
+![Spring Framework and Spring Boot Analogy]({{ '/assets/images/Spring-Framework-Boot-Analogy.png' | absolute_url }})
+([Reference](https://twitter.com/phillip_webb/status/641444531867680768?lang=en))
+
+The Spring Framework provides us with lots of great ingredients that we need to make a delicious cake (or Spring based application).  Spring Boot takes all these great ingredients and bakes the cake for us.  Spring Boot is very customisable, and we can change (_almost_) anything we like.  Furthermore, Spring Boot uses a set of ingredients (dependencies) that work well together.  This ensures that our cake (or Spring based application), does not taste funny.
+
+The Spring Framework and Spring Boot are two popular projects from the many projects within the Spring ecosystem.  Spring Framework provides _Inversion of Control_, also referred to as _Dependency Injection_ amongst other things, while Spring Boot simplifies the usage and integration of various parts of an application.
 
 The Spring Framework can be used together with Spring Boot or without it.  Consider the following application.
 
