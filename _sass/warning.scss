@@ -13,3 +13,19 @@
   padding-right: 1em;
   font-weight: bold;
 }
+
+.note {
+  padding: 0.2em 0.15em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  font-weight: 400;
+  background-color: $yellow-000;
+  border: $border $border-color;
+  border-radius: $border-radius;
+}
+
+.note .title {
+  padding-right: 1em;
+  font-weight: bold;
+  text-transform: uppercase;
+}

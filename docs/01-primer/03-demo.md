@@ -242,7 +242,7 @@ The application can also downloaded from [contact-us.zip]({{ '/assets/demo/01-pr
    $ mv src/main/resources/application.properties src/main/resources/application.yaml
    ```
 
-   This is a matter of preference as the application can be configured either using `.properties` or `.yaml`.
+   {% include custom/note.html details="This is a matter of preference as the application can be configured either using <code>.properties</code> or <code>.yaml</code> files alike" %}
 
    Note that the examples shown in this demo make use of `yaml`.
 
