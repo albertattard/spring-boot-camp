@@ -68,7 +68,7 @@ Successfully built 36c3897b8921
 Successfully tagged contact-us:local
 ```
 
-If we modify our application and rebuild the docker image, the first two layers are reused and only third and fourth layer recomputed as captured by the following image.
+If we modify our application and rebuild the docker image, the first two layers are reused and only the third and the fourth layers are recomputed as captured by the following image.
 
 ![Docker Repetitive Builds-Layers]({{ '/assets/images/Docker-Repetitive-Builds-Layers.png' | absolute_url }})
 
@@ -76,9 +76,9 @@ The `application.jar` FatJAR file, copied in step 3, contains our code together 
 
 ![Docker Repetitive Efficient Builds-Layers]({{ '/assets/images/Docker-Repetitive-Efficient-Builds-Layers.png' | absolute_url }})
 
-In the above fictitious example, the first three layers are reused and the fourth layer, comprising one with our code, is recomputed.  This is a relatively slim layer and thus a small change in the code, produces new smaller layers.
+In the above **fictitious** example, the first three layers are reused and the fourth and fifth layers, are recomputed.  This is a relatively slim layer and thus a small change in the code, produces new smaller layers.
 
-This approach makes efficient use of the docker layering and caching system.  While we can achieve all this manually, Spring Boot provides a Gradle task for this, names `bootBuildImage`.
+This approach makes efficient use of the docker layering and caching system.  While we can achieve all this manually, Spring Boot provides a Gradle task for this, names `bootBuildImage`.  Spring Boot leverages [Buildpacks](https://buildpacks.io/) to create an efficient docker image that does not consume unnecessary space as shown above.
 
 [Dive](https://github.com/wagoodman/dive) is a very good command line tool that helps you analyse a given docker image.
 
