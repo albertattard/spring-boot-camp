@@ -10,7 +10,7 @@ permalink: docs/primer/demo/dockerize/
 # Dockerize
 {: .no_toc }
 
-Spring Boot provides a [Gradle task `bootBuildImage`](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#build-image), that we can use to build docker images and take full advantage of the docker layers.  To appreciate the benefits of this approach, we need to dive deeper in the docker layers.
+Spring Boot provides a [Gradle task `bootBuildImage`](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#build-image), that we can use to build docker images and take full advantage of the docker layers.
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -27,7 +27,7 @@ Our application can be dockerized using the following `dockerfile`.
 ```dockerfile
 FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
 WORKDIR /opt/app
-ADD ./build/libs/*.jar ./application.jar
+COPY ./build/libs/*.jar ./application.jar
 CMD ["java", "-jar", "application.jar"]
 ```
 
@@ -37,10 +37,10 @@ The above `dockerfile` has four docker commands (lines), each of which is transl
 
 Let's build the above `dockerfile`.
 
-Make sure to build the application first as the `dockerfile` will use the FatJAR file produced by the Gradle `build` task.
+Make sure to build the application first as the `dockerfile` will use the FatJAR file produced by the Gradle `bootJar` task.
 
 ```bash
-$ ./gradlew clean build
+$ ./gradlew clean bootJar
 ```
 
 Build the docker image
@@ -58,7 +58,7 @@ Step 1/4 : FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
 Step 2/4 : WORKDIR /opt/app
  ---> Using cache
  ---> e4b34b3167d1
-Step 3/4 : ADD ./build/libs/*.jar ./application.jar
+Step 3/4 : COPY ./build/libs/*.jar ./application.jar
  ---> 15457ae20ca5
 Step 4/4 : CMD ["java", "-jar", "application.jar"]
  ---> Running in 5568e3296cfa
@@ -72,11 +72,13 @@ If we modify our application and rebuild the docker image, the first two layers 
 
 ![Docker Repetitive Builds-Layers]({{ '/assets/images/Docker-Repetitive-Builds-Layers.png' | absolute_url }})
 
-The `application.jar` FatJAR file, copied in step 3, contains our code together with all the dependencies we used.  When we change the code, like when we add new features, we do not necessary change the dependencies.  One small change in the code will cause a new, relatively big, layer to be created.  If, on the other hand, we split our FatJAR into several layers, that would help us reuse some of the previous layers as shown in the following images.
+The `application.jar` FatJAR, copied in step 3, contains our code together with all the dependencies we used (_our code + dependencies_).  When we change the application code, like when we add new features, we do not necessary change the dependencies.  One small change in the application's code will cause a new, relatively big, layer to be created.
+
+Alternatively, we can split our FatJAR into several layers, so that parts that do not change that often are separated from those part that change frequently.  That would help us reuse some of the previous layers as shown in the following images.
 
 ![Docker Repetitive Efficient Builds-Layers]({{ '/assets/images/Docker-Repetitive-Efficient-Builds-Layers.png' | absolute_url }})
 
-In the above **fictitious** example, the first three layers are reused and the fourth and fifth layers, are recomputed.  This is a relatively slim layer and thus a small change in the code, produces new smaller layers.
+In the above **fictitious** example, the first three layers are reused and the fourth and fifth layers, are recomputed.  Note that once a layer is modified, all the subsequent layers need to be recomputed.  The fourth later, where our application code is, is a relatively slim layer and thus a small change in the application code, produces a new small layer.
 
 This approach makes efficient use of the docker layering and caching system.  While we can achieve all this manually, Spring Boot provides a Gradle task for this, names `bootBuildImage`.  Spring Boot leverages [Buildpacks](https://buildpacks.io/) to create an efficient docker image that does not consume unnecessary space as shown above.
 
@@ -107,51 +109,7 @@ Spring Boot provides the Gradle `bootBuildImage` task and we can create our dock
              \--- :processResources
    ```
 
-   Instead, we can used the `check` task
-
-   ```bash
-   $ ./gradlew check taskTree
-   ```
-
-   The `check` task depends on both `test` and `integrationTest` as shown next.
-
-   ```bash
-   :check
-   +--- :integrationTest
-   |    +--- :classes
-   |    |    +--- :compileJava
-   |    |    \--- :processResources
-   |    +--- :integrationTestClasses
-   |    |    +--- :compileIntegrationTestJava
-   |    |    |    +--- :classes
-   |    |    |    |    +--- :compileJava
-   |    |    |    |    \--- :processResources
-   |    |    |    \--- :testClasses
-   |    |    |         +--- :compileTestJava
-   |    |    |         |    \--- :classes
-   |    |    |         |         +--- :compileJava
-   |    |    |         |         \--- :processResources
-   |    |    |         \--- :processTestResources
-   |    |    \--- :processIntegrationTestResources
-   |    \--- :testClasses
-   |         +--- :compileTestJava
-   |         |    \--- :classes
-   |         |         +--- :compileJava
-   |         |         \--- :processResources
-   |         \--- :processTestResources
-   \--- :test
-        +--- :classes
-        |    +--- :compileJava
-        |    \--- :processResources
-        \--- :testClasses
-             +--- :compileTestJava
-             |    \--- :classes
-             |         +--- :compileJava
-             |         \--- :processResources
-             \--- :processTestResources
-   ```
-
-   Run the tests
+   Instead, we can use the `check` task as the `check` task depends on the tests.  Run the tests.
 
    ```bash
    $ ./gradlew clean check
@@ -161,13 +119,13 @@ Spring Boot provides the Gradle `bootBuildImage` task and we can create our dock
    7 actionable tasks: 7 executed
    ```
 
-1. Build the image using the Gradle `bootBuildImage`
+1. Build the image using the Gradle `bootBuildImage` task
 
    ```bash
    $ ./gradlew bootBuildImage --imageName=contact-us:local
    ```
 
-   The first time we build the image may take up to two minutes, but subsequent runs are much faster.
+   The first time we build the image may take a couple of minutes, but subsequent runs are much faster.
 
    ```bash
    ...
@@ -181,11 +139,13 @@ Spring Boot provides the Gradle `bootBuildImage` task and we can create our dock
    4 actionable tasks: 2 executed, 2 up-to-date
    ```
 
-1. Run the image
+1. (_Optionally_) Run the image
 
    ```bash
-   $ docker run -p 8080:8080 -it contact-us:local
+   $ docker run -it --network host contact-us:local
    ```
+
+   {% include custom/note.html details="Note that this time we are not publishing ports as we are using the host network (<code>--network host</code>)" %}
 
    The docker container should start
 
@@ -209,10 +169,10 @@ Spring Boot provides the Gradle `bootBuildImage` task and we can create our dock
    2077-04-27 12:34:58.219  INFO 1 --- [           main] demo.boot.ContactUsApplication           : Started ContactUsApplication in 4.238 seconds (JVM running for 5.127)
    ```
 
-1. Access the application
+1. (_Optionally_) Access the application
 
    ```bash
-   $ curl http://localhost:8080/offices
+   $ curl "http://localhost:8080/offices"
    ```
 
    You should get the contact details of the Cologne office
@@ -221,11 +181,173 @@ Spring Boot provides the Gradle `bootBuildImage` task and we can create our dock
    [{"office":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
    ```
 
-That's it!!
+1. (_Optionally_) Analyse the created docker image
 
-## Dockersize application using `dockerfile` (_not recommended approach_)
+   ```bash
+   $ dive contact-us:local
+   ```
 
-{% include custom/note.html details="The approach described in the <a href='#dockersize-application-using-gradle-bootbuildimage-task-recommended-approach'>previous part</a> makes better use of the docker layer and caching system, as described <a href='#what-is-a-docker-layer'>described before</a>" %}
+   The following image shows the layers of the image `contact-us:local`
+
+   ![Dive - Contact Us using Buildpacks]({{ '/assets/images/Dive-Contact-Us-Buildpacks.png' | absolute_url }})
+
+   Our application's code is added to the end.  This enables reuse of the upper layers when our application changes.
+
+   The layer containing the application code is 20KB in size, which is relatively small.  This makes efficient use of docker's layering as following changes will reuse the previous layers and add another 20KB.
+
+##  Dockersize application using layered JAR (_alternative approach_)
+
+We can take advantage of [layered JAR](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#packaging-layered-jars) to create an efficient docker image that makes best us of space.  This achieves similar results as those shown in the [previous part](#dockersize-application-using-gradle-bootbuildimage-task-recommended-approach), using layered JAR approach instead of Buildpacks.
+
+1. Create a layered JAR
+
+   Update file: `build.gradle`
+
+   ```groovy
+   bootJar {
+     layered()
+   }
+   ```
+
+   The following four layers are defined, by default
+
+   1. `dependencies`: containing the dependency, whose version **does not** contain `SNAPSHOT`
+   1. `spring-boot-loader`: containing the jar loader classes
+   1. `snapshot-dependencies`: containing the snapshot dependency, whose version contains `SNAPSHOT`.
+   1. `application`: containing the application classes and resources
+
+   It is important that the layers that are less likely to change are first and those that are most likely to change are last as this will make best use of caching.
+
+   When creating a layered JAR, the [`spring-boot-jarmode-layertools`](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-jarmode-layertools) JAR file is added as a dependency.  The _layertools_ JAR enables the application to run in a special mode, which allows the bootstrap code to run something entirely different from the application.
+
+   ```bash
+   $ java -Djarmode=layertools -jar build/libs/contact-us.jar
+   ```
+
+   The _layertools_ has three options as shown next
+
+   ```bash
+   Usage:
+     java -Djarmode=layertools -jar contact-us.jar
+
+   Available commands:
+     list     List layers from the jar that can be extracted
+     extract  Extracts layers from the jar for image creation
+     help     Help about any command
+   ```
+
+   To list the layers that our layered JAR has, use the `list` option, as shown next.
+
+   ```bash
+   $ java -Djarmode=layertools -jar build/libs/contact-us.jar list
+   dependencies
+   spring-boot-loader
+   snapshot-dependencies
+   application
+   ```
+
+   The layered JAR will have these four layers.  We can extract the layered JAR using the `extract` option.
+
+
+1. Run the tests
+
+   ```bash
+   $ ./gradlew clean check
+
+   ...
+   BUILD SUCCESSFUL in 14s
+   7 actionable tasks: 7 executed
+   ```
+
+   {% include custom/note.html details="Note that the <code>bootJar</code> Gradle task does not depend on the tests tasks and thus may build a JAR that fails the tests" %}
+
+1. Build the application
+
+   {% include custom/note.html details="Make sure to build the JAR file after the layered JAR configuration described in the previous step" %}
+
+   ```bash
+   $ ./gradlew clean bootJar
+   ```
+
+   The following steps depend on the JAR file created by the `bootJar` task.
+
+1. Create multistage `dockerfile`
+
+   Create file: `dockerfile`
+
+   ```dockerfile
+   FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine as builder
+   WORKDIR /opt/app
+   COPY ./build/libs/*.jar application.jar
+   RUN java -Djarmode=layertools -jar application.jar extract
+
+   FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
+   WORKDIR /opt/app
+   COPY --from=builder /opt/app/dependencies ./
+   COPY --from=builder /opt/app/spring-boot-loader ./
+   COPY --from=builder /opt/app/snapshot-dependencies ./
+   COPY --from=builder /opt/app/application ./
+   ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+   ```
+
+   The multistage `dockerfile` shown above is using the _layertools_ to extract the layered JAR produced in the previous step, into its four layers and then copying each layer.
+
+   ```dockerfile
+   COPY --from=builder /opt/app/dependencies ./
+   COPY --from=builder /opt/app/spring-boot-loader ./
+   COPY --from=builder /opt/app/snapshot-dependencies ./
+   COPY --from=builder /opt/app/application ./
+   ```
+
+   Spring Boot can be started using the [`JarLauncher`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/loader/JarLauncher.html), instead of the traditional `java -jar application.jar`
+
+   ```dockerfile
+   ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+   ```
+
+1. Build the docker image
+
+   ```bash
+   $ docker build . -t contact-us:local
+   ```
+
+1. (_Optionally_) Run the docker image
+
+   ```bash
+   $ docker run -it --network host contact-us:local
+   ```
+
+   {% include custom/note.html details="Note that this time we are not publishing ports as we are using the host network (<code>--network host</code>)" %}
+
+1. (_Optionally_) Access the application
+
+   ```bash
+   $ curl "http://localhost:8080/offices"
+   ```
+
+   You should get the contact details of the Cologne office
+
+   ```json
+   [{"office":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
+   ```
+
+1. (_Optionally_) Analyse the layered JAR docker image
+
+   ```bash
+   $ dive contact-us:local
+   ```
+
+   This docker image has less layers when compared with the one generated by the Gradle `bootBuildImage` task.
+
+   ![Dive - Contact Us Layered]({{ '/assets/images/Dive-Contact-Us-Layered-JAR.png' | absolute_url }})
+
+    The layer containing the application code is 20KB in size, which is relatively small.  This makes efficient use of docker's layering as following changes will reuse the previous layers and add another 20KB.
+
+## Dockersize application using FatJAR (_less recommended approach_)
+
+{% include custom/note.html details="The approaches described before, using <a href='#dockersize-application-using-gradle-bootbuildimage-task-recommended-approach'>Buildpacks</a> and using <a href='#dockersize-application-using-layered-jar-alternative-approach'>layered JAR</a>, make better use of the docker layering and caching system, as described <a href='#what-is-a-docker-layer'>described before</a> and should be preferred over this approach." %}
+
+The following example is only shown for completeness and you should only use this approach if the previous two approaches are not possible.
 
 1. Our application requires Java 14.  We can use the [OpenJDK 14 docker image](https://hub.docker.com/r/adoptopenjdk/openjdk14).
 
@@ -265,11 +387,13 @@ That's it!!
    Successfully tagged contact-us:local
    ```
 
-1. Run the docker image
+1. (_Optionally_) Run the image
 
    ```bash
-   $ docker run -p 8080:8080 -it contact-us:local
+   $ docker run -it --network host contact-us:local
    ```
+
+   {% include custom/note.html details="Note that this time we are not publishing ports as we are using the host network (<code>--network host</code>)" %}
 
    The docker container should start
 
@@ -293,10 +417,10 @@ That's it!!
    2077-04-27 12:34:58.219  INFO 1 --- [           main] demo.boot.ContactUsApplication           : Started ContactUsApplication in 4.238 seconds (JVM running for 5.127)
    ```
 
-1. Access the application
+1. (_Optionally_) Access the application
 
    ```bash
-   $ curl http://localhost:8080/offices
+   $ curl "http://localhost:8080/offices"
    ```
 
    You should get the contact details of the Cologne office
@@ -304,6 +428,16 @@ That's it!!
    ```json
    [{"office":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
    ```
+
+1. (_Optionally_) Analyse the FatJAR docker image
+
+   ```bash
+   $ dive contact-us:local
+   ```
+
+   The application's layer is 44MB in size, which is quite large when compared with the 20KB when using the other approaches.
+
+   ![Dive - Contact Us FatJAR]({{ '/assets/images/Dive-Contact-Us-FatJAR.png' | absolute_url }})
 
 ## Tasks status
 
