@@ -92,6 +92,75 @@ Spring Boot provides the Gradle `bootBuildImage` task and we can create our dock
 
 {% include custom/note.html details="The <code>bootBuildImage</code> Gradle task does not make use of a <code>dockerfile</code>, thus one is not required" %}
 
+1. Run all tests
+
+   The `bootBuildImage` does not run the tests, as this only depends on `bootJar`, which in turn depends on the `classes` task as shown next.
+
+   ```bash
+   $ ./gradlew bootBuildImage taskTree
+
+   ...
+   :bootBuildImage
+   \--- :bootJar
+        \--- :classes
+             +--- :compileJava
+             \--- :processResources
+   ```
+
+   Instead, we can used the `check` task
+
+   ```bash
+   $ ./gradlew check taskTree
+   ```
+
+   The `check` task depends on both `test` and `integrationTest` as shown next.
+
+   ```bash
+   :check
+   +--- :integrationTest
+   |    +--- :classes
+   |    |    +--- :compileJava
+   |    |    \--- :processResources
+   |    +--- :integrationTestClasses
+   |    |    +--- :compileIntegrationTestJava
+   |    |    |    +--- :classes
+   |    |    |    |    +--- :compileJava
+   |    |    |    |    \--- :processResources
+   |    |    |    \--- :testClasses
+   |    |    |         +--- :compileTestJava
+   |    |    |         |    \--- :classes
+   |    |    |         |         +--- :compileJava
+   |    |    |         |         \--- :processResources
+   |    |    |         \--- :processTestResources
+   |    |    \--- :processIntegrationTestResources
+   |    \--- :testClasses
+   |         +--- :compileTestJava
+   |         |    \--- :classes
+   |         |         +--- :compileJava
+   |         |         \--- :processResources
+   |         \--- :processTestResources
+   \--- :test
+        +--- :classes
+        |    +--- :compileJava
+        |    \--- :processResources
+        \--- :testClasses
+             +--- :compileTestJava
+             |    \--- :classes
+             |         +--- :compileJava
+             |         \--- :processResources
+             \--- :processTestResources
+   ```
+
+   Run the tests
+
+   ```bash
+   $ ./gradlew clean check
+
+   ...
+   BUILD SUCCESSFUL in 14s
+   7 actionable tasks: 7 executed
+   ```
+
 1. Build the image using the Gradle `bootBuildImage`
 
    ```bash
