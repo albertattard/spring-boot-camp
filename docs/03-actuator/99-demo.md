@@ -9,6 +9,8 @@ permalink: docs/actuator/demo/
 # Spring Boot Actuator
 {: .no_toc }
 
+[Spring Boot Actuator](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html) is a sub-project of the [Spring Boot](https://spring.io/projects/spring-boot) project.  It includes a number of additional features that help us monitor and manage our application using HTTP and JMX endpoints.
+
 ## Table of contents
 {: .no_toc .text-delta }
 
@@ -18,6 +20,8 @@ permalink: docs/actuator/demo/
 ---
 
 ## jq
+
+https://stedolan.github.io/jq/
 
 ```bash
 $ curl "https://samples.openweathermap.org/data/2.5/weather?lat=35&lon=139&appid=439d4b804bc8187953eb36d2a8c26a02"
@@ -76,7 +80,6 @@ $ curl "https://samples.openweathermap.org/data/2.5/weather?lat=35&lon=139&appid
 ```
 
 ## health
-
 
 ```bash
 $ curl "http://localhost:8080/health" | jq .
@@ -453,7 +456,7 @@ scrape_configs:
 ```yaml
   prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
+    container_name: ${DATABASE_NAME}-prometheus
     ports:
       - 9090:9090
     env_file:
@@ -466,4 +469,10 @@ scrape_configs:
 
 
 http://localhost:9090/targets
+
+![Prometheus Targets]({{ '/assets/images/Prometheus-Targets.png' | absolute_url }})
+
+HTTP Requests
+
+![Prometheus Graph]({{ '/assets/images/Prometheus-Graph.png' | absolute_url }})
 
