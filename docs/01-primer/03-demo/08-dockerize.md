@@ -10,7 +10,7 @@ permalink: docs/primer/demo/dockerize/
 # Dockerize
 {: .no_toc }
 
-Spring Boot provides a [Gradle task `bootBuildImage`](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#build-image), that we can use to build docker images and take full advantage of the docker layers.
+Spring Boot provides an efficient approach to dockerize an application that takes full advantage of the docker layers.
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -241,7 +241,7 @@ We can take advantage of [layered JAR](https://docs.spring.io/spring-boot/docs/c
 
 ## Dockersize application using Gradle `bootBuildImage` task (_less recommended approach_)
 
-Spring Boot provides the Gradle `bootBuildImage` task and we can create our docker image using this task.  This task makes use of [Buildpacks](https://buildpacks.io/) to create layered image.
+Spring Boot provides [the Gradle `bootBuildImage` task](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/html/#build-image) and we can create our docker image using this task.  This task makes use of [Buildpacks](https://buildpacks.io/) to create layered image.
 
 {% include custom/note.html details="The <code>bootBuildImage</code> Gradle task does not make use of a <code>dockerfile</code>, thus one is not required" %}
 
