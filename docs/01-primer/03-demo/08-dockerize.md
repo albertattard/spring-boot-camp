@@ -219,7 +219,7 @@ We can take advantage of [layered JAR](https://docs.spring.io/spring-boot/docs/c
 
    ![Dive - Contact Us Layered]({{ '/assets/images/Dive-Contact-Us-Layered-JAR.png' | absolute_url }})
 
-   This makes efficient use of docker's layering as following changes will reuse the previous layers and add another 20KB.  20 deployments per day will consume 1.2MB per week instead of 2GB.
+   This makes efficient use of docker's layering as new changes in the application code will reuse the previous layers and add another 20KB.  20 deployments per day will consume 1.2MB per week instead of 2GB.
 
 1. (_Optionally_) Run the docker image
 
