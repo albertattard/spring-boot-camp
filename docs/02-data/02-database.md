@@ -158,3 +158,128 @@ While we can achieve the same thing with both libraries, we will opt for Flyway 
 Spring Boot will run [Flyway migration](https://flywaydb.org/documentation/command/migrate) before it makes the database connection available to the rest of application.  This ensures that the database is prepared before the application makes use of it.
 
 {% include custom/note.html details="Our program is not yet making use of the database and thus flyway will not run the migration scripts." %}
+
+### (_Optional_) Testing Flyway migration scripts
+
+Flyway is rarely tested individually, as this is usually tested as part of a feature.  We will be saving the offices information in a database.  When implementing this feature, our tests can ensure that the respective migration scripts ran successfully as otherwise our queries will fail.
+
+Nevertheless, we can have a general test that ensures that the migration have run successfully.
+
+1. Make the `org.flywaydb:flyway-core` dependency available to the `testImplementation`
+
+   Update file: `build.gradle`
+
+   ```groovy
+   dependencies {
+     /* Data */
+     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+     runtimeOnly 'org.flywaydb:flyway-core'
+     runtimeOnly 'com.h2database:h2'
+
+     /* We need this to verify that Flyway migrated all scripts without any errors */
+     testImplementation 'org.flywaydb:flyway-core'
+   }
+   ```
+
+1. Create a generic `FlywayMigrationTest`
+
+   Create file: `src/test/java/demo/boot/FlywayMigrationTest.java`
+
+   ```java
+   package demo.boot;
+
+   import org.flywaydb.core.Flyway;
+   import org.flywaydb.core.api.MigrationInfo;
+   import org.flywaydb.core.api.MigrationState;
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
+
+   import static org.assertj.core.api.Assertions.assertThat;
+
+   @DataJdbcTest
+   @DisplayName( "Flyway migration" )
+   public class FlywayMigrationTest {
+
+     @Autowired
+     private Flyway flyway;
+
+     @Test
+     @DisplayName( "verify that all migrations were executed and all of them succeeded" )
+     public void verifyAllMigrations() {
+       /* In the test we simply verify that all migrations were executed and all of them succeeded. */
+       final MigrationInfo[] migrations = flyway.info().all();
+
+       /* This needs to be updated to the number of expected migrations */
+       final int expectedNumberOfScripts = 2;
+       assertThat( migrations.length )
+         .describedAs( "number of migrations found" )
+         .isEqualTo( expectedNumberOfScripts );
+
+       for ( final MigrationInfo migration : migrations ) {
+         assertThat( migration.getState() )
+           .describedAs( "script %s", migration.getScript() )
+           .isEqualTo( MigrationState.SUCCESS );
+       }
+     }
+   }
+   ```
+
+   1. Take advantage from [Spring Boot Test](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-testing)
+
+       ```java
+       @DataJdbcTest
+       ```
+
+      The [`@DataJdbcTest`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/data/jdbc/DataJdbcTest.html) prepares our test and provides us with an instance of [`Flyway`](https://flywaydb.org/documentation/api/javadoc/org/flywaydb/core/Flyway).
+
+      {% include custom/note.html details="Our test depends on the database being ready.  Spring Boot will first run the flyway migration and then will run our tests." %}
+
+   1. Retrieve all migrations
+
+      ```java
+          /* In the test we simply verify that all migrations were executed and all of them succeeded. */
+          final MigrationInfo[] migrations = flyway.info().all();
+      ```
+
+   1. Make sure that the correct number of migrations are found
+
+      ```java
+          /* This needs to be updated to the number of expected migrations */
+          final int expectedNumberOfScripts = 2;
+          assertThat( migrations.length )
+            .describedAs( "number of migrations found" )
+            .isEqualTo( expectedNumberOfScripts );
+      ```
+
+      {% include custom/note.html details="The variable <code>expectedNumberOfScripts</code> need to be updated when new migration scripts are added." %}
+
+   1. Verify that migrations have been successfully executed
+
+      ```java
+          for ( final MigrationInfo migration : migrations ) {
+            assertThat( migration.getState() )
+              .describedAs( "script %s", migration.getScript() )
+              .isEqualTo( MigrationState.SUCCESS );
+          }
+      ```
+
+1. Run the tests
+
+   ```bash
+   $./gradlew clean test
+   ```
+
+   All tests should pass, including the Flyway test, as shown next
+
+   ```bash
+   ...
+
+   Flyway migration > verify that all migrations were executed and all of them succeeded PASSED
+
+   ...
+
+   BUILD SUCCESSFUL in 10s
+   6 actionable tasks: 6 executed
+   ```
