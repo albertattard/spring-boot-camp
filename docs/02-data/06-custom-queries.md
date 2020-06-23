@@ -172,7 +172,7 @@ Note that while we are not adding any actual code, the method name has logic bou
 
       An [`EntityManager`](https://docs.oracle.com/javaee/7/api/javax/persistence/EntityManager.html) is responsible for the lifecycle of entities.  Our application is using an instance of `EntityManager` under the hood, to read data from the `offices` table.  The repositories interact with an instance of the `EntityManager` which is conveniently setup and configured by [Spring Boot](https://spring.io/projects/spring-boot).  The `EntityManager` is used within this test to be able to empty the table and add new offices to prepare the test data for our tests.
 
-   We can interact with the database directly using SQL, but that may produce unexpected results.  The `EntityManager` may cache data and when the database is modified outside of the `EntityManager`, the repository may be dealing stale data.
+      We can interact with the database directly using SQL, but that may produce unexpected results.  The `EntityManager` may cache data and when the database is modified outside of the `EntityManager`, the repository may be dealing stale data.
 
    1. Setup the data
 

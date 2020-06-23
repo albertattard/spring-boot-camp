@@ -195,11 +195,13 @@ Nevertheless, we can have a general test that ensures that the migration have ru
    import org.junit.jupiter.api.Test;
    import org.springframework.beans.factory.annotation.Autowired;
    import org.springframework.boot.test.autoconfigure.data.jdbc.DataJdbcTest;
+   import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 
    import static org.assertj.core.api.Assertions.assertThat;
 
    @DataJdbcTest
    @DisplayName( "Flyway migration" )
+   @AutoConfigureTestDatabase( replace = AutoConfigureTestDatabase.Replace.NONE )
    public class FlywayMigrationTest {
 
      @Autowired
@@ -230,9 +232,12 @@ Nevertheless, we can have a general test that ensures that the migration have ru
 
        ```java
        @DataJdbcTest
+       @AutoConfigureTestDatabase( replace = AutoConfigureTestDatabase.Replace.NONE )
        ```
 
-      The [`@DataJdbcTest`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/data/jdbc/DataJdbcTest.html) prepares our test and provides us with an instance of [`Flyway`](https://flywaydb.org/documentation/api/javadoc/org/flywaydb/core/Flyway).
+      These two annotations prepare our application ass required by the test.  Usually we can do with just the [`@DataJpaTest`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/orm/jpa/DataJpaTest.html) annotation, but given that we do not want to swap the actual database with an embedded one, we need to fine tune our test.
+
+      Using the `@AutoConfigureTestDatabase` annotation we can customise the test setup and use the production database, by setting the [`replace`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/jdbc/AutoConfigureTestDatabase.html#replace--) parameter to [`AutoConfigureTestDatabase.Replace.NONE`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/jdbc/AutoConfigureTestDatabase.Replace.html#NONE).
 
       {% include custom/note.html details="Our test depends on the database being ready.  Spring Boot will first run the flyway migration and then will run our tests." %}
 
