@@ -426,7 +426,7 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
 
    All tests should pass.
 
-1. (_Optionally_) Refactor
+1. (_Optional_) Refactor
 
    We have some code repetition that can be moved to one place.  **The amount of repetition is not that much, and it is perfect to leave things as they are**.  The code is refactored just to show an alternative approach.
 

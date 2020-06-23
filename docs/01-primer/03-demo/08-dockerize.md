@@ -49,32 +49,131 @@ Build the docker image
 $ docker build . -t contact-us:local
 ```
 
-Each layer is represented with a _layer id_.  For example, the layer id for step 1 is `4b6ab0f52b1b`.
+Each layer is represented with a _layer id_.  For example, the layer id for step 1 is `d873c8fea8bd`.
 
 ```bash
-Sending build context to Docker daemon  24.25MB
+Sending build context to Docker daemon  24.22MB
 Step 1/4 : FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
- ---> 4b6ab0f52b1b
+jre-14.0.1_7-alpine: Pulling from adoptopenjdk/openjdk14
+df20fa9351a1: Pull complete
+519cb7a36d12: Pull complete
+8e7ea6d57839: Pull complete
+Digest: sha256:adb1a9135f33d5a82f2be01e8da3bf7b6300b884162f1036a419f885baafeb25
+Status: Downloaded newer image for adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
+ ---> d873c8fea8bd
 Step 2/4 : WORKDIR /opt/app
- ---> Using cache
- ---> 625114fe4e40
-Step 3/4 : ADD ./build/libs/*.jar ./application.jar
- ---> c9f365565171
+ ---> Running in 17301002974d
+Removing intermediate container 17301002974d
+ ---> 24d382537622
+Step 3/4 : COPY ./build/libs/*.jar ./application.jar
+ ---> 6331681c6d0e
 Step 4/4 : CMD ["java", "-jar", "application.jar"]
- ---> Running in 32a880759172
-Removing intermediate container 32a880759172
- ---> 68914dbaa5f9
-Successfully built 68914dbaa5f9
+ ---> Running in 31eaea7bfd34
+Removing intermediate container 31eaea7bfd34
+ ---> bc85de35701a
+Successfully built bc85de35701a
 Successfully tagged contact-us:local
 ```
 
-If we modify our application and rebuild the docker image, the first two layers are reused and only the third and the fourth layers are recomputed as captured by the following image.
+These layers are saved and can be viewed using the `history` command, shown next
+
+```bash
+$ docker history contact-us:local
+```
+
+The history command will list all layers for the given image.
+
+```bash
+
+IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
+bc85de35701a        20 seconds ago      /bin/sh -c #(nop)  CMD ["java" "-jar" "appli…   0B
+6331681c6d0e        20 seconds ago      /bin/sh -c #(nop) COPY file:9a8d1169bd3e092b…   23.3MB
+24d382537622        20 seconds ago      /bin/sh -c #(nop) WORKDIR /opt/app              0B
+d873c8fea8bd        2 weeks ago         /bin/sh -c #(nop)  ENV JAVA_HOME=/opt/java/o…   0B
+<missing>           2 weeks ago         /bin/sh -c set -eux;     apk add --no-cache …   168MB
+<missing>           2 weeks ago         /bin/sh -c #(nop)  ENV JAVA_VERSION=jdk-14.0…   0B
+<missing>           2 weeks ago         /bin/sh -c apk add --no-cache --virtual .bui…   14MB
+<missing>           2 weeks ago         /bin/sh -c #(nop)  ENV LANG=en_US.UTF-8 LANG…   0B
+<missing>           3 weeks ago         /bin/sh -c #(nop)  CMD ["/bin/sh"]              0B
+<missing>           3 weeks ago         /bin/sh -c #(nop) ADD file:c92c248239f8c7b9b…   5.57MB
+```
+
+Note that the layers (also referred to as _intermediate images_) id shown in the history match those shown in during the build process, in reverse order.  The last layer build is shown at the top of the history (`bc85de35701a`).  The layers are reused as much as possible.  Building the image without changing anything will reuse the exiting layers, a shown next.
+
+```bash
+$ docker build . -t contact-us:local
+Sending build context to Docker daemon  24.22MB
+Step 1/4 : FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
+ ---> d873c8fea8bd
+Step 2/4 : WORKDIR /opt/app
+ ---> Using cache
+ ---> 24d382537622
+Step 3/4 : COPY ./build/libs/*.jar ./application.jar
+ ---> Using cache
+ ---> 6331681c6d0e
+Step 4/4 : CMD ["java", "-jar", "application.jar"]
+ ---> Using cache
+ ---> bc85de35701a
+Successfully built bc85de35701a
+Successfully tagged contact-us:local
+```
+
+If we rebuild our application (even without changing the code) and then build the docker image, the first two layers are reused and the third and the fourth layers are recomputed as captured by the following image.
 
 ![Docker Repetitive Builds-Layers]({{ '/assets/images/Docker-Repetitive-Builds-Layers.png' | absolute_url }})
 
+We can also see this in practice.
+
+1. Rebuild the FatJAR
+
+   {% include custom/note.html details="We simply rebuild the FatJAR without changing the code." %}
+
+   ```bash
+   $ ./gradlew clean bootJar
+   ```
+
+1. Build the docker image
+
+   ```bash
+   $ docker build . -t contact-us:local
+   Sending build context to Docker daemon  24.22MB
+   Step 1/4 : FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
+    ---> d873c8fea8bd
+   Step 2/4 : WORKDIR /opt/app
+    ---> Using cache
+    ---> 24d382537622
+   Step 3/4 : COPY ./build/libs/*.jar ./application.jar
+    ---> 89cc0cbe9955
+   Step 4/4 : CMD ["java", "-jar", "application.jar"]
+    ---> Running in 086b0ec3c794
+   Removing intermediate container 086b0ec3c794
+    ---> e153943ea402
+   Successfully built e153943ea402
+   Successfully tagged contact-us:local
+   ```
+
+   The layer ids for the first two layers are the same as before, `d873c8fea8bd` and `24d382537622` respectively, but the following layers are new.  We can see this in the history command too.
+
+   ```bash
+   docker history contact-us:local
+   IMAGE               CREATED              CREATED BY                                      SIZE                COMMENT
+   e153943ea402        About a minute ago   /bin/sh -c #(nop)  CMD ["java" "-jar" "appli…   0B
+   89cc0cbe9955        About a minute ago   /bin/sh -c #(nop) COPY file:0491a5cc99519740…   23.3MB
+   24d382537622        9 minutes ago        /bin/sh -c #(nop) WORKDIR /opt/app              0B
+   d873c8fea8bd        2 weeks ago          /bin/sh -c #(nop)  ENV JAVA_HOME=/opt/java/o…   0B
+   <missing>           2 weeks ago          /bin/sh -c set -eux;     apk add --no-cache …   168MB
+   <missing>           2 weeks ago          /bin/sh -c #(nop)  ENV JAVA_VERSION=jdk-14.0…   0B
+   <missing>           2 weeks ago          /bin/sh -c apk add --no-cache --virtual .bui…   14MB
+   <missing>           2 weeks ago          /bin/sh -c #(nop)  ENV LANG=en_US.UTF-8 LANG…   0B
+   <missing>           3 weeks ago          /bin/sh -c #(nop)  CMD ["/bin/sh"]              0B
+   <missing>           3 weeks ago          /bin/sh -c #(nop) ADD file:c92c248239f8c7b9b…   5.57MB
+   ```
+
+   Only the last two layers where updated.  The first two layers were reused.
+
 The `application.jar` FatJAR, copied in step 3, contains our code together with all the dependencies we used (_our code + dependencies_).  When we change the application code, like when we add new features, we do not necessary change the dependencies.  One small change in the application's code will cause a new, relatively big, layer to be created.
 
-We can analyse the docker image created using [Dive](https://github.com/wagoodman/dive). Dive is a very good command line tool that helps you analyse a given docker image.
+We can also analyse the docker image created using [Dive](https://github.com/wagoodman/dive). Dive is a very good command line tool that helps you analyse a given docker image.
 
 ```bash
 $ dive contact-us:local
@@ -93,6 +192,19 @@ Alternatively, we can split our FatJAR into several layers, so that parts that d
 In the above **fictitious** example, the first three layers are reused and the fourth and fifth layers, are recomputed.  Note that once a layer is modified, all the subsequent layers need to be recomputed.  The fourth layer, where our application code is, is a relatively slim layer and thus a small change in the application code, produces a new small layer.
 
 This approach makes efficient use of the docker layering and caching system.
+
+## What's the difference between `CMD`, `RUN` and `ENTRYPOINT`?
+
+These three docker commands provide different functionality.
+
+1. [`RUN`](https://docs.docker.com/engine/reference/builder/#run): executes one or more commands in a new layer and creates a new image.  This is ideal for installing any missing software packages.
+1. [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd): used to sets the default command to be executed when the docker container starts.  This can be overwritten from command line when docker container runs.
+1. [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint): created an executable docker container.
+
+The RUN docker command is unique and serves a unique purpose.
+
+The CMD and ENTRYPOINT can be used to run a command once the docker container starts.
+Unless you need to interact with the docker image by providing different parameters, prefer the `ENTRYPOINT` over the `CMD` approach.
 
 ##  Dockersize application using layered JAR (_recommended approach_)
 
@@ -197,6 +309,8 @@ We can take advantage of [layered JAR](https://docs.spring.io/spring-boot/docs/c
    COPY --from=builder /opt/app/application ./
    ```
 
+   **The order in which these are copied is very important**.  The layers that tend to modify more frequently, such as our application, should come after the layers that do not tend to update.
+
    Spring Boot can be started using the [`JarLauncher`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/loader/JarLauncher.html), instead of the traditional `java -jar application.jar`
 
    ```dockerfile
@@ -221,13 +335,13 @@ We can take advantage of [layered JAR](https://docs.spring.io/spring-boot/docs/c
 
    This makes efficient use of docker's layering as new changes in the application code will reuse the previous layers and add another 20KB.  20 deployments per day will consume 1.2MB per week instead of 2GB.
 
-1. (_Optionally_) Run the docker image
+1. (_Optional_) Run the docker image
 
    ```bash
    $ docker run -it -p 8080:8080 contact-us:local
    ```
 
-1. (_Optionally_) Access the application
+1. (_Optional_) Access the application
 
    ```bash
    $ curl "http://localhost:8080/offices"

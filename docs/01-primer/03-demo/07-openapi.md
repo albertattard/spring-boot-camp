@@ -22,6 +22,8 @@ permalink: docs/primer/demo/openapi/
 
 1. Add that [OpenApi dependency](https://github.com/springdoc/springdoc-openapi) dependency
 
+   Update file: `build.gradle`
+
    ```groovy
    dependencies {
     /* OpenApi/Swagger */
@@ -29,7 +31,9 @@ permalink: docs/primer/demo/openapi/
    }
    ```
 
-1. Start the application (_if not already started_)
+1. Start the application
+
+   {% include custom/note.html details="Note that you need to restart it if this was already running" %}
 
    ```bash
    $ ./gradlew bootRun

@@ -167,7 +167,7 @@ permalink: docs/primer/demo/configure/
    }
    ```
 
-1. (_Optionally_) include the [task-tree plugin](https://plugins.gradle.org/plugin/com.dorongold.task-tree)
+1. (_Optional_) include the [task-tree plugin](https://plugins.gradle.org/plugin/com.dorongold.task-tree)
 
    Update file: `build.gradle`
 
