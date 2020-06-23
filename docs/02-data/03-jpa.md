@@ -204,7 +204,9 @@ JPA entities are rarely tested individually as these are usually tested together
         }
       ```
 
-      Empty the table first and adds two offices.  This makes sure that the table will only have two offices for the duration of the tests.  Note that these changes are rolled back at the end of the test.
+      Empty the table first and adds two offices.  This makes sure that the table will only have two offices for the duration of the tests.
+
+      {% include custom/note.html details="These changes are rolled back at the end of the test." %}
 
    1. Query the repository
 

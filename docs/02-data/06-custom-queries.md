@@ -185,7 +185,9 @@ Note that while we are not adding any actual code, the method name has logic bou
         }
       ```
 
-      Empty the table first and adds two offices.  This makes sure that the table will only have two offices for the duration of the tests.  Note that these changes are rolled back at the end of the test.
+      Empty the table first and adds two offices.  This makes sure that the table will only have two offices for the duration of the tests.
+
+      {% include custom/note.html details="These changes are rolled back at the end of the test." %}
 
    1. Query the repository
 
