@@ -86,7 +86,11 @@ The `OfficeEntity` class uses [Lombok](https://projectlombok.org/) to generate t
 
 ### (_Optional_) How can we test the JPA entities?
 
-JPA entities are rarely tested individually as these are usually tested together with the [repository](#jpa-repository) as part of the feature.  Nevertheless, we can write a simple test to ensure that the entity is properly configured.
+JPA entities are rarely tested individually as these are usually tested together with the [repository](#jpa-repository) as part of the feature.  My preferred approach is to test the entities together with the repository as these two are tightly coupled.
+
+{% include custom/note.html details="Do not implement this test if you are " %}
+
+Nevertheless, we can write a simple test to ensure that the entity is properly configured.
 
 1. Add a test class that selects from the database
 
@@ -298,7 +302,149 @@ In the following examples, we will use the [`findAll()`](https://docs.spring.io/
 
 ### Should we test the JPA repository?
 
-**Yes**.  While it is tempted not to test the JPA repository given that this interface has no code, we need to make sure that our entity and repository are working as expected.
+**Yes**.  While it is tempted not to test the JPA repository, `OfficesRepository`, given that this interface has no code, we need to make sure that our entity and repository are working as expected together.
+
+1. Create JPA repository test
+
+   Create file: `src/test/java/demo/boot/OfficesRepositoryTest.java`
+
+   ```java
+   package demo.boot;
+
+   import org.junit.jupiter.api.BeforeEach;
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+   import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
+   import javax.persistence.EntityManager;
+   import javax.persistence.PersistenceContext;
+   import java.util.List;
+
+   import static org.assertj.core.api.Assertions.assertThat;
+
+   @DataJpaTest
+   @DisplayName( "Offices repository" )
+   @AutoConfigureTestDatabase( replace = AutoConfigureTestDatabase.Replace.NONE )
+   public class OfficesRepositoryTest {
+
+     @PersistenceContext
+     private EntityManager entityManager;
+
+     @Autowired
+     private OfficesRepository repository;
+
+     private static final OfficeEntity COLOGNE = new OfficeEntity(
+       "ThoughtWorks Cologne",
+       "Lichtstr. 43i, 50825 Cologne, Germany",
+       "Germany",
+       "+49 221 64 30 70 63",
+       "contact-de@thoughtworks.com",
+       "https://www.thoughtworks.com/locations/cologne"
+     );
+
+     private static final OfficeEntity MANCHESTER = new OfficeEntity(
+       "ThoughtWorks 'ThoughtWorks Manchester'",
+       "4th Floor Federation House, 2 Federation St., Manchester M4 4BF, UK",
+       "UK",
+       "+44 (0)161 923 6810",
+       null,
+       "https://www.thoughtworks.com/locations/manchester"
+     );
+
+     @BeforeEach
+     public void before() {
+       entityManager.createQuery( "DELETE FROM OfficeEntity" ).executeUpdate();
+       entityManager.persist( COLOGNE );
+       entityManager.persist( MANCHESTER );
+     }
+
+     @Test
+     @DisplayName( "should return all offices in the table" )
+     public void shouldReturnAll() {
+       final List<OfficeEntity> offices = repository.findAll();
+
+       assertThat( offices.size() ).isEqualTo( 2 );
+       assertThat( offices ).contains( COLOGNE );
+       assertThat( offices ).contains( MANCHESTER );
+     }
+   }
+   ```
+
+   {% include custom/note.html details="The test shown above is very similar to the <code>OfficeEntityTest</code> example shown before.<br/>Delete the <code>OfficeEntityTest</code> if you have this test as we have two tests now that are almost doing the same thing.  Have multiple tests covering the same thing make the tests very rigid and makes our code harder to change.  A small refactor may break many tests." %}
+
+   When used together with JPA repositories, entities are automatically tested when testing the JPA repository.  These two objects are tightly coupled by their nature.
+
+   1. Take advantage from [Spring Boot Test](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-testing)
+
+       ```java
+       @DataJdbcTest
+       @AutoConfigureTestDatabase( replace = AutoConfigureTestDatabase.Replace.NONE )
+       ```
+
+      These two annotations prepare our application as required by the test.  Usually we can do with just the [`@DataJpaTest`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/orm/jpa/DataJpaTest.html) annotation, but given that we do not want to swap the actual database with an embedded one, we need to fine tune our test setup using the [`@AutoConfigureTestDatabase`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/jdbc/AutoConfigureTestDatabase.html) annotation.
+
+      Using the `@AutoConfigureTestDatabase` annotation we can customise the test setup and use the production database, by setting the [`replace`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/jdbc/AutoConfigureTestDatabase.html#replace--) parameter to [`AutoConfigureTestDatabase.Replace.NONE`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/jdbc/AutoConfigureTestDatabase.Replace.html#NONE).
+
+      A great advantage of `@DataJpaTest` annotation is that it includes [`@Transactional`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/annotation/Transactional.html) annotation.  When used within tests, the `@Transactional` annotation rollbacks the database transaction at the end of each test, and thus any changes made will be ignored.  For example, if we delete all data from a table, these will be only deleted for the duration of the test and these changes are rolled back after each test.  This is quite convenient as the database is left in the same state as it was before the test is started.
+
+      {% include custom/note.html details="Our test depends on the database being ready.  Spring Boot will first run the flyway migration and then will run our tests." %}
+
+   1. Entity Manager
+
+      ```java
+        @PersistenceContext
+        private EntityManager entityManager;
+      ```
+
+      An [`EntityManager`](https://docs.oracle.com/javaee/7/api/javax/persistence/EntityManager.html) is responsible for the lifecycle of entities.  Our application is using an instance of `EntityManager` under the hood, to read data from the `offices` table.  The repositories interact with an instance of the `EntityManager` which is conveniently setup and configured by [Spring Boot](https://spring.io/projects/spring-boot).  The `EntityManager` is used within this test to be able to empty the table and add new offices to prepare the test data for our tests.
+
+      We can interact with the database directly using SQL, but that may produce unexpected results.  The `EntityManager` may cache data and when the database is modified outside of the `EntityManager`, the repository may be dealing stale data.
+
+   1. Setup the data
+
+      ```java
+        @BeforeEach
+        public void before() {
+          entityManager.createQuery( "DELETE FROM OfficeEntity" ).executeUpdate();
+          entityManager.persist( COLOGNE );
+          entityManager.persist( MANCHESTER );
+        }
+      ```
+
+      Empty the table first and adds two offices.  This makes sure that the table will only have two offices for the duration of the tests.
+
+      {% include custom/note.html details="These changes are rolled back at the end of the test." %}
+
+   1. Query the repository
+
+      ```java
+        @Test
+        @DisplayName( "should return all offices in the table" )
+        public void shouldReturnAll() {
+          final List<OfficeEntity> offices = repository.findAll();
+
+          assertThat( offices.size() ).isEqualTo( 2 );
+          assertThat( offices ).contains( COLOGNE );
+          assertThat( offices ).contains( MANCHESTER );
+        }
+      ```
+
+      This tests interact with the database using JPA repository and verify that our entity is properly annotated.
+
+1. Run the test
+
+   ```bash
+   $ ./gradlew clean test
+
+   ...
+
+   BUILD SUCCESSFUL in 14s
+   6 actionable tasks: 6 executed
+   ```
+
+   All tests should pass.
 
 ## Use the JPA repository
 
