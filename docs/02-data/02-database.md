@@ -31,6 +31,8 @@ In our example we will use the Spring Data JPA as this allows us to interact wit
 
    Update file: `build.gradle`
 
+   {% include custom/dose_not_compile.html details="We are missing another dependency which will cause our build to fail." %}
+
    ```groovy
    dependencies {
      /* Data */
@@ -66,9 +68,7 @@ In our example we will use the Spring Data JPA as this allows us to interact wit
 
 1. Provide the database connection properties
 
-   {% include custom/proceed_with_caution.html details="Do not save production passwords as plain text" %}
-
-   Note that we will refactor this code and will make use of [environment variables]({{ '/docs/data/env/' | absolute_url }}), instead.
+   {% include custom/proceed_with_caution.html details="Do not save production passwords as plain text.<br />Note that we will refactor this code and will make use of <a href='/spring-boot-camp/docs/data/env/'>environment variables</a> instead." %}
 
    Update file: `src/main/resources/application.yaml`
 
@@ -81,7 +81,7 @@ In our example we will use the Spring Data JPA as this allows us to interact wit
        password: SomeRandomPassword
    ```
 
-   We are configuring the connection through the `DATABASE_TO_UPPER=false` property.  Without this, the connection may not work as expected.
+   {% include custom/note.html details="We are configuring the connection through the <code>DATABASE_TO_UPPER=false</code> property.  Without this property, the connection may not work as expected." %}
 
 1. Build the project, again
 
@@ -97,11 +97,13 @@ In our example we will use the Spring Data JPA as this allows us to interact wit
 
 ## Flyway
 
-The database will change over time.  One way to manage the database is to use a library such as [Flyway](https://flywaydb.org/) or [Liquibase](https://www.liquibase.org/).  ThoughtWorks [technology radar](https://www.thoughtworks.com/radar/) has [Flyway as adopt](https://www.thoughtworks.com/radar/tools/flyway).  Unfortunately, the [technology radar does not mention Liquibase](https://www.thoughtworks.com/radar/a-z#Liquibase), which means that ThoughtWorkers have not used Liquibase in production.
+The database structure, such as database tables and columns, will change over time.  One way to manage the database is to use a library such as [Flyway](https://flywaydb.org/) or [Liquibase](https://www.liquibase.org/).  ThoughtWorks [technology radar](https://www.thoughtworks.com/radar/) has [Flyway as adopt](https://www.thoughtworks.com/radar/tools/flyway).  Unfortunately, the [technology radar does not mention Liquibase](https://www.thoughtworks.com/radar/a-z#Liquibase), which means that ThoughtWorkers have not used Liquibase in production.
 
 Both libraries share the same popularity according to [Google trends](https://trends.google.com/trends/explore?q=Flyway,Liquibase).
 
 ![Google Trends: Flyway vs. Liquibase.png]({{ '/assets/images/Google-Trends-Flyway-Liquibase.png' | absolute_url }})
+
+While we can achieve the same thing with both libraries, we will opt for Flyway given that this is marked as adopt in the technology radar while Liquibase is not mentioned.
 
 1. Add the Flyway dependency
 
@@ -113,7 +115,7 @@ Both libraries share the same popularity according to [Google trends](https://tr
    }
    ```
 
-   Note that in many _Spring Boot + Flyway_ documentation, this step omitted as it is said that Spring Boot configures Flyway automatically.
+   {% include custom/note.html details="Note that in many <em>Spring Boot + Flyway</em> documentation, this step omitted as it is said that Spring Boot configures Flyway automatically.  This is a bit misleading as Spring Boot configure Flyway automatically only if this is on the classpath." %}
 
    ![Flyway Dependency]({{ '/assets/images/Flyway-Dependency.png' | absolute_url }})
 
@@ -154,3 +156,5 @@ Both libraries share the same popularity according to [Google trends](https://tr
 ### When is Flyway triggered?
 
 Spring Boot will run [Flyway migration](https://flywaydb.org/documentation/command/migrate) before it makes the database connection available to the rest of application.  This ensures that the database is prepared before the application makes use of it.
+
+{% include custom/note.html details="Our program is not yet making use of the database and thus flyway will not run the migration scripts." %}

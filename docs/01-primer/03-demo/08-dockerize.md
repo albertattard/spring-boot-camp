@@ -201,9 +201,9 @@ These three docker commands provide different functionality.
 1. [`CMD`](https://docs.docker.com/engine/reference/builder/#cmd): used to sets the default command to be executed when the docker container starts.  This can be overwritten from command line when docker container runs.
 1. [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint): created an executable docker container.
 
-The RUN docker command is unique and serves a unique purpose.
+The `RUN` docker command is unique and serves a unique purpose.
 
-The CMD and ENTRYPOINT can be used to run a command once the docker container starts.
+The `CMD` and `ENTRYPOINT` can be used to run a command once the docker container starts.
 Unless you need to interact with the docker image by providing different parameters, prefer the `ENTRYPOINT` over the `CMD` approach.
 
 ##  Dockersize application using layered JAR (_recommended approach_)

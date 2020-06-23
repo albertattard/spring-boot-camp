@@ -21,7 +21,11 @@ The application makes use of a CSV file to read the list of offices.  In this pa
 
 ## What is JPA?
 
-The Java Persistence API (JPA) provides a set of annotations that can be used to map Java objects to database tables.  JPA was initially released as a part of the EJB 3.0 specification ([JSR 220](https://jcp.org/en/jsr/detail?id=220)), but then moved to a separate specification ([JSR 317](https://jcp.org/en/jsr/detail?id=317)).
+The Java Persistence API (JPA) provides a set of annotations that can be used to map Java objects to database tables, as showning the following image.
+
+![JPA-Read-From-Table]({{ '/assets/images/JPA-Read-From-Table.png' | absolute_url }})
+
+JPA was initially released as a part of the EJB 3.0 specification ([JSR 220](https://jcp.org/en/jsr/detail?id=220)), but then moved to a separate specification ([JSR 317](https://jcp.org/en/jsr/detail?id=317)).
 
 JPA is nothing but specification.  There are different implementations, [Hibernate](https://hibernate.org/) being the most popular, according to [Google trends](https://trends.google.com/trends/explore?q=Hibernate,EclipseLink,OpenJPA,DataNucleus).
 
@@ -61,7 +65,7 @@ Entities are classes that map to a database table.
    }
    ```
 
-Classes that needs to be mapped with a table needs to be annotated with the [`@Entity`](https://docs.oracle.com/javaee/7/api/javax/persistence/Entity.html) annotation.  Note that the above class only defines the properties, that match one-to-one with the table.  The properties name matches the column names.  JPA uses [convention over configuration](https://en.wikipedia.org/wiki/Convention_over_configuration) to minimise the amount of configuration required.
+Classes that need to be mapped with a table, need to be annotated with the [`@Entity`](https://docs.oracle.com/javaee/7/api/javax/persistence/Entity.html) annotation.  Note that the above class only defines the properties and the properties name matches the table's column names.  JPA uses [convention over configuration](https://en.wikipedia.org/wiki/Convention_over_configuration) to minimise the amount of configuration required.
 
 Given that the table name (`offices`) is different from the class name (`OfficeEntity`), we need to specify the table name through the [`@Table`](https://docs.oracle.com/javaee/7/api/javax/persistence/Table.html) annotation, as shown next.
 
@@ -76,7 +80,9 @@ JPA requires a primary key.  This is annotated with the [`@Id`](https://docs.ora
 private String office;
 ```
 
-The `OfficeEntity` class uses [Lombok](https://projectlombok.org/) to generate the usual methods through the [`@Data`](https://projectlombok.org/api/lombok/Data.html) annotation.
+The properties name can have a different name from the table column name, in which case we need to use the [`@Column`](https://docs.oracle.com/javaee/7/api/javax/persistence/column.html) annotation and provide the table column name.
+
+The `OfficeEntity` class uses [Lombok](https://projectlombok.org/) to generate the usual methods through the [`@Data`](https://projectlombok.org/api/lombok/Data.html) annotation.  This reduces the amount of code that we have to write.
 
 ## Repository
 
@@ -99,11 +105,13 @@ Spring Data introduced [repositories](https://docs.spring.io/spring-data/jpa/doc
 
 That's it!!
 
-Note that this is an interface and not a class.  The Spring Data will implement this interface for us and it provide several methods too, that allows us to read from and write to the `offices` table, through the `OfficeEntity` entity.
+{% include custom/note.html details="Note that the <code>OfficesRepository</code> is an interface and not a class.  Spring Data will implement this interface for us and it provides several useful methods too, that allows us to read from and write to the <code>offices</code> table, through the <code>OfficeEntity</code> entity." %}
 
 In the following examples, we will use the [`findAll()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findAll--) method, which will return all rows in the `offices` table as instances of the `OfficeEntity` class.
 
 ## Use the JPA repository
+
+Read all rows in the `offices` table using the JPA repository.
 
 1. Create new service that will be backed by the JPA repository
 
