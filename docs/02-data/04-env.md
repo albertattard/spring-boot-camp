@@ -182,7 +182,9 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
    }
    ```
 
-   The name of the file (`integration-test.gradle`) is not very important, as long as you are consistent.  Note that we will use this file name (`integration-test.gradle`) to include the above Gradle definition in the `build.gradle` in the next step.
+   The name of the file (`integration-test.gradle`) is not very important, as long as you are consistent.
+
+   {% include custom/note.html details="We will use this file name (<code>integration-test.gradle</code>) to include the above Gradle definition in the <code>build.gradle</code> in the next step." %}
 
    The above file deserves some explanation.
 
@@ -314,7 +316,7 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
                      \--- :processTestResources
       ```
 
-      Note that our `integrationTest` does not depend on the `test` task as we can run each of these Gradle tasks independent.   With that said, the integration test code, depends on the test code and we can reuse classes that are defined in the tests.
+      {% include custom/note.html details="Our <code>integrationTest</code> Gradle task does not depend on the <code>test</code> Gradle task as we can run each of these Gradle tasks independent.   With that said, the integration test code, depends on the test code and we can reuse classes that are defined in the tests." %}
 
    **Why are we creating a second Gradle build file?**
 
@@ -503,7 +505,7 @@ So far we have configured Gradle to use the `.env` file defined before.
 
    ![IntelliJ Env File]({{ '/assets/images/IntelliJ-Env-File.png' | absolute_url }})
 
-   Note that the `.env` file is a hidden file and it may not show in the finder.  Press `[command] + [shift] + [.]` to toggle show/hide hidden files.
+   {% include custom/note.html details="The <code>.env</code> file is a hidden file and it may not show in the finder.  Press <code>[command] + [shift] + [.]</code> to toggle show/hide hidden files." %}
 
 1. Run the application again
 

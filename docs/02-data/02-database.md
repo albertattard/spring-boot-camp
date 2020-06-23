@@ -295,6 +295,6 @@ Nevertheless, we can have a general test that ensures that the migration have ru
 
 If you ask three programmers what [integration testing](https://martinfowler.com/bliki/IntegrationTest.html) is, you will get four different answers.
 
-For the scope of this boot camp, integration testing is any testing that depends on external resources.  [PostgreSQL](https://www.postgresql.org/) and environment variables are a good example of external resources.
+For the scope of this boot camp, integration testing is any testing that depends on external resources.  [PostgreSQL](https://www.postgresql.org/) and [environment variables]({{ '/docs/data/env/#integration-tests' | absolute_url }}) are a good example of external resources.
 
 Resources that are part of the project and use the same Java process, are not considered as integration tests.  The H2 in-memory database, runs within the same Java process as our project and thus it is not considered as integration tests.
