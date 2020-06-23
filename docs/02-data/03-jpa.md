@@ -84,6 +84,10 @@ The properties name can have a different name from the table column name, in whi
 
 The `OfficeEntity` class uses [Lombok](https://projectlombok.org/) to generate the usual methods through the [`@Data`](https://projectlombok.org/api/lombok/Data.html) annotation.  This reduces the amount of code that we have to write.
 
+### How can we test the JPA entities?
+
+
+
 ## Repository
 
 Spring Data introduced [repositories](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#reference) to simplify the interaction with the database.
