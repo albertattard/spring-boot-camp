@@ -53,6 +53,8 @@ Entities are classes that map to a database table.
    @Data
    @Entity
    @Table( name = "offices" )
+   @AllArgsConstructor
+   @NoArgsConstructor
    public class OfficeEntity {
 
      @Id
@@ -82,17 +84,19 @@ private String office;
 
 The properties name can have a different name from the table column name, in which case we need to use the [`@Column`](https://docs.oracle.com/javaee/7/api/javax/persistence/column.html) annotation and provide the table column name.
 
-The `OfficeEntity` class uses [Lombok](https://projectlombok.org/) to generate the usual methods through the [`@Data`](https://projectlombok.org/api/lombok/Data.html) annotation.  This reduces the amount of code that we have to write.
+The `OfficeEntity` class uses [Lombok](https://projectlombok.org/) to generate the usual methods through the [`@Data`](https://projectlombok.org/api/lombok/Data.html) annotation.  This reduces the amount of code that we have to write.  The [`@AllArgsConstructor`](https://projectlombok.org/api/lombok/AllArgsConstructor.html) and [`@NoArgsConstructor`](https://projectlombok.org/api/lombok/NoArgsConstructor.html) annotations are added to simplify the creation of the `OfficeEntity` class.
+
+{% include custom/note.html details="JPA required the entities to have the default constructor." %}
 
 ### (_Optional_) How can we test the JPA entities?
 
 JPA entities are rarely tested individually as these are usually tested together with the [repository](#jpa-repository) as part of the feature.  My preferred approach is to test the entities together with the repository as these two are tightly coupled.
 
-{% include custom/note.html details="Do not implement this test if you are " %}
+{% include custom/note.html details="Do not implement this test if you are going to make use of <a href='#jpa-repository'>JPA repositories</a>, as we will be repeating the test later on.  This test is only shown here for completeness." %}
 
-Nevertheless, we can write a simple test to ensure that the entity is properly configured.
+We can write a simple test to ensure that the entity is properly configured.
 
-1. Add a test class that selects from the database
+1. Add a test class that selects entities from the database
 
    Create file: `src/test/java/demo/boot/OfficeEntityTest.java`
 
@@ -262,10 +266,11 @@ Nevertheless, we can write a simple test to ensure that the entity is properly c
 
 ### Should we take advantage of Hibernate validation to test our entity?
 
-Hibernate can be configured to validate our entities before these are used, through the `src/main/resources/application.yaml` file as shown next.
+Hibernate can be configured to validate our entities before these are used, through the `src/main/resources/application.yaml` properties file as shown next.
 
 ```yaml
 spring:
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -296,13 +301,15 @@ Spring Data introduced [repositories](https://docs.spring.io/spring-data/jpa/doc
 
 That's it!!
 
-{% include custom/note.html details="Note that the <code>OfficesRepository</code> is an interface and not a class.  Spring Data will implement this interface for us and it provides several useful methods too, that allows us to read from and write to the <code>offices</code> table, through the <code>OfficeEntity</code> entity." %}
+{% include custom/note.html details="The <code>OfficesRepository</code> is an interface and not a class.  Spring Data will implement this interface for us and it provides several useful methods too, that allows us to read from and write to the <code>offices</code> table, through the <code>OfficeEntity</code> entity." %}
 
 In the following examples, we will use the [`findAll()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findAll--) method, which will return all rows in the `offices` table as instances of the `OfficeEntity` class.
 
 ### Should we test the JPA repository?
 
-**Yes**.  While it is tempted not to test the JPA repository, `OfficesRepository`, given that this interface has no code, we need to make sure that our entity and repository are working as expected together.
+**Yes**.
+
+While it is tempted not to test the JPA repository, `OfficesRepository`, given that this interface has no code, we need to make sure that our entity and repository are working as expected together.
 
 1. Create JPA repository test
 
@@ -372,7 +379,7 @@ In the following examples, we will use the [`findAll()`](https://docs.spring.io/
    }
    ```
 
-   {% include custom/note.html details="The test shown above is very similar to the <code>OfficeEntityTest</code> example shown before.<br/>Delete the <code>OfficeEntityTest</code> if you have this test as we have two tests now that are almost doing the same thing.  Have multiple tests covering the same thing make the tests very rigid and makes our code harder to change.  A small refactor may break many tests." %}
+   {% include custom/note.html details="The test shown above is very similar to the <code>OfficeEntityTest</code> example shown <a href='#optional-how-can-we-test-the-jpa-entities'>before</a>.<br/>Delete the <code>OfficeEntityTest</code> if you have this test as we have two tests now that are almost doing the same thing.  Have multiple tests covering the same thing make the tests very rigid and makes our code harder to change.  A small refactor may break many tests." %}
 
    When used together with JPA repositories, entities are automatically tested when testing the JPA repository.  These two objects are tightly coupled by their nature.
 
@@ -473,7 +480,9 @@ Read all rows in the `offices` table using the JPA repository.
    }
    ```
 
-   The `JpaContactUsService` require an instance of `OfficesRepository` which will be provided by Spring.  Note that the above class, also takes advantage from Lombok's [`@AllArgsConstructor`](https://projectlombok.org/api/lombok/AllArgsConstructor.html) annotation.
+   The `JpaContactUsService` require an instance of `OfficesRepository` which will be provided by Spring.
+
+   {% include custom/note.html details="Note that the above class, also takes advantage from Lombok's <a href='https://projectlombok.org/api/lombok/AllArgsConstructor.html'><code>@AllArgsConstructor</code></a> annotation." %}
 
 1. Create the test
 
@@ -595,7 +604,7 @@ Read all rows in the `offices` table using the JPA repository.
 
 ## Use the new service
 
-Note that now we will have two implementations for the same service as shown in the following image.
+We now have two implementations for the same service as shown in the following image.
 
 ![Two Implementations.png]({{ '/assets/images/Two-Implementations.png' | absolute_url }})
 
@@ -622,9 +631,7 @@ We need to tell Spring which one is the preferred service that needs to be picke
    public class JpaContactUsService implements ContactUsService { /* ... */ }
    ```
 
-   Note that we have to use the [`@Primary`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Primary.html) annotation to mark our JPA service as the main service.
-
-   Without the `@Primary` annotation Spring will not know which of the two services to use and will not start.
+   {% include custom/note.html details="We have to use the <a href='https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Primary.html'><code>@Primary</code></a> annotation to mark our JPA service as the main service.  Without the <code>@Primary</code> annotation Spring will not know which of the two services to use and will not start." %}
 
 ## View the generated SQL code
 
@@ -646,7 +653,7 @@ Sometimes is it very useful to see what SQL code was generated and used to run a
          ddl-auto: validate
    ```
 
-   Following is the complete example of the `application.yaml` file.
+   Following is the complete example of the `application.yaml` properties file.
 
    ```yaml
    spring:
@@ -704,7 +711,7 @@ Sometimes is it very useful to see what SQL code was generated and used to run a
          path: /h2
    ```
 
-   Following is the complete example of the `application.yaml` file.
+   Following is the complete example of the `application.yaml` properties file.
 
    ```yaml
    spring:
@@ -737,7 +744,7 @@ Sometimes is it very useful to see what SQL code was generated and used to run a
 
 1. Access the H2 Console ([http://localhost:8080/h2](http://localhost:8080/h2))
 
-   You need to use the same credentials as defined in the `application.yaml` file.
+   You need to use the same credentials as defined in the `application.yaml` properties file.
 
    | Name     | Value                    |
    | -------- | ------------------------ |
@@ -794,6 +801,8 @@ Our application will only use the database and will not rely on the CSV anymore.
      implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
    }
    ```
+
+   {% include custom/note.html details="The above example is missing the <code>testImplementation 'org.flywaydb:flyway-core'</code> entry, which needs to be included if Flyway is tested separately, using the <code>FlywayMigrationTest</code> test class discussed <a href='/spring-boot-camp/docs/data/database/#optional-testing-flyway-migration-scripts'>before</a>." %}
 
 1. Build the project
 
