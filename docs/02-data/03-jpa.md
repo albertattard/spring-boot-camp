@@ -86,7 +86,7 @@ The `OfficeEntity` class uses [Lombok](https://projectlombok.org/) to generate t
 
 ### (_Optional_) How can we test the JPA entities?
 
-JPA entities are rarely tested individually as these are usually tested together with the [repository](#repository) as part of the feature.  Nevertheless, we can write a simple test to ensure that the entity is properly configured.
+JPA entities are rarely tested individually as these are usually tested together with the [repository](#jpa-repository) as part of the feature.  Nevertheless, we can write a simple test to ensure that the entity is properly configured.
 
 1. Add a test class that selects from the database
 
@@ -256,7 +256,22 @@ JPA entities are rarely tested individually as these are usually tested together
 
    All tests should pass.
 
-## Repository
+### Should we take advantage of Hibernate validation to test our entity?
+
+Hibernate can be configured to validate our entities before these are used, through the `src/main/resources/application.yaml` file as shown next.
+
+```yaml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+```
+
+This is quite good as it ensures that our entities are properly annotated.  With that said, Hibernate validations are **not** standalone tests and these are triggered when our application starts.  Any test that starts the application will also trigger these validations and the test may fail for a different reason from which it was designed for.
+
+My preferred approach is to test the entities together with the repository as these two are tightly coupled.
+
+## JPA Repository
 
 Spring Data introduced [repositories](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#reference) to simplify the interaction with the database.
 
@@ -280,6 +295,10 @@ That's it!!
 {% include custom/note.html details="Note that the <code>OfficesRepository</code> is an interface and not a class.  Spring Data will implement this interface for us and it provides several useful methods too, that allows us to read from and write to the <code>offices</code> table, through the <code>OfficeEntity</code> entity." %}
 
 In the following examples, we will use the [`findAll()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findAll--) method, which will return all rows in the `offices` table as instances of the `OfficeEntity` class.
+
+### Should we test the JPA repository?
+
+**Yes**.  While it is tempted not to test the JPA repository given that this interface has no code, we need to make sure that our entity and repository are working as expected.
 
 ## Use the JPA repository
 
