@@ -50,7 +50,7 @@ DATABASE_USERNAME=tw-data
 DATABASE_PASSWORD=SomeRandomPassword
 ```
 
-Note that the above example only contains development and test credentials.  While that may seem fine, given that we are working with a development environment, there may be cases where this may have serious implications.  There are cases where the development and test environments work with sensitive data.  In such cases, we always need to secure the credentials to such resources (such as files and databases) and make sure to destroy such resources when we are done with them.
+The above example only contains development and test credentials.  While that may seem fine, given that we are working with a development environment, there may be cases where this may have serious implications.  There are cases where the development and test environments work with sensitive data.  In such cases, we always need to secure the credentials to such resources (such as files and databases) and make sure to destroy such resources when we are done with them.
 
 1. Create the `.env` file
 
@@ -65,7 +65,7 @@ Note that the above example only contains development and test credentials.  Whi
    DATABASE_PASSWORD=SomeRandomPassword
    ```
 
-   Note that the [H2](https://www.h2database.com/) in-memory database does not require a port number, yet we defined the `DATABASE_PORT` environment variable.  This will be used later on when we connect to a production grade database.
+   {% include custom/note.html details="The <a href='https://www.h2database.com/'>H2</a> in-memory database does not require a port number, yet we defined the <code>DATABASE_PORT</code> environment variable.  This will be used later on when we connect to a production grade database." %}
 
 1. Update the properties
 
@@ -80,9 +80,9 @@ Note that the above example only contains development and test credentials.  Whi
        password: ${DATABASE_PASSWORD}
    ```
 
-   Note that all hardcoded values are now replaced by an environment variable.  Spring will replace `${ENV_NAME}` with the value found in the environment variables automatically allowing our application to behave differently based on where this is running.  In a production environment, our application can connect to the production database, while when in development our application will connect to the development database.
+   All hardcoded values are now replaced by an environment variable.  Spring will replace `${ENV_NAME}` with the value found in the environment variables automatically allowing our application to behave differently based on where this is running.  In a production environment, our application can connect to the production database, while when in development our application will connect to the development database.
 
-   Following is the complete example of the `application.yaml` file.
+   Following is the complete example of the `application.yaml` properties file.
 
    ```yaml
    spring:
@@ -125,7 +125,7 @@ Note that the above example only contains development and test credentials.  Whi
 
    Our application will not build successfully as Gradle is not using these environment variables as of yet.
 
-Note that the `.env` should not be deployed with the application and is only intended to be used as part of the source to aid development.
+{% include custom/note.html details="The <code>.env</code> should not be deployed with the application and is only intended to be used as part of the source to aid development." %}
 
 ## Integration tests
 
