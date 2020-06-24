@@ -314,6 +314,6 @@ Say that we have another table containing all employees which is linked to the o
 ## Tasks status
 
 - [X] Return one office by id
-- [ ] Filter by country
+- [ ] Return all offices in country
 - [ ] Update individual office details
 - [ ] Delete an office

@@ -29,6 +29,6 @@ permalink: docs/data/custom-queries/delete/
 ## Tasks status
 
 - [X] Return one office by id
-- [X] Filter by country
+- [X] Return all offices in country
 - [X] Update individual office details
 - [X] Delete an office

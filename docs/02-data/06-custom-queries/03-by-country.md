@@ -1,13 +1,13 @@
 ---
 layout: default
-title: Filter by a country
+title: Return all offices in country
 parent: Custom Queries
 grand_parent: Spring Data
 nav_order: 3
 permalink: docs/data/custom-queries/find-by-country/
 ---
 
-# Filter by a country
+# Return all offices in country
 {: .no_toc }
 
 ## Table of contents
@@ -542,6 +542,6 @@ This is an overkill for our example but shows how we can fine tune the query to 
 ## Tasks status
 
 - [X] Return one office by id
-- [X] Filter by country
+- [X] Return all offices in country
 - [ ] Update individual office details
 - [ ] Delete an office
