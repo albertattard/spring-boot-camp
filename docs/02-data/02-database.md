@@ -68,9 +68,9 @@ In our example we will use the Spring Data JPA as this allows us to interact wit
 
 1. Provide the database connection properties
 
-   {% include custom/proceed_with_caution.html details="Do not save production passwords as plain text.<br />Note that we will refactor this code and will make use of <a href='/spring-boot-camp/docs/data/env/'>environment variables</a> instead." %}
-
    Update file: `src/main/resources/application.yaml`
+
+   {% include custom/proceed_with_caution.html details="Do not save production passwords as plain text.<br />Note that we will refactor this code and will make use of <a href='/spring-boot-camp/docs/data/env/'>environment variables</a> instead." %}
 
    ```yaml
    spring:

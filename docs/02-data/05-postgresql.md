@@ -34,15 +34,13 @@ This is a great tool to query our PostgreSQL database.
 
 ## Docker Compose (setup PostgreSQL and PgAdmin)
 
-We can take advantage of [docker](https://docs.docker.com/) and [docker composed](https://docs.docker.com/compose/) to setup third party dependencies, such as PostgreSQL and PgAdmin.
+We can take advantage of [docker](https://docs.docker.com/) and [docker compose](https://docs.docker.com/compose/) to setup third party dependencies, such as PostgreSQL and PgAdmin.
 
-1. Create the `docker-compose.yml` file
-
-   {% include custom/proceed_with_caution.html details="Do not reuse credentials between different services" %}
-
-   For convenience, the following example uses the same credentials (`DATABASE_USERNAME` and `DATABASE_PASSWORD`) for both services.  **Do not do this in production**.
+1. Create the docker compose file
 
    Create file: `docker-compose.yml`
+
+   {% include custom/proceed_with_caution.html details="Do not reuse credentials between different services.<br/>For convenience, the following example uses the same credentials (<code>DATABASE_USERNAME</code> and <code>DATABASE_PASSWORD</code>) for both the PostgreSQL and PgAdmin services.  <strong>Do not do this in production!!</strong>" %}
 
    ```yaml
    version: "3"
@@ -140,7 +138,9 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker composed
 
 1. Update the `.env` file
 
-   Update file `.env`
+   Update file: `.env`
+
+   {% include custom/note.html details="The application will fail the integration tests until we include the new PostgreSQL database driver dependency." %}
 
    ```properties
    DATABASE_NAME=contact-us
@@ -151,9 +151,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker composed
    DATABASE_PASSWORD=SomeRandomPassword
    ```
 
-   {% include custom/note.html details="The application will fail the integration tests until we include the new dependency" %}
-
-   Note that the database driver, `DATABASE_DRIVER`, now points to the PostgreSQL driver `org.postgresql.Driver` not to H2 anymore.  Running the integration tests now will fail as still we need to update the application.  Furthermore, the application will not start as we are missing the driver.
+   The database driver, `DATABASE_DRIVER`, now points to the PostgreSQL driver `org.postgresql.Driver` not to H2 anymore.  Running the integration tests now will fail as still we need to update the application.  Furthermore, the application will not start as we are missing the driver.
 
 1. Start the services defined by docker composed
 
