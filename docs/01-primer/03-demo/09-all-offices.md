@@ -155,7 +155,9 @@ permalink: docs/primer/demo/all-offices/
 
 ## Use service
 
-1. Use the service from the controller
+1. Create a test to assert the relation between the service (`ContactUsService`) and the controller (`OfficeController`).
+
+   {% include custom/note.html details="The following example takes advantage of <a href='https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-testing'>Spring Boot Test</a>.  <a href='#can-we-test-the-controller-using-other-means'>Later on</a> we will see alternative options to test the controller." %}
 
    Create test file `src/test/java/demo/boot/OfficeControllerTest.java`
 
@@ -374,6 +376,213 @@ permalink: docs/primer/demo/all-offices/
    Contact us service > should parse the offices from CSV file PASSED
    ...
    ```
+
+### Do we need to reset the mocks between tests?
+
+There is no need to reset the beans annotated with the [`@MockBean`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/mock/mockito/MockBean.html) annotation.  According to the blog post written by [Phillip Webb](https://spring.io/team/pwebb), titled [Testing improvements in Spring Boot 1.4](https://spring.io/blog/2016/04/15/testing-improvements-in-spring-boot-1-4#mocking-and-spying):
+
+"_Mocks will be automatically reset across tests_"
+
+Therefore, there is no need to reset the mocks between tests as Spring takes care of that for you.
+
+### Can we test the controller using other means?
+
+In our [previous example](#use-service), we tested the controller using Spring Boot Test, as shown next.
+
+```java
+package demo.boot;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@DisplayName( "Office controller" )
+@WebMvcTest( OfficeController.class )
+public class OfficeControllerTest {
+
+  @Autowired
+  private MockMvc mockMvc;
+
+  @MockBean
+  private ContactUsService service;
+
+  @Test
+  @DisplayName( "should return the list of offices returned by the service" )
+  public void shouldReturnTheOffices() throws Exception { /* ... */ }
+}
+```
+
+The annotation [`@WebMvcTest`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/autoconfigure/web/servlet/WebMvcTest.html) starts our Spring Boot web application without starting the webserver.  The controller under test, `OfficeController`, will be wired and provided the mocked version of the `ContactUsService`.  You can see this in the output produced during tests, where the banner is displayed as shown next.
+
+```bash
+...
+  _____            _             _     _    _
+ / ____|          | |           | |   | |  | |
+| |     ___  _ __ | |_ __ _  ___| |_  | |  | |___
+| |    / _ \| '_ \| __/ _` |/ __| __| | |  | / __|
+| |___| (_) | | | | || (_| | (__| |_  | |__| \__ \
+ \_____\___/|_| |_|\__\__,_|\___|\__|  \____/|___/
+
+2077-04-27 12:34:55.005  INFO 10104 --- [    Test worker] demo.boot.OfficeControllerTest           : Starting OfficeControllerTest on Alberts-MBP.fritz.box with PID 10104 (started by albertattard in /Users/albertattard/Downloads/contact-us)
+2077-04-27 12:34:55.008  INFO 10104 --- [    Test worker] demo.boot.OfficeControllerTest           : No active profile set, falling back to default profiles: default
+2077-04-27 12:34:56.142  INFO 10104 --- [    Test worker] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2077-04-27 12:34:56.616  INFO 10104 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2077-04-27 12:34:56.616  INFO 10104 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2077-04-27 12:34:56.627  INFO 10104 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 11 ms
+2077-04-27 12:34:56.651  INFO 10104 --- [    Test worker] demo.boot.OfficeControllerTest           : Started OfficeControllerTest in 1.97 seconds (JVM running for 2.943)
+...
+```
+
+However, there are arguments where these types of tests are slow, when compared to unit tests that do not use Spring.  Spring driven tests have an overhead, as Spring Boot starts and configures all parts that are needed before the test runs.
+
+Alternatively, we can test the controller directly, without using Spring, as shown next.
+
+```java
+package demo.boot;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@DisplayName( "Office controller" )
+public class OfficeControllerTest {
+
+  @Test
+  @DisplayName( "should return the list of offices returned by the service" )
+  public void shouldReturnTheOffices() {
+    final Office cologne =
+      new Office( "ThoughtWorks Cologne",
+        "Lichtstr. 43i, 50825 Cologne, Germany",
+        "+49 221 64 30 70 63",
+        "contact-de@thoughtworks.com" );
+    final List<Office> offices = List.of( cologne );
+
+    final ContactUsService service = mock( ContactUsService.class );
+    when( service.list() ).thenReturn( offices );
+
+    final OfficeController controller = new OfficeController( service );
+    final List<Office> list = controller.offices();
+
+    assertEquals( offices, list );
+
+    verify( service, times( 1 ) ).list();
+  }
+}
+```
+
+In the above test we are doing the following
+
+1. Creating the mock, instead of relying on Spring to create it for us
+
+   ```java
+       final ContactUsService service = mock( ContactUsService.class );
+   ```
+
+   The mock is then configured to behave as we need it to behave, as we did with Spring.
+
+   ```java
+       when( service.list() ).thenReturn( offices );
+   ```
+
+1. Create the controller and provide it with the mocked service, instead of relying on Spring to create it for us
+
+   ```java
+       final OfficeController controller = new OfficeController( service );
+   ```
+
+   Call the controller's `office()` method, instead if making a REST request
+
+   ```java
+       final List<Office> list = controller.offices();
+   ```
+
+   Finally, compare the actual list, instead of the JSON response.
+
+   ```java
+       assertEquals( offices, list );
+   ```
+
+1. Verify the mock
+
+   ```java
+       verify( service, times( 1 ) ).list();
+   ```
+
+
+On average, the Spring Boot Test version takes about 6 seconds to run while the version shown above takes about 2 seconds.  The tests themselves take far less time to run, as shown in the following table.
+
+| Type           | Overhead | Test  |
+| -------------- | -------: | ----: |
+| Spring         |       6s | 200ms |
+| Without Spring |       2s |  50ms |
+
+The speed difference between these tests is not negligible, especially for an application that has lots of endpoints.
+
+While the tests that do not make use of Spring are faster, here we are not comparing like with like.  The test that does not involve Spring will still pass even if we remove the REST related annotations (`@RestController` and `@GetMapping`) from the controller, as shown next.
+
+{% include custom/proceed_with_caution.html details="Do not update the controller as this is shown here for demonstration purpose.  The controller should have all the annotations as otherwise it will not work." %}
+
+```java
+package demo.boot;
+
+import lombok.AllArgsConstructor;
+// import org.springframework.web.bind.annotation.GetMapping;
+// import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+// @RestController
+@AllArgsConstructor
+public class OfficeController {
+
+  private final ContactUsService service;
+
+  // @GetMapping( "/offices" )
+  public List<Office> offices() {
+    return service.list();
+  }
+}
+```
+
+The Spring version of the test will fail as no controller is found to handle the request and a 404 is returned instead of a 200.
+
+Despite being slower, I prefer the Spring version of the test for the reasons listed below:
+
+1. The Spring version of the test cover both the controller logic and its wiring (annotations), which is part of the same class.
+1. If we **only** opt for the non-Spring tests, then we will have parts of the application that are not tested.  Our application will still pass but
+1. If we create _integration like_ tests to cover the annotations, we will duplicate the tests.
+
+The REST controller acts as a bridge between the outside world and our application and enables communication via HTTP/REST as shown next.
+
+![REST, MQ and Service]({{ '/assets/images/REST-MQ-Service.png' | absolute_url }})
+
+The REST controller simply converts the HTTP/REST requests to Java objects and then invokes the service, where the application business logic resides.  Our application can later be connected to a message queue and a new bridge will be added to connect our service to the message queue.
+
+The REST controller may use [path variables](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/PathVariable.html), or [request parameters](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/RequestParam.html), each of which needs to b covered by tests.  In some cases, these parameters may be optional and have a default value while other times these parameters are mandatory.  Testing such cases outside Spring is not possible as the logic behind the validation is performed by Spring, through the annotations used.
 
 ## Tasks status
 
