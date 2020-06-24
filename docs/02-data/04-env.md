@@ -56,6 +56,8 @@ The above example only contains development and test credentials.  While that ma
 
    Create file `.env`
 
+   {% include custom/proceed_with_caution.html details="Do not save production passwords as plain text" %}
+
    ```properties
    DATABASE_NAME=contact-us
    DATABASE_PORT=
@@ -129,9 +131,16 @@ The above example only contains development and test credentials.  While that ma
 
 ## Integration tests
 
-When we moved the configuration of the database to environment variables, we made our application dependent on external resources, such as the environment variables.  Any tests that depend on resources sitting outside of our application should be moved into their own category (namely _integration tests_).
+When we moved the configuration of the database to environment variables, we made our application dependent on external resources.  Any tests that depend on resources sitting outside of our application should be moved into their own category (namely _integration tests_).
 
-The test class `ContactUsApplicationTests` requires the application to start, which in turn require the environment variables defined before.  Gradle is very customisable and we can easily have a new set of tests, referred to as _integration tests_, and move the tests that depend on external resources into this group.
+Our application has two tests that interact with the database.
+
+1. `ContactUsApplicationTests`
+1. `OfficesRepositoryTest`
+
+{% include custom/note.html details="Other tests that are marked as optional, such as <code>FlywayMigrationTest</code> and <code>OfficeEntityTest</code>, too need to be moved if these are present, as these depend on the database." %}
+
+Gradle is very customisable and we can easily have a new set of tests, referred to as _integration tests_, and move the tests that depend on external resources into this group.
 
 1. Define integration tests
 
@@ -380,17 +389,18 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
    ...
    ```
 
-1. Move the `ContactUsApplicationTests` to the `test-intergration`, and retain the package structure
+1. Move the `ContactUsApplicationTests` and `OfficesRepositoryTest` to the `test-intergration`, and retain the package structure
 
    ```bash
    $ mkdir -p src/test-integration/java/demo/boot
    $ mv src/test/java/demo/boot/ContactUsApplicationTests.java src/test-integration/java/demo/boot
+   $ mv src/test/java/demo/boot/OfficesRepositoryTest.java src/test-integration/java/demo/boot
    ```
 
-   The other two tests, the `JpaContactUsServiceTest.java` and `OfficeControllerTest.java`, should stay where these were, as shown in the following directory structure.
+   The other two tests, the `JpaContactUsServiceTest` and `OfficeControllerTest`, should stay where these were, as shown in the following directory structure.
 
    ```bash
-   tree src
+   $ tree src
    src
    ├── main
    ...
@@ -404,9 +414,8 @@ The test class `ContactUsApplicationTests` requires the application to start, wh
        └── java
            └── demo
                └── boot
-                   └── ContactUsApplicationTests.java
-
-   16 directories, 15 files
+                   ├── ContactUsApplicationTests.java
+                   └── OfficesRepositoryTest.java
    ```
 
 1. Run the integration test
