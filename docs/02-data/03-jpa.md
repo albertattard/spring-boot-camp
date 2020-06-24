@@ -67,7 +67,7 @@ Entities are classes that map to a database table.
    }
    ```
 
-Classes that need to be mapped with a table, need to be annotated with the [`@Entity`](https://docs.oracle.com/javaee/7/api/javax/persistence/Entity.html) annotation.  Note that the above class only defines the properties and the properties name matches the table's column names.  JPA uses [convention over configuration](https://en.wikipedia.org/wiki/Convention_over_configuration) to minimise the amount of configuration required.
+Classes that need to be mapped with a table, need to be annotated with the [`@Entity`](https://docs.oracle.com/javaee/7/api/javax/persistence/Entity.html) annotation.  The above class only defines the properties and the properties name matches the table's column names.  JPA uses [convention over configuration](https://en.wikipedia.org/wiki/Convention_over_configuration) to minimise the amount of configuration required.
 
 Given that the table name (`offices`) is different from the class name (`OfficeEntity`), we need to specify the table name through the [`@Table`](https://docs.oracle.com/javaee/7/api/javax/persistence/Table.html) annotation, as shown next.
 
@@ -482,7 +482,7 @@ Read all rows in the `offices` table using the JPA repository.
 
    The `JpaContactUsService` require an instance of `OfficesRepository` which will be provided by Spring.
 
-   {% include custom/note.html details="Note that the above class, also takes advantage from Lombok's <a href='https://projectlombok.org/api/lombok/AllArgsConstructor.html'><code>@AllArgsConstructor</code></a> annotation." %}
+   {% include custom/note.html details="The above class also takes advantage from Lombok's <a href='https://projectlombok.org/api/lombok/AllArgsConstructor.html'><code>@AllArgsConstructor</code></a> annotation." %}
 
 1. Create the test
 

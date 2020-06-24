@@ -115,7 +115,7 @@ While we can achieve the same thing with both libraries, we will opt for Flyway 
    }
    ```
 
-   {% include custom/note.html details="Note that in many <em>Spring Boot + Flyway</em> documentation, this step omitted as it is said that Spring Boot configures Flyway automatically.  This is a bit misleading as Spring Boot configure Flyway automatically only if this is on the classpath." %}
+   {% include custom/note.html details="In many <em>Spring Boot + Flyway</em> documentation, this step omitted as it is said that Spring Boot configures Flyway automatically.  This is a bit misleading as Spring Boot configure Flyway automatically only if this is on the classpath." %}
 
    ![Flyway Dependency]({{ '/assets/images/Flyway-Dependency.png' | absolute_url }})
 

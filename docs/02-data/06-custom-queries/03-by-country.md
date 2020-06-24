@@ -1,17 +1,14 @@
 ---
 layout: default
-title: Custom Queries
-parent: Spring Data
-nav_order: 6
-permalink: docs/data/custom-queries/
+title: Filter by a country
+parent: Custom Queries
+grand_parent: Spring Data
+nav_order: 3
+permalink: docs/data/custom-queries/find-by-country/
 ---
 
-# Custom Query
+# Filter by a country
 {: .no_toc }
-
-We are able to return all offices using the provided [`findAll()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findAll--) method.  In this section we will introduce custom queries and take advantage of [Spring Repositories](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.repositories).
-
-For the time being we will not expose any of the features added here to the front-end as this is covered at a later stage.  Our changes should stop at the service layer.
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -20,32 +17,6 @@ For the time being we will not expose any of the features added here to the fron
 {:toc}
 
 ---
-
-## Scenario
-
-Customers using our API came back with feedback.  They would like to filter offices by country.  For example, given the country, `"germany"`, our repository should return all offices that belong to this country, case-insensitive.  ThoughtWorks is promoting the self-service approach and offices can modify the office details and delete offices that are not operating anymore.
-
-### Tasks
-
-- [ ] Return one office by id
-- [ ] Filter by country
-- [ ] Update individual office details
-- [ ] Delete an office
-
-## Return one office by id (`findById()`)
-
-{% include custom/pending.html %}
-
-### Link to service
-
-{% include custom/pending.html %}
-
-### Tasks
-
-- [X] Return one office by id
-- [ ] Filter by country
-- [ ] Update individual office details
-- [ ] Delete an office
 
 ## Filter by a country (JPA query methods)
 
@@ -480,14 +451,7 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
    }
    ```
 
-### Tasks
-
-- [X] Return one office by id
-- [X] Filter by country
-- [ ] Update individual office details
-- [ ] Delete an office
-
-### Can we query the repository based on what the user inputs?
+## Can we query the repository based on what the user inputs?
 
 **Yes**.  Spring Data JPA provides more elaborate filtering abilities.  We can make use of [`ExampleMatcher`](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#query-by-example.matchers) to create more elaborate queries based on the needs at hand.
 
@@ -507,32 +471,9 @@ The `ExampleMatcher` can be customised based on the needs at hand.  We can repla
 
 This is an overkill for our example but shows how we can fine tune the query to the required need.
 
-## Update individual office details
-
-{% include custom/pending.html %}
-
-### Link to service
-
-{% include custom/pending.html %}
-
-### Tasks
+## Tasks
 
 - [X] Return one office by id
 - [X] Filter by country
-- [X] Update individual office details
+- [ ] Update individual office details
 - [ ] Delete an office
-
-## Delete an office
-
-{% include custom/pending.html %}
-
-### Link to service
-
-{% include custom/pending.html %}
-
-### Tasks
-
-- [X] Return one office by id
-- [X] Filter by country
-- [X] Update individual office details
-- [X] Delete an office

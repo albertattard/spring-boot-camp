@@ -153,7 +153,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
    The database driver, `DATABASE_DRIVER`, now points to the PostgreSQL driver `org.postgresql.Driver` not to H2 anymore.  Running the integration tests now will fail as still we need to update the application.  Furthermore, the application will not start as we are missing the driver.
 
-1. Start the services defined by docker composed
+1. Start the services defined in the docker compose file
 
    ```bash
    $ docker-compose up -d
@@ -234,12 +234,11 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    }
    ```
 
-   The above file does not make use of environment variables and you need to make sure that the database name
-    (`DATABASE_NAME`) and the database username (`DATABASE_USERNAME`) match those defined in the `.env` file.
+   {% include custom/note.html details="The above file does not make use of environment variables and you need to make sure that the database name (<code>DATABASE_NAME</code>) and the database username (<code>DATABASE_USERNAME</code>) match those defined in the <code>.env</code> file." %}
 
 1. Delete the existing containers
 
-   {% include custom/proceed_with_caution.html details="The following command will delete all stopped containers" %}
+   {% include custom/proceed_with_caution.html details="The following command will delete <strong>all</strong> stopped containers" %}
 
    If you do not want to delete old containers, please do not run the `docker system prune -f` command.
 
@@ -256,7 +255,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    $ docker-compose stop && docker system prune -f
    ```
 
-   The docker containers are stopped and then deleted.
+   The docker containers are first stopped and then deleted.
 
    ```bash
    Stopping contact-us ... done
@@ -271,7 +270,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    Total reclaimed space: 154B
    ```
 
-1. Start the services defined by docker composed
+1. Start the services defined in the docker compose file
 
    ```bash
    $ docker-compose up -d
@@ -330,7 +329,7 @@ The database is setup and ready to be used by our application.
 
      /* Data */
      implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-     implementation 'org.flywaydb:flyway-core'
+     runtimeOnly 'org.flywaydb:flyway-core'
      runtimeOnly 'org.postgresql:postgresql'
 
      /* OpenApi/Swagger */
@@ -338,9 +337,9 @@ The database is setup and ready to be used by our application.
    }
    ```
 
-1. Restart the services (_if these are not running_)
+1. Restart the services
 
-   {% include custom/proceed_with_caution.html details="The following command will delete all stopped containers" %}
+   {% include custom/proceed_with_caution.html details="The following command will delete <strong>all</strong> stopped containers." %}
 
    If you do not want to delete old containers, please do not run the `docker system prune -f` command.
 
@@ -370,7 +369,7 @@ The database is setup and ready to be used by our application.
 
 1. Expands the tables node
 
-   Note that now we have two tables:
+   There should be two tables:
 
    1. `flyway_schema_history`: used by Flyway to manage the database migration state.  This is how Flyway keeps track of which scripts are executed and which scripts are pending.
    1. `offices`: our table
