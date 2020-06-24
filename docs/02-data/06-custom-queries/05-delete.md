@@ -26,7 +26,7 @@ permalink: docs/data/custom-queries/delete/
 
 {% include custom/pending.html %}
 
-## Tasks
+## Tasks status
 
 - [X] Return one office by id
 - [X] Filter by country
