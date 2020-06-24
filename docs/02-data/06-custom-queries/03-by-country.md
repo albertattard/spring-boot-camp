@@ -232,7 +232,7 @@ Note that while we are not adding any actual code, the method name has logic bou
 
 ### Link to service
 
-A new method will be added to the `ContactUsService`, named `listInCountry( String )`, that will interact with the repository to return only the offices for the given country.
+A new method will be added to the `ContactUsService`, named `findAllInCountry()`, that takes the country name at it sole parameter.  This method will interact with the repository to retrieve and return only the offices for the given country.
 
 1. Add a new test method
 
@@ -261,6 +261,14 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
      public void shouldReturnOffices() { /* ... */ }
 
      @Test
+     @DisplayName( "should query for the with a given id and return optional empty when the office is not found" )
+     public void shouldReturnOptionEmpty() { /* ... */ }
+
+     @Test
+     @DisplayName( "should query for the with a given id and return the office returned by the repository" )
+     public void shouldReturnOffice() { /* ... */ }
+
+     @Test
      @DisplayName( "should return all offices in a given country" )
      public void shouldReturnOfficesInACountry() {
        final List<OfficeEntity> entities = List.of(
@@ -274,7 +282,7 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
        when( repository.findAllByCountryIgnoreCase( eq( country ) ) ).thenReturn( entities );
 
        final ContactUsService service = new JpaContactUsService( repository );
-       final List<Office> offices = service.listInCountry( country );
+       final List<Office> offices = service.findAllInCountry( country );
 
        final List<Office> expected = List.of(
          new Office( "a1", "a2", "a4", "a5" ),
@@ -288,7 +296,7 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
    }
    ```
 
-   Add the new method to the `ContactUsService` interface.  We will be adding more methods to this interface and that's why we never declared the interface as a [`@FunctionalInterface`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/lang/FunctionalInterface.html).
+   Add the new method to the `ContactUsService` interface.
 
    Update file: `src/main/java/demo/boot/ContactUsService.java`
 
@@ -296,12 +304,15 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
    package demo.boot;
 
    import java.util.List;
+   import java.util.Optional;
 
    public interface ContactUsService {
 
      List<Office> list();
 
-     List<Office> listInCountry( final String country );
+     Optional<Office> findOneByOffice( final String office );
+
+     List<Office> findAllInCountry( final String country );
    }
    ```
 
@@ -363,6 +374,7 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
    import org.springframework.stereotype.Service;
 
    import java.util.List;
+   import java.util.Optional;
    import java.util.function.Function;
    import java.util.stream.Collectors;
 
@@ -377,7 +389,10 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
      public List<Office> list() { /* ... */ }
 
      @Override
-     public List<Office> listInCountry( final String country ) {
+     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+
+     @Override
+     public List<Office> findAllInCountry( final String country ) {
        return repository
          .findAllByCountryIgnoreCase( country )
          .stream()
@@ -385,7 +400,14 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
          .collect( Collectors.toList() );
      }
 
-     private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
+     private Function<OfficeEntity, Office> mapToOffice() {
+       return entity -> new Office(
+         entity.getOffice(),
+         entity.getAddress(),
+         entity.getPhone(),
+         entity.getEmail()
+       );
+     }
    }
    ```
 
@@ -415,6 +437,7 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
    import org.springframework.stereotype.Service;
 
    import java.util.List;
+   import java.util.Optional;
    import java.util.function.Function;
    import java.util.stream.Collectors;
 
@@ -431,11 +454,18 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
      }
 
      @Override
-     public List<Office> listInCountry( final String country ) {
+     public Optional<Office> findOneByOffice( final String office ) {
+       return repository
+         .findById( office )
+         .map( mapToOffice() );
+     }
+
+     @Override
+     public List<Office> findAllInCountry( final String country ) {
        return mapToOffices( repository.findAllByCountryIgnoreCase( country ) );
      }
 
-     private List<Office> mapToOffices( final List<OfficeEntity> entities ) {
+     private List<Office> mapToOffices( List<OfficeEntity> entities ) {
        return entities
          .stream()
          .map( mapToOffice() )
@@ -460,6 +490,34 @@ A new method will be added to the `ContactUsService`, named `listInCountry( Stri
 The `ExampleMatcher` can be customised based on the needs at hand.  We can replace the previous example with the following code.
 
 ```java
+package demo.boot;
+
+import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Service
+@Primary
+@AllArgsConstructor
+public class JpaContactUsService implements ContactUsService {
+
+  private final OfficesRepository repository;
+
+  @Override
+  public List<Office> list() { /* ... */ }
+
+  @Override
+  public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+
+  @Override
+  public List<Office> findAllInCountry( final String country ) {
     final OfficeEntity office = new OfficeEntity();
     office.setCountry( "germany" );
 
@@ -468,7 +526,15 @@ The `ExampleMatcher` can be customised based on the needs at hand.  We can repla
       .withIgnoreCase();
 
     final Example<OfficeEntity> example = Example.of( office, matcher );
-    final List<OfficeEntity> offices = repository.findAll( example );
+    final List<OfficeEntity> entities = repository.findAll( example );
+
+    return mapToOffices( entities );
+  }
+
+  private List<Office> mapToOffices( List<OfficeEntity> entities ) { /* ... */ }
+
+  private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
+}
 ```
 
 This is an overkill for our example but shows how we can fine tune the query to the required need.
