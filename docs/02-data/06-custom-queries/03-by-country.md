@@ -39,11 +39,11 @@ No need to add code, as Spring Data JPA will take care of the rest.  The method 
 
 Note that while we are not adding any actual code, the method name has logic bound to it and thus it needs to be tested like any other code.
 
-1. Create a repository (**integration**) test
+1. Create a repository (_integration_) test
 
-   Note that our new test will interact with a PostgreSQL database, thus it is an integration test.
+   {% include custom/note.html details="Our new test will interact with a <a href='https://www.postgresql.org/'>PostgreSQL</a> database, thus it is an integration test." %}
 
-   Create file `src/test-integration/java/demo/boot/OfficesRepositoryTest.java`
+   Update file `src/test-integration/java/demo/boot/OfficesRepositoryTest.java`
 
    ```java
    package demo.boot;
@@ -96,6 +96,10 @@ Note that while we are not adding any actual code, the method name has logic bou
        entityManager.persist( COLOGNE );
        entityManager.persist( MANCHESTER );
      }
+
+     @Test
+     @DisplayName( "should return all offices in the table" )
+     public void shouldReturnAll() { /* ... */ }
 
      @Test
      @DisplayName( "should return all offices for the given country (case insensitive) " )
@@ -202,12 +206,10 @@ Note that while we are not adding any actual code, the method name has logic bou
 1. Make sure that PostgreSQL is running
 
    ```bash
-   $ docker ps
-
-   ...
-   CONTAINER ID        IMAGE                 COMMAND                  CREATED             STATUS                 PORTS                           NAMES
-   5a8316ce8655        postgres:11.1         "docker-entrypoint.s…"   4 hours ago         Up 4 hours (healthy)   0.0.0.0:5432->5432/tcp          contact-us
-   363fe0c321cb        dpage/pgadmin4:4.22   "/entrypoint.sh"         4 hours ago         Up 4 hours             443/tcp, 0.0.0.0:8000->80/tcp   pgadmin4
+   $  docker ps -a
+   CONTAINER ID        IMAGE                    COMMAND                  CREATED             STATUS                    PORTS                           NAMES
+   c73a54d042bd        dpage/pgadmin4:4.22      "/entrypoint.sh"         17 seconds ago      Up 15 seconds             443/tcp, 0.0.0.0:8000->80/tcp   contact-us-pgadmin4
+   48191453c2ea        postgres:11.1            "docker-entrypoint.s…"   17 seconds ago      Up 15 seconds (healthy)   0.0.0.0:5432->5432/tcp          contact-us-pg
    ```
 
    You can start the services using the following command, if these are not running.

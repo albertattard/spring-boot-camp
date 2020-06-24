@@ -46,7 +46,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    version: "3"
    services:
      postgres:
-       container_name: ${DATABASE_NAME}
+       container_name: ${DATABASE_NAME}-pg
        image: postgres:11.1
        restart: unless-stopped
        networks:
@@ -66,7 +66,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
          timeout: 5s
          retries: 5
      pgadmin4:
-       container_name: pgadmin4
+       container_name: ${DATABASE_NAME}-pgadmin4
        image: dpage/pgadmin4:4.22
        restart: unless-stopped
        networks:
@@ -92,7 +92,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
       ```yaml
         postgres:
-          container_name: ${DATABASE_NAME}
+          container_name: ${DATABASE_NAME}-pg
           image: postgres:11.1
           restart: unless-stopped
           networks:
@@ -117,7 +117,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
       ```yaml
         pgadmin4:
-          container_name: pgadmin4
+          container_name: ${DATABASE_NAME}-pgadmin4
           image: dpage/pgadmin4:4.22
           restart: unless-stopped
           networks:
@@ -190,7 +190,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
       ```yaml
         pgadmin4:
-          container_name: pgadmin4
+          container_name: ${DATABASE_NAME}-pgadmin4
           image: dpage/pgadmin4:4.22
           restart: unless-stopped
           networks:
@@ -258,8 +258,8 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    The docker containers are first stopped and then deleted.
 
    ```bash
-   Stopping contact-us ... done
-   Stopping pgadmin4   ... done
+   Stopping contact-us-pg         ... done
+   Stopping contact-us-pgadmin4   ... done
    Deleted Containers:
    7fd865ee5aced2b8265611fb15e00feaea33679cf8c5f234efd300287ba15b39
    a694df37731836953b9c272ab529c26852bd92f78f317a31172c15ee4fd914b3
@@ -385,3 +385,20 @@ The database is setup and ready to be used by our application.
    ![PgAdmin Tables Created]({{ '/assets/images/PgAdmin-Tables-Created.png' | absolute_url }})
 
    This will display all offices that were populated by Flyway during the migration.
+
+## Remove H2 references
+
+We have deleted the H2 dependency from the `build.gradle` file.  We still may have H2 related configuration in our `application.yaml` properties file.
+
+1. Remove the H2 configuration
+
+   Update file: `/Users/albertattard/work/projects/albertattard/contact-us/src/main/resources/application.yaml`
+
+   Remove the `h2` configuration by deleting the following.
+
+   ```yaml
+     h2:
+       console:
+         enabled: true
+         path: /h2
+   ```
