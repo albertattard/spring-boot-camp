@@ -297,6 +297,14 @@ There are several approaches to handle this.
 
    The tests pass as the interaction with the repository was already implemented in the previous test.  This works for both tests.
 
+## What is the difference between `findById()` and `getOne()` repository methods?
+
+In our example we used the [`findById()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findById-ID-) method, defined by the [`CrudRepository`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) interface to retrieve the office by the given id.  The [`JpaRepository`](https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaRepository.html) interface defines the [`getOne()`](https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaRepository.html#getOne-ID-) method, which too returns an office by its id.
+
+The difference between these two methods is that the `findById()` method is eager, while the `getOne()` method is lazy.  This has no impact in our case as we only have one table and we do not have any relations.
+
+Say that we have another table containing all employees which is linked to the offices table and also another entity that represent the employee in Java.  Then using the `findById()` method will retrieve the office and all employees that are linked to this office immediately.  On the other hand, if we use the `getOne()` method, the office details are read from the table but the employees are not.  Only when we request the list of employees, these are fetched from the database and then returned.
+
 ## Tasks
 
 - [X] Return one office by id
