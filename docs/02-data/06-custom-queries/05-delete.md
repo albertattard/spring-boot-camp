@@ -1,9 +1,9 @@
 ---
 layout: default
-title: Update individual office details
+title: Delete an office
 parent: Custom Queries
 grand_parent: Spring Data
-nav_order: 4
+nav_order: 5
 permalink: docs/data/custom-queries/delete/
 ---
 
@@ -19,10 +19,6 @@ permalink: docs/data/custom-queries/delete/
 ---
 
 ## Delete an office
-
-{% include custom/pending.html %}
-
-## Link to service
 
 {% include custom/pending.html %}
 

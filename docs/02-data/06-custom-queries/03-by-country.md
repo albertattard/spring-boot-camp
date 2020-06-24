@@ -230,7 +230,7 @@ Note that while we are not adding any actual code, the method name has logic bou
 
    The integration tests should all pass
 
-### Link to service
+## Link to service
 
 A new method will be added to the `ContactUsService`, named `findAllInCountry()`, that takes the country name at it sole parameter.  This method will interact with the repository to retrieve and return only the offices for the given country.
 
@@ -465,7 +465,7 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
        return mapToOffices( repository.findAllByCountryIgnoreCase( country ) );
      }
 
-     private List<Office> mapToOffices( List<OfficeEntity> entities ) {
+     private List<Office> mapToOffices( final List<OfficeEntity> entities ) {
        return entities
          .stream()
          .map( mapToOffice() )
@@ -531,7 +531,7 @@ public class JpaContactUsService implements ContactUsService {
     return mapToOffices( entities );
   }
 
-  private List<Office> mapToOffices( List<OfficeEntity> entities ) { /* ... */ }
+  private List<Office> mapToOffices( final List<OfficeEntity> entities ) { /* ... */ }
 
   private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
 }
