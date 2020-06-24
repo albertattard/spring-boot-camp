@@ -297,6 +297,12 @@ There are several approaches to handle this.
 
    The tests pass as the interaction with the repository was already implemented in the previous test.  This works for both tests.
 
+## How come we did not create a test for the `findById()` method?
+
+The [`findById()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findById-ID-) method is provided by the  [`CrudRepository`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) interface.
+
+We added a test for the [`findAll()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findAll--) to make sure that our entity (`OfficeEntity`) is properly mapped.  There is no value in creating a new test for the `findById()`.
+
 ## What is the difference between `findById()` and `getOne()` repository methods?
 
 In our example we used the [`findById()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findById-ID-) method, defined by the [`CrudRepository`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) interface to retrieve the office by the given id.  The [`JpaRepository`](https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaRepository.html) interface defines the [`getOne()`](https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaRepository.html#getOne-ID-) method, which too returns an office by its id.
