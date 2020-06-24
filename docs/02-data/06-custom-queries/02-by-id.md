@@ -315,5 +315,5 @@ Say that we have another table containing all employees which is linked to the o
 
 - [X] Return one office by id
 - [ ] Return all offices in country
-- [ ] Update individual office details
+- [ ] Update one office
 - [ ] Delete an office

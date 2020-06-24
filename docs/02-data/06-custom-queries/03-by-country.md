@@ -543,5 +543,5 @@ This is an overkill for our example but shows how we can fine tune the query to 
 
 - [X] Return one office by id
 - [X] Return all offices in country
-- [ ] Update individual office details
+- [ ] Update one office
 - [ ] Delete an office

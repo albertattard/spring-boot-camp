@@ -26,5 +26,5 @@ permalink: docs/data/custom-queries/delete/
 
 - [X] Return one office by id
 - [X] Return all offices in country
-- [X] Update individual office details
+- [X] Update one office
 - [X] Delete an office

@@ -1,13 +1,13 @@
 ---
 layout: default
-title: Update individual office details
+title: Update one office
 parent: Custom Queries
 grand_parent: Spring Data
 nav_order: 4
 permalink: docs/data/custom-queries/update/
 ---
 
-# Update individual office details
+# Update one office
 {: .no_toc }
 
 ## Table of contents
@@ -18,7 +18,7 @@ permalink: docs/data/custom-queries/update/
 
 ---
 
-## Update individual office details
+## Update one office
 
 1. a
 
@@ -399,5 +399,5 @@ permalink: docs/data/custom-queries/update/
 
 - [X] Return one office by id
 - [X] Return all offices in country
-- [X] Update individual office details
+- [X] Update one office
 - [ ] Delete an office

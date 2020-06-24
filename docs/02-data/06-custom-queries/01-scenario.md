@@ -26,5 +26,5 @@ Customers using our API came back with feedback.  They would like to filter offi
 
 - [ ] Return one office by id
 - [ ] Return all offices in country
-- [ ] Update individual office details
+- [ ] Update one office
 - [ ] Delete an office
