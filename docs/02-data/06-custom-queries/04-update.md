@@ -395,20 +395,100 @@ permalink: docs/data/custom-queries/update/
 
 ## Are concurrent updates a problem?
 
-Each individual update is atomic by nature.  In our current example, if two or more updates happen at the same time, these are simply applied in the order they are received by the database.
+Let's analyse the update operation we have implemented so far.
+
+```java
+  @Override
+  public Optional<Office> update( final Office office ) {
+    return repository
+      .findById( office.getOffice() )
+      .map( updateEntity( office ) )
+      .map( repository::save )
+      .map( mapToOffice() );
+  }
+```
+
+The above update operation is subject to the _race condition_, or as also know to the _check then act_ concurrency problem.  We _check_ whether the office exists when we invoke the `findById()` method.  Then we _act_ by saving the updates.
+
+```java
+    return repository
+      .findById( office.getOffice() ) /* Check */
+      .map( updateEntity( office ) )
+      .map( repository::save ) /* Act */
+      .map( mapToOffice() );
+```
+
+Each individual database update is atomic by nature as teh database ensures that.  In our current example, if two or more updates happen at the same time, these are simply applied in the order they are received by the database.  The _check then act_ problem does not affect us when updates happen concurrently, because irrespective of how may updates we make (the _act_ part), the `findById()` (the _check_ part) will always find the office as this is still in the database.
 
 In the [next section]({{ '/docs/data/custom-queries/delete/' | absolute_url }}), we will introduce the delete operation, which simply deletes the office from the database.  This will introduce a new complexity as the update should not happen if the office does not exist.  We should not be able to update an office that was delete.  Consider the following scenario, where a delete operation happens while an item is being updated on two different threads (_T1_ and _T2_).
 
-| Time | Update (_T1_)              | Delete (_T2_)     |
-| :--: | -------------------------- | ----------------- |
-|   1  | `findById()` return office |                   |
-|   2  |                            | `delete()` office |
-|   3  | `save()` changes           |                   |
+| Time | Update (_T1_)                        | Delete (_T2_)     |
+| :--: | ------------------------------------ | ----------------- |
+|   1  | `findById()` return office (_check_) |                   |
+|   2  |                                      | `delete()` office |
+|   3  | `save()` changes (_act_)             |                   |
 
-The above table shows two things happening at the same time, on two separate threads (_T1_ and _T2_).  The sequence shown above will leave the data in an invalid state as the office will be saved back to the database (Time: 3) after this was deleted (Time: 2).  Irrespective of the order of the update and delete operations, the item should be deleted.
+The above table shows two things happening at the same time, on two separate threads (_T1_ and _T2_).  The sequence shown above will leave the data in an invalid state as the office will be saved back to the database (Time: 3) after this was deleted (Time: 2).  Irrespective of the order of the office update and delete operations, the office should be deleted.
 
 * When the update happens before the delete, the update will succeed and then the item is deleted
 * When the delete happens before the update, the update will not happen as the item does not exist
+
+### How can we protect ourselves against issues related to concurrency?
+
+Testing for concurrency is not an easy task.  First you need to identify the where the problem lies, and then we need to be able to replicate it.  The latter is not an easy task as we need to get the problematic sequence right.
+
+In our example, we have a check then act issue that may manifest itself once we introduce the delete operation.  We need to write a test that is able to delete the office right after the `findById()` (the _check_ part) and when the office is saved back to the database (the _act_ part), as shown next
+
+```java
+    return repository
+      .findById( office.getOffice() ) /* Check */
+      .map( updateEntity( office ) ) /* <<< We need to delete the item at this point */
+      .map( repository::save ) /* Act */
+      .map( mapToOffice() );
+```
+
+The `updateEntity()` method returns a [`Function<OfficeEntity, OfficeEntity>`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/function/Function.html) that takes an `OfficeEntity` and returns it updated with the `Office` values.
+
+```java
+  private Function<OfficeEntity, OfficeEntity> updateEntity( final Office office ) {
+    return entity -> {
+      entity.setAddress( office.getAddress() );
+      entity.setPhone( office.getPhone() );
+      entity.setEmail( office.getEmail() );
+      return entity;
+    };
+  }
+```
+
+We can leverage this part of the code to simulate a delete operation.  Consider the following fragment.
+
+```java
+    final Office office = new Office( "a", "b", "c", "d" ) {
+      @Override
+      public String getAddress() {
+        /* Delete the office between the findById() and save() */
+        deleteOfficeFromAnotherThread();
+        return super.getAddress();
+      }
+    };
+```
+
+The above fragment, creates an inner anonymous class and overrides the `getAddress()` method.  In the overridden `getAddress()` method, we invoke yet another method that deletes the office, then resumes by returning the address.  This deletes the office after the `findById()` method is invoked but before the `save()` method is invoked.
+
+The `deleteOfficeFromAnotherThread()` needs to delete the office using a different thread, as shown next.
+
+```java
+  private void deleteOfficeFromAnotherThread() {
+    try {
+      final Thread delete = new Thread( () -> repository.delete( COLOGNE ), "DELETE" );
+      delete.start();
+      delete.join();
+    } catch ( InterruptedException e ) {
+    }
+  }
+```
+
+This is important as otherwise Hibernate will fail and the test will not be simulating a real-life situation.
 
 ```java
 package demo.boot;
