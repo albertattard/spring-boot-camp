@@ -24,7 +24,7 @@ An existing office can be updated using a new method named `update()`, that take
 
 **What should we return if the office does not exists?**
 
-We can rely on the [`Optional`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html) to indicate whether the update happened successfully or not.  An [empty optional](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html#empty()) as we did in the `findOneByOffice()` method.
+We can rely on the [`Optional`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html) to indicate whether the update happened successfully or not.  An [empty optional](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html#empty()) as we did in the `findOneByName()` method.
 
 **Why do we need to return an office back?**
 
@@ -145,18 +145,18 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      @Test
      @DisplayName( "should return empty optional if the office being saved does not exists" )
      public void shouldSaveNonExistentOffice() {
-       final String id = "a1";
-       final Office office = new Office( id, "a2", "a3", "a4" );
+       final String name = "a1";
+       final Office office = new Office( name, "a2", "a3", "a4" );
 
        final OfficesRepository repository = mock( OfficesRepository.class );
-       when( repository.findById( eq( id ) ) ).thenReturn( Optional.empty() );
+       when( repository.findById( eq( name ) ) ).thenReturn( Optional.empty() );
 
        final ContactUsService service = new JpaContactUsService( repository );
        final Optional<Office> saved = service.update( office );
 
        assertEquals( Optional.empty(), saved );
 
-       verify( repository, times( 1 ) ).findById( id );
+       verify( repository, times( 1 ) ).findById( name );
        verifyNoMoreInteractions( repository );
      }
    }
@@ -204,7 +204,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      public List<Office> list() { /* ... */ }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+     public Optional<Office> findOneByName( final String name ) { /* ... */ }
 
      @Override
      public List<Office> findAllInCountry( final String country ) { /* ... */ }
@@ -280,13 +280,13 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      @Test
      @DisplayName( "should update the office and return the updated version" )
      public void shouldSaveOffice() {
-       final String id = "a1";
-       final Office office = new Office( id, "a2", "a4", "a5" );
-       final OfficeEntity existingEntity = new OfficeEntity( id, "o2", "o3", "o4", "o5", "o6" );
-       final OfficeEntity updatedEntity = new OfficeEntity( id, "a2", "o3", "a4", "a5", "o6" );
+       final String name = "a1";
+       final Office office = new Office( name, "a2", "a4", "a5" );
+       final OfficeEntity existingEntity = new OfficeEntity( name, "o2", "o3", "o4", "o5", "o6" );
+       final OfficeEntity updatedEntity = new OfficeEntity( name, "a2", "o3", "a4", "a5", "o6" );
 
        final OfficesRepository repository = mock( OfficesRepository.class );
-       when( repository.findById( eq( id ) ) ).thenReturn( Optional.of( existingEntity ) );
+       when( repository.findById( eq( name ) ) ).thenReturn( Optional.of( existingEntity ) );
        when( repository.save( eq( updatedEntity ) ) ).thenReturn( updatedEntity );
 
        final ContactUsService service = new JpaContactUsService( repository );
@@ -294,7 +294,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
 
        assertEquals( Optional.of( office ), saved );
 
-       verify( repository, times( 1 ) ).findById( id );
+       verify( repository, times( 1 ) ).findById( name );
        verify( repository, times( 1 ) ).save( updatedEntity );
      }
    }
@@ -337,7 +337,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      public List<Office> list() { /* ... */ }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+     public Optional<Office> findOneByName( final String name ) { /* ... */ }
 
      @Override
      public List<Office> findAllInCountry( final String country ) { /* ... */ }
@@ -393,7 +393,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      public List<Office> list() { /* ... */ }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+     public Optional<Office> findOneByName( final String name ) { /* ... */ }
 
      @Override
      public List<Office> findAllInCountry( final String country ) { /* ... */ }
@@ -712,7 +712,7 @@ We need to make the two operations, `findById()` and `save()` methods, atomic.  
      public List<Office> list() { /* ... */ }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+     public Optional<Office> findOneByName( final String name ) { /* ... */ }
 
      @Override
      public List<Office> findAllInCountry( final String country ) { /* ... */ }
@@ -857,7 +857,7 @@ We can do better than simply failing.  In our case, we can retry the office upda
      public List<Office> list() { /* ... */ }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+     public Optional<Office> findOneByName( final String name ) { /* ... */ }
 
      @Override
      public List<Office> findAllInCountry( final String country ) { /* ... */ }

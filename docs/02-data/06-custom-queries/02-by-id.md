@@ -38,7 +38,7 @@ There are several approaches to handle this.
 
   This is the recommended approach to indicate that the value was not found.  [Spring Data JPA](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/) was improved and now returns [an empty optional when the entity with the given id is not found](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findById-ID-).  Furthermore, the [`Optional`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html), plays well with functional Java as we will see later on.
 
-[Java 8](https://openjdk.java.net/projects/jdk8/) introduced the[`Optional`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html) type, which we will use to wrap our type in.  Our service will add a new method `findOneByOffice()`, that takes a `String` and returns `Optional<Office>`.
+[Java 8](https://openjdk.java.net/projects/jdk8/) introduced the[`Optional`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html) type, which we will use to wrap our type in.  Our service will add a new method `findOneByName()`, that takes a `String` and returns `Optional<Office>`.
 
 1. Add method to interface
 
@@ -64,7 +64,7 @@ There are several approaches to handle this.
 
    ```java
      @Override
-     public Optional<Office> findOneByOffice( final String office ) {
+     public Optional<Office> findOneByName( final String name ) {
        return Optional.empty();
      }
    ```
@@ -94,7 +94,7 @@ There are several approaches to handle this.
      public List<Office> list() { /* ... */ }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) {
+     public Optional<Office> findOneByName( final String name ) {
        return Optional.empty();
      }
 
@@ -134,17 +134,17 @@ There are several approaches to handle this.
      @Test
      @DisplayName( "should query for the with a given id and return optional empty when the office is not found" )
      public void shouldReturnOptionEmpty() {
-       final String id = "a1";
+       final String name = "a1";
 
        final OfficesRepository repository = mock( OfficesRepository.class );
-       when( repository.findById( eq( id ) ) ).thenReturn( Optional.empty() );
+       when( repository.findById( eq( name ) ) ).thenReturn( Optional.empty() );
 
        final ContactUsService service = new JpaContactUsService( repository );
-       final Optional<Office> office = service.findOneByOffice( id );
+       final Optional<Office> office = service.findOneByName( name );
 
        assertEquals( Optional.empty(), office );
 
-       verify( repository, times( 1 ) ).findById( id );
+       verify( repository, times( 1 ) ).findById( name );
      }
    }
    ```
@@ -264,19 +264,19 @@ There are several approaches to handle this.
      @Test
      @DisplayName( "should query for the with a given id and return the office returned by the repository" )
      public void shouldReturnOffice() {
-       final String id = "a1";
-       final OfficeEntity entity = new OfficeEntity( id, "a2", "a3", "a4", "a5", "a6" );
+       final String name = "a1";
+       final OfficeEntity entity = new OfficeEntity( name, "a2", "a3", "a4", "a5", "a6" );
 
        final OfficesRepository repository = mock( OfficesRepository.class );
-       when( repository.findById( eq( id ) ) ).thenReturn( Optional.of( entity ) );
+       when( repository.findById( eq( name ) ) ).thenReturn( Optional.of( entity ) );
 
        final ContactUsService service = new JpaContactUsService( repository );
-       final Optional<Office> office = service.findOneByName( id );
+       final Optional<Office> office = service.findOneByName( name );
 
        final Optional<Office> expected = Optional.of( new Office( "a1", "a2", "a4", "a5" ) );
        assertEquals( expected, office );
 
-       verify( repository, times( 1 ) ).findById( id );
+       verify( repository, times( 1 ) ).findById( name );
      }
    }
    ```

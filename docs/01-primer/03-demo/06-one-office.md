@@ -134,7 +134,7 @@ permalink: docs/primer/demo/one-office/
    @AllArgsConstructor
    public class Office {
 
-     private String office;
+     private String name;
      private String address;
      private String phone;
      private String email;

@@ -310,7 +310,7 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
 
      List<Office> list();
 
-     Optional<Office> findOneByOffice( final String office );
+     Optional<Office> findOneByName( final String name );
 
      List<Office> findAllInCountry( final String country );
    }
@@ -385,7 +385,7 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
      public List<Office> list() { /* ... */ }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+     public Optional<Office> findOneByName( final String name ) { /* ... */ }
 
      @Override
      public List<Office> findAllInCountry( final String country ) {
@@ -448,7 +448,7 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
      }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) {
+     public Optional<Office> findOneByName( final String name ) {
        return repository
          .findById( office )
          .map( mapToOffice() );
@@ -506,7 +506,7 @@ public class JpaContactUsService implements ContactUsService {
   public List<Office> list() { /* ... */ }
 
   @Override
-  public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+  public Optional<Office> findOneByName( final String name ) { /* ... */ }
 
   @Override
   public List<Office> findAllInCountry( final String country ) {
