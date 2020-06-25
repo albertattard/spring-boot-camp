@@ -324,7 +324,6 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
 
    import java.util.List;
@@ -332,7 +331,6 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 
@@ -370,7 +368,6 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
 
    import java.util.List;
@@ -379,7 +376,6 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 
@@ -433,7 +429,6 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
 
    import java.util.List;
@@ -442,7 +437,6 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 
@@ -493,7 +487,6 @@ The `ExampleMatcher` can be customised based on the needs at hand.  We can repla
 package demo.boot;
 
 import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
@@ -504,7 +497,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@Primary
 @AllArgsConstructor
 public class JpaContactUsService implements ContactUsService {
 

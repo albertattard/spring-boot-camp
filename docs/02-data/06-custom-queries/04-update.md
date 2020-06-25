@@ -66,7 +66,6 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
 
    import java.util.List;
@@ -75,7 +74,6 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 
@@ -189,7 +187,6 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
 
    import java.util.List;
@@ -198,7 +195,6 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 
@@ -324,7 +320,6 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
 
    import java.util.List;
@@ -333,7 +328,6 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 
@@ -382,7 +376,6 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
 
    import java.util.List;
@@ -391,7 +384,6 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 
@@ -702,7 +694,6 @@ We need to make the two operations, `findById()` and `save()` methods, atomic.  
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
    import org.springframework.transaction.annotation.Transactional;
 
@@ -712,7 +703,6 @@ We need to make the two operations, `findById()` and `save()` methods, atomic.  
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 
@@ -847,7 +837,6 @@ We can do better than simply failing.  In our case, we can retry the office upda
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.orm.ObjectOptimisticLockingFailureException;
    import org.springframework.retry.annotation.Retryable;
    import org.springframework.stereotype.Service;
@@ -859,7 +848,6 @@ We can do better than simply failing.  In our case, we can retry the office upda
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 

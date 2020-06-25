@@ -77,7 +77,6 @@ There are several approaches to handle this.
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
 
    import java.util.List;
@@ -86,7 +85,6 @@ There are several approaches to handle this.
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 
@@ -186,7 +184,6 @@ There are several approaches to handle this.
    package demo.boot;
 
    import lombok.AllArgsConstructor;
-   import org.springframework.context.annotation.Primary;
    import org.springframework.stereotype.Service;
 
    import java.util.List;
@@ -195,7 +192,6 @@ There are several approaches to handle this.
    import java.util.stream.Collectors;
 
    @Service
-   @Primary
    @AllArgsConstructor
    public class JpaContactUsService implements ContactUsService {
 

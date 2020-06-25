@@ -806,6 +806,33 @@ Our application will only use the database and will not rely on the CSV anymore.
 
    {% include custom/note.html details="The above example is missing the <code>testImplementation 'org.flywaydb:flyway-core'</code> entry, which needs to be included if Flyway is tested separately, using the <code>FlywayMigrationTest</code> test class discussed <a href='/spring-boot-camp/docs/data/database/#optional-testing-flyway-migration-scripts'>before</a>." %}
 
+1. Remove the `@Primary` annotation as we only have one service
+
+   Update file: `src/main/java/demo/boot/JpaContactUsService.java`
+
+   ```java
+   package demo.boot;
+
+   import lombok.AllArgsConstructor;
+   import org.springframework.orm.ObjectOptimisticLockingFailureException;
+   import org.springframework.retry.annotation.Retryable;
+   import org.springframework.stereotype.Service;
+   import org.springframework.transaction.annotation.Transactional;
+
+   import java.util.List;
+   import java.util.Optional;
+   import java.util.function.Function;
+   import java.util.stream.Collectors;
+
+   @Service
+   @AllArgsConstructor
+   public class JpaContactUsService implements ContactUsService { /* ... */ }
+   ```
+
+   **Given that we have one implementation, should we remove the interface?**
+
+   We can remove the interface `ContactUsService` and just use the implementation directly instead.
+
 1. Build the project
 
    ```bash
