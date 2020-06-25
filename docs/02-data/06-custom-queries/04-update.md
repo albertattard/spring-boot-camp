@@ -143,7 +143,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      public void shouldReturnOfficesInACountry() { /* ... */ }
 
      @Test
-     @DisplayName( "should return empty optional if the office being saved does not exists" )
+     @DisplayName( "should return empty optional if the office being saved does not exist" )
      public void shouldSaveNonExistentOffice() {
        final String name = "a1";
        final Office office = new Office( name, "a2", "a3", "a4" );
@@ -274,7 +274,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      public void shouldReturnOfficesInACountry() { /* ... */ }
 
      @Test
-     @DisplayName( "should return empty optional if the office being saved does not exists" )
+     @DisplayName( "should return empty optional if the office being saved does not exist" )
      public void shouldSaveNonExistentOffice() { /* ... */ }
 
      @Test
