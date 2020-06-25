@@ -433,13 +433,15 @@ The above table shows two things happening at the same time, on two separate thr
 * When the update happens before the delete, the update will succeed and then the item is deleted
 * When the delete happens before the update, the update will not happen as the item does not exist
 
-### How can we protect ourselves against issues related to concurrency?
+## How can we protect ourselves against issues related to concurrency?
 
 Testing for concurrency is not an easy task.  First you need to identify where the problem lies, and then we need to be able to replicate it.  The latter is not an easy task as we need to get the problematic sequence right.
 
 Our example is subject to the _check then act_ problem that may manifest itself once we introduce the delete operation.
 
 {% include custom/note.html details="Such problems may lie hidden for a long time and only surface once in a while." %}
+
+### Replicate problem
 
 We need to write a test that is able to delete the office right after the `findById()` method (the _check_ part) is invoked but before the office is saved back to the database (the _act_ part), as shown next.
 
@@ -533,7 +535,7 @@ Following is the complete test that replicates this problem.
      private ContactUsService service;
 
      private static final OfficeEntity ENTITY = new OfficeEntity(
-       "ThoughtWorks Test Office",
+       "Test Office",
        "Test Address",
        "Test Country",
        "Test Phone",
@@ -580,21 +582,46 @@ Following is the complete test that replicates this problem.
    }
    ```
 
-   This test requires the application to be setup to work, but it does not require the web part.  Thus, the web environment is disabled.
+   Parts of this test were already discussed before while other parts were not.  Let's break this test down.
 
-   ```java
-   @SpringBootTest( webEnvironment = WebEnvironment.NONE )
-   ```
+   1. This test requires the application to be setup to work without the web part.
 
-   The test also verifies that the office is delete and it is not in the table at the end of the test.
+      ```java
+      @SpringBootTest( webEnvironment = WebEnvironment.NONE )
+      ```
 
-   ```java
-       /* The office should not be in the database, as this was deleted and the update should not succeed */
-       final Optional<OfficeEntity> entity = repository.findById( COLOGNE.getOffice() );
-       assertThat( entity.isEmpty() ).isTrue();
-   ```
+   1. In this particular test we cannot take advantage of test transaction rollback and we need to manually delete the office that was added during the test.  Furthermore, to minimise the interference with other tests, we are not using a known office.
 
-   Run the test
+      ```java
+        private static final OfficeEntity ENTITY = new OfficeEntity(
+          "Test Office",
+          "Test Address",
+          "Test Country",
+          "Test Phone",
+          "Test Email",
+          "Test Webpage"
+        );
+
+        @BeforeEach
+        public void setUp() {
+          repository.save( ENTITY );
+        }
+
+        @AfterEach
+        public void tearDown() {
+          repository.delete( ENTITY );
+        }
+      ```
+
+   1. The test also verifies that the office is deleted and it is not in the table at the end of the test.
+
+      ```java
+          /* The office should not be in the database, as this was deleted and the update should not succeed */
+          final Optional<OfficeEntity> entity = repository.findById( COLOGNE.getOffice() );
+          assertThat( entity.isEmpty() ).isTrue();
+      ```
+
+1. Run the test
 
    ```bash
    $ ./gradlew clean integrationTest
@@ -608,6 +635,8 @@ Following is the complete test that replicates this problem.
     6 actionable tasks: 6 executed
    ```
 
+   The test will fail as we have no protection in place to safegaurd against this race condition.
+
    View the test report.
 
    ```bash
@@ -615,6 +644,88 @@ Following is the complete test that replicates this problem.
    ```
 
    ![Office-Delete-While-Update-Test-Fail.png]({{ '/assets/images/Office-Delete-While-Update-Test-Fail.png' | absolute_url }})
+
+### Transations
+
+1. Transactions
+
+   We need to make the two operations, `findById()` and `save()` methods, atomic.  We can use the [`@Transactional`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/annotation/Transactional.html) annotation, as shown next.
+
+   ```java
+   package demo.boot;
+
+   import lombok.AllArgsConstructor;
+   import org.springframework.context.annotation.Primary;
+   import org.springframework.stereotype.Service;
+   import org.springframework.transaction.annotation.Transactional;
+
+   import java.util.List;
+   import java.util.Optional;
+   import java.util.function.Function;
+   import java.util.stream.Collectors;
+
+   @Service
+   @Primary
+   @AllArgsConstructor
+   public class JpaContactUsService implements ContactUsService {
+
+     private final OfficesRepository repository;
+
+     @Override
+     public List<Office> list() { /* ... */ }
+
+     @Override
+     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+
+     @Override
+     public List<Office> findAllInCountry( final String country ) { /* ... */ }
+
+     @Override
+     @Transactional
+     public Optional<Office> update( final Office office ) {
+       return repository
+         .findById( office.getOffice() )
+         .map( updateEntity( office ) )
+         .map( repository::save )
+         .map( mapToOffice() );
+     }
+
+     private List<Office> mapToOffices( final List<OfficeEntity> entities ) { /* ... */ }
+
+     private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
+
+     private Function<OfficeEntity, OfficeEntity> updateEntity( final Office office ) { /* ... */ }
+   }
+   ```
+
+   Run the tests
+
+   ```bash
+   $ ./gradlew clean integrationTest
+   ```
+
+   The test will still fail, for a new reason.
+
+   ```bash
+   org.springframework.orm.ObjectOptimisticLockingFailureException: Object of class [demo.boot.OfficeEntity] with identifier [ThoughtWorks Test Office]: optimistic locking failed; nested exception is org.hibernate.StaleObjectStateException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect) : [demo.boot.OfficeEntity#ThoughtWorks Test Office]
+     at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:337)
+     at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:255)
+   ...
+   ```
+
+   Note that now the `update()` method within the `JpaContactUsService` class is failing with a [`ObjectOptimisticLockingFailureException`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/orm/ObjectOptimisticLockingFailureException.html).  This is an improvement as now the concurrency problem is not unnoticed.
+
+### Retry on error
+
+1. Retry on error
+
+   We can do better than simply failing.  In our case, we can retry the office update operation when we encounter this error.  [Spring Batch](https://spring.io/projects/spring-batch) provides the retry functionality.
+
+   Update file: ``
+
+   ```groovy
+
+   ```
 
 ## Tasks status
 
