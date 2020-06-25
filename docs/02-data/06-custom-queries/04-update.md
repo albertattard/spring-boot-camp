@@ -20,7 +20,25 @@ permalink: docs/data/custom-queries/update/
 
 ## Update one office
 
-1. a
+An existing office can be updated using a new method named `update()`, that takes an `Office` and updates the existing office if this exists.  The `update()` should return back the updated `Office`.
+
+**What should we return if the office does not exists?**
+
+We can rely on the [`Optional`](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html) to indicate whether the update happened successfully or not.  An [empty optional](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html#empty()) as we did in the `findOneByOffice()` method.
+
+**Why do we need to return an office back?**
+
+We need to indicate that the update was successful or not.  In the event an office does not exists, we may need to communicate that back to the caller.  We have three options
+
+1. Return an `Optional` together with the updated details.  This can be very helpful as we can continue working with the updated version of the office, should needs be.
+
+1. We can create an enum, such as `UpdateResult`, and return `UPDATED` when the update succeeds or `NOT_FOUND` when the office is not found.
+
+1. Alternatively we can return a `boolean`, where `true` indicates a successful update.  This is the least preferred option.
+
+The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) provides a [`save()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#save-S-) which returns the updated version of our entity.  We can take advantage of this and return the updated `Office`.
+
+1. Add the new method to the interface
 
    Update file: `src/main/java/demo/boot/ContactUsService.java`
 
@@ -83,7 +101,10 @@ permalink: docs/data/custom-queries/update/
    }
    ```
 
-1. b
+   {% include custom/note.html details="The update method simply returns an empty optional, just enough to compile." %}
+
+
+1. Assert that an empty optional is return when the office does not exist.
 
    Update file: `src/test/java/demo/boot/JpaContactUsServiceTest.java`
 
@@ -143,6 +164,8 @@ permalink: docs/data/custom-queries/update/
    }
    ```
 
+   Run the tests
+
    ```bash
    $ ./gradlew clean test
 
@@ -156,7 +179,9 @@ permalink: docs/data/custom-queries/update/
    5 actionable tasks: 5 executed
    ```
 
-1. c
+   These should fail as despite the fact that the method returns what we expect (an empty optional), the service did not interact with the repository as expected.
+
+1. Make the test pass
 
    Update file: `src/main/java/demo/boot/JpaContactUsService.java`
 
@@ -201,6 +226,8 @@ permalink: docs/data/custom-queries/update/
    }
    ```
 
+   {% include custom/note.html details="The above implementation is not the complete implementation and only enough for the test to pass." %}
+
    ```bash
    $ ./gradlew clean test
 
@@ -210,7 +237,9 @@ permalink: docs/data/custom-queries/update/
    5 actionable tasks: 5 executed
    ```
 
-1. d
+1. Assert that the office is updated, and the updated office is returned
+
+   Update file: `src/test/java/demo/boot/JpaContactUsServiceTest.java`
 
    ```java
    package demo.boot;
@@ -274,6 +303,7 @@ permalink: docs/data/custom-queries/update/
      }
    }
    ```
+   Run the tests.
 
    ```bash
    $ ./gradlew clean test
@@ -284,7 +314,11 @@ permalink: docs/data/custom-queries/update/
    5 actionable tasks: 5 executed
    ```
 
-1. e
+   The new test should fail.
+
+1. Add the missing functionality.
+
+   Update file: `src/main/java/demo/boot/JpaContactUsService.java`
 
    ```java
    package demo.boot;
@@ -330,16 +364,19 @@ permalink: docs/data/custom-queries/update/
 
      private List<Office> mapToOffices( final List<OfficeEntity> entities ) { /* ... */ }
 
-     private Function<OfficeEntity, Office> mapToOffice() {
-       return entity -> new Office(
-         entity.getOffice(),
-         entity.getAddress(),
-         entity.getPhone(),
-         entity.getEmail()
-       );
-     }
+     private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
    }
    ```
+
+   Run the tests.
+
+   ```bash
+   $ ./gradlew clean check
+   ```
+
+   All tests should pass.
+
+   With the tests all passed, we can refactor the new method and move out the mapping of `Office` to `OfficeEntity` to a new method, as shown next.
 
    ```java
    package demo.boot;
@@ -392,6 +429,14 @@ permalink: docs/data/custom-queries/update/
      }
    }
    ```
+
+   Run the tests again.
+
+   ```bash
+   $ ./gradlew clean check
+   ```
+
+   All tests should pass.
 
 ## Are concurrent updates a problem?
 
@@ -567,7 +612,7 @@ Following is the complete test that replicates this problem.
 
        service.update( office );
 
-       /* The office should not be in the database, as this was deleted and the update should not succeed */
+       /* The office should not be in the database, as this was deleted, and the update should not succeed */
        final Optional<OfficeEntity> entity = repository.findById( ENTITY.getOffice() );
        assertThat( entity.isEmpty() ).isTrue();
      }
@@ -613,10 +658,10 @@ Following is the complete test that replicates this problem.
         }
       ```
 
-   1. The test also verifies that the office is deleted and it is not in the table at the end of the test.
+   1. The test also verifies that the office is deleted, and it is not in the table at the end of the test.
 
       ```java
-          /* The office should not be in the database, as this was deleted and the update should not succeed */
+          /* The office should not be in the database, as this was deleted, and the update should not succeed */
           final Optional<OfficeEntity> entity = repository.findById( COLOGNE.getOffice() );
           assertThat( entity.isEmpty() ).isTrue();
       ```
@@ -635,7 +680,7 @@ Following is the complete test that replicates this problem.
     6 actionable tasks: 6 executed
    ```
 
-   The test will fail as we have no protection in place to safegaurd against this race condition.
+   The test will fail as we have no protection in place to safeguard against this race condition.
 
    View the test report.
 
@@ -645,11 +690,13 @@ Following is the complete test that replicates this problem.
 
    ![Office-Delete-While-Update-Test-Fail.png]({{ '/assets/images/Office-Delete-While-Update-Test-Fail.png' | absolute_url }})
 
-### Transations
+### Transactions
 
-1. Transactions
+We need to make the two operations, `findById()` and `save()` methods, atomic.  We can use the [`@Transactional`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/annotation/Transactional.html) annotation, as shown next.
 
-   We need to make the two operations, `findById()` and `save()` methods, atomic.  We can use the [`@Transactional`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/annotation/Transactional.html) annotation, as shown next.
+1. Use transactions
+
+   Update file: `src/main/java/demo/boot/JpaContactUsService.java`
 
    ```java
    package demo.boot;
@@ -698,7 +745,7 @@ Following is the complete test that replicates this problem.
    }
    ```
 
-   Run the tests
+1. Run the tests
 
    ```bash
    $ ./gradlew clean integrationTest
@@ -707,25 +754,157 @@ Following is the complete test that replicates this problem.
    The test will still fail, for a new reason.
 
    ```bash
+   $ open build/reports/tests/integrationTest/classes/demo.boot.JpaContactUsServiceDeleteWhileUpdateTest.html#shouldHandleConcurrentUpdates()
+   ```
+
+   Note that now the `update()` method, within the `JpaContactUsService` class, is failing with a [`ObjectOptimisticLockingFailureException`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/orm/ObjectOptimisticLockingFailureException.html).
+
+   ```bash
    org.springframework.orm.ObjectOptimisticLockingFailureException: Object of class [demo.boot.OfficeEntity] with identifier [ThoughtWorks Test Office]: optimistic locking failed; nested exception is org.hibernate.StaleObjectStateException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect) : [demo.boot.OfficeEntity#ThoughtWorks Test Office]
      at org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:337)
      at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:255)
    ...
    ```
 
-   Note that now the `update()` method within the `JpaContactUsService` class is failing with a [`ObjectOptimisticLockingFailureException`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/orm/ObjectOptimisticLockingFailureException.html).  This is an improvement as now the concurrency problem is not unnoticed.
+   This is an improvement as now the concurrency problem is not unnoticed.
+
+While this solves our race condition, we can do better as shown [next](#retry-on-error).
 
 ### Retry on error
 
-1. Retry on error
+We can do better than simply failing.  In our case, we can retry the office update operation when we encounter this error.  [Spring Batch](https://spring.io/projects/spring-batch) provides the retry functionality.
 
-   We can do better than simply failing.  In our case, we can retry the office update operation when we encounter this error.  [Spring Batch](https://spring.io/projects/spring-batch) provides the retry functionality.
+1. Add the [`spring-boot-starter-batch`](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-batch) dependency
 
-   Update file: ``
+   Update file: `build.gradle`
 
    ```groovy
-
+   dependencies {
+     implementation 'org.springframework.boot:spring-boot-starter-batch'
+   }
    ```
+
+   Following is a complete list of the dependencies used in the project.
+
+   ```groovy
+   dependencies {
+     /* Lombok */
+     compileOnly 'org.projectlombok:lombok'
+     annotationProcessor 'org.projectlombok:lombok'
+
+     /* Spring */
+     implementation 'org.springframework.boot:spring-boot-starter-web'
+     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+     testImplementation('org.springframework.boot:spring-boot-starter-test') {
+       exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+     }
+
+     /* Data */
+     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+     implementation 'org.springframework.boot:spring-boot-starter-batch'
+     runtimeOnly 'org.flywaydb:flyway-core'
+     runtimeOnly 'org.postgresql:postgresql'
+
+     /* Prometheus */
+     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+     /* Spring/OpenApi */
+     implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
+   }
+   ```
+
+1. Enable retry
+
+   Update file: `src/main/java/demo/boot/ContactUsApplication.java`
+
+   ```java
+   package demo.boot;
+
+   import org.springframework.boot.SpringApplication;
+   import org.springframework.boot.autoconfigure.SpringBootApplication;
+   import org.springframework.retry.annotation.EnableRetry;
+
+   @EnableRetry
+   @SpringBootApplication
+   public class ContactUsApplication {
+     public static void main(String[] args) { /* ... */ }
+   }
+   ```
+
+   The [`@EnableRetry`](https://docs.spring.io/spring-retry/docs/api/current/org/springframework/retry/annotation/EnableRetry.html) annotation enables the use of the [`@Retryable`](https://docs.spring.io/spring-retry/docs/api/current/org/springframework/retry/annotation/Retryable.html) annotation.
+
+   Spring will scan our services and will create a [proxy](https://docs.oracle.com/javase/8/docs/technotes/guides/reflection/proxy.html) for any service which contains methods annotated with the `@Retryable` annotation, as shown next.
+
+   ![Proxy.png]({{ '/assets/images/Proxy.png' | absolute_url }})
+
+   Using the proxy, Spring will intercept calls to our method (that is annotated with the `@Retryable` annotation) and will wrap them in a try/catch, similar to the image shown above.
+
+1. Annotation the method with the `@Retryable` annotation
+
+   Update file: `src/main/java/demo/boot/JpaContactUsService.java`
+
+   ```java
+   package demo.boot;
+
+   import lombok.AllArgsConstructor;
+   import org.springframework.context.annotation.Primary;
+   import org.springframework.orm.ObjectOptimisticLockingFailureException;
+   import org.springframework.retry.annotation.Retryable;
+   import org.springframework.stereotype.Service;
+   import org.springframework.transaction.annotation.Transactional;
+
+   import java.util.List;
+   import java.util.Optional;
+   import java.util.function.Function;
+   import java.util.stream.Collectors;
+
+   @Service
+   @Primary
+   @AllArgsConstructor
+   public class JpaContactUsService implements ContactUsService {
+
+     private final OfficesRepository repository;
+
+     @Override
+     public List<Office> list() { /* ... */ }
+
+     @Override
+     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+
+     @Override
+     public List<Office> findAllInCountry( final String country ) { /* ... */ }
+
+     @Override
+     @Transactional
+     @Retryable( ObjectOptimisticLockingFailureException.class )
+     public Optional<Office> update( final Office office ) {
+       return repository
+         .findById( office.getOffice() )
+         .map( updateEntity( office ) )
+         .map( repository::save )
+         .map( mapToOffice() );
+     }
+
+     private List<Office> mapToOffices( final List<OfficeEntity> entities ) { /* ... */ }
+
+     private Function<OfficeEntity, Office> mapToOffice() { /* ... */ }
+
+     private Function<OfficeEntity, OfficeEntity> updateEntity( final Office office ) { /* ... */ }
+   }
+   ```
+
+1. Run the tests
+
+   ```bash
+   $ ./gradlew clean check
+
+   ...
+
+   BUILD SUCCESSFUL in 19s
+   7 actionable tasks: 7 executed
+   ```
+
+   The test should now pass.
 
 ## Tasks status
 
