@@ -393,7 +393,91 @@ permalink: docs/data/custom-queries/update/
    }
    ```
 
-## Concurrent updates
+## Are concurrent updates a problem?
+
+Each individual update is atomic by nature.  In our current example, if two or more updates happen at the same time, these are simply applied in the order they are received by the database.
+
+In the [next section]({{ '/docs/data/custom-queries/delete/' | absolute_url }}), we will introduce the delete operation, which simply deletes the office from the database.  This will introduce a new complexity as the update should not happen if the office does not exist.  We should not be able to update an office that was delete.  Consider the following scenario, where a delete operation happens while an item is being updated on two different threads (_T1_ and _T2_).
+
+| Time | Update (_T1_)              | Delete (_T2_)     |
+| :--: | -------------------------- | ----------------- |
+|   1  | `findById()` return office |                   |
+|   2  |                            | `delete()` office |
+|   3  | `save()` changes           |                   |
+
+The above table shows two things happening at the same time, on two separate threads (_T1_ and _T2_).  The sequence shown above will leave the data in an invalid state as the office will be saved back to the database (Time: 3) after this was deleted (Time: 2).  Irrespective of the order of the update and delete operations, the item should be deleted.
+
+* When the update happens before the delete, the update will succeed and then the item is deleted
+* When the delete happens before the update, the update will not happen as the item does not exist
+
+```java
+package demo.boot;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DisplayName( "JPA contact us service" )
+@SpringBootTest( webEnvironment = WebEnvironment.NONE )
+public class JpaContactUsServiceTest {
+
+  @Autowired
+  private OfficesRepository repository;
+
+  @Autowired
+  private ContactUsService service;
+
+  private static final OfficeEntity COLOGNE = new OfficeEntity(
+    "ThoughtWorks Cologne",
+    "Lichtstr. 43i, 50825 Cologne, Germany",
+    "Germany",
+    "+49 221 64 30 70 63",
+    "contact-de@thoughtworks.com",
+    "https://www.thoughtworks.com/locations/cologne"
+  );
+
+  @BeforeEach
+  public void before() {
+    repository.deleteAll();
+    repository.save( COLOGNE );
+  }
+
+  @Test
+  @DisplayName( "should update the office and return the updated version" )
+  public void shouldHandleConcurrentUpdates() {
+    final Office office = new Office( COLOGNE.getOffice(), "b", "c", "d" ) {
+      @Override
+      public String getAddress() {
+        /* Delete the office between the findById() and save() */
+        deleteOfficeFromAnotherThread();
+        return super.getAddress();
+      }
+    };
+
+    service.update( office );
+
+    /* The office should not be in the database, as this was deleted and the update should not succeed */
+    final Optional<OfficeEntity> entity = repository.findById( COLOGNE.getOffice() );
+    assertThat( entity.isEmpty() ).isTrue();
+  }
+
+  private void deleteOfficeFromAnotherThread() {
+    try {
+      final Thread delete = new Thread( () -> repository.delete( COLOGNE ), "DELETE" );
+      delete.start();
+      delete.join();
+    } catch ( InterruptedException e ) {
+    }
+  }
+}
+```
 
 ## Tasks status
 
