@@ -44,7 +44,9 @@ Entities are classes that map to a database table.
    ```java
    package demo.boot;
 
+   import lombok.AllArgsConstructor;
    import lombok.Data;
+   import lombok.NoArgsConstructor;
 
    import javax.persistence.Entity;
    import javax.persistence.Id;
