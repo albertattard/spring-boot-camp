@@ -73,7 +73,7 @@ One of these approaches is [mutation testing](https://en.wikipedia.org/wiki/Muta
    @AllArgsConstructor
    public class Office {
 
-     private String office;
+     private String name;
      private String address;
      private String phone;
      private String email;

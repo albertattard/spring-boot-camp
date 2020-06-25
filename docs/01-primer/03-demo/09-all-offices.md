@@ -137,7 +137,7 @@ permalink: docs/primer/demo/all-offices/
      }
 
      private Office parseOffice( final CSVRecord record ) {
-       return new Office( record.get( "Office" ),
+       return new Office( record.get( "Name" ),
          record.get( "Address" ),
          record.get( "Phone" ),
          record.get( "Email" ) );
@@ -206,7 +206,7 @@ permalink: docs/primer/demo/all-offices/
          .andExpect( status().isOk() )
          .andExpect( jsonPath( "$" ).isArray() )
          .andExpect( jsonPath( "$", hasSize( 1 ) ) )
-         .andExpect( jsonPath( "$.[0].office", is( cologne.getOffice() ) ) )
+         .andExpect( jsonPath( "$.[0].name", is( cologne.getName() ) ) )
          .andExpect( jsonPath( "$.[0].address", is( cologne.getAddress() ) ) )
          .andExpect( jsonPath( "$.[0].phone", is( cologne.getPhone() ) ) )
          .andExpect( jsonPath( "$.[0].email", is( cologne.getEmail() ) ) )

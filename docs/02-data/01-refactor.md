@@ -29,7 +29,7 @@ We can perform the refactoring either using IntelliJ or rename the file manually
 
    **Using IntelliJ**
 
-   1. Right click on the class the `ContactUsService` class and select _Refactor > Extract Interface..._
+   1. Right click on the `ContactUsService` class and select _Refactor > Extract Interface..._
 
       ![IntelliJ Extract Interface 1]({{ '/assets/images/IntelliJ-Extract-Interface-1.png' | absolute_url }})
 

@@ -398,7 +398,7 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
 
      private Function<OfficeEntity, Office> mapToOffice() {
        return entity -> new Office(
-         entity.getOffice(),
+         entity.getName(),
          entity.getAddress(),
          entity.getPhone(),
          entity.getEmail()
@@ -468,7 +468,7 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
 
      private Function<OfficeEntity, Office> mapToOffice() {
        return entity -> new Office(
-         entity.getOffice(),
+         entity.getName(),
          entity.getAddress(),
          entity.getPhone(),
          entity.getEmail()

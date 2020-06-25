@@ -350,7 +350,7 @@ We can take advantage of [layered JAR](https://docs.spring.io/spring-boot/docs/c
    You should get the contact details of the Cologne office
 
    ```json
-   [{"office":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
+   [{"name":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
    ```
 
 ## Dockersize application using Gradle `bootBuildImage` task (_less recommended approach_)

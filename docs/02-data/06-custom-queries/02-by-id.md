@@ -54,7 +54,7 @@ There are several approaches to handle this.
 
      List<Office> list();
 
-     Optional<Office> findOneByOffice( final String office );
+     Optional<Office> findOneByName( final String name );
    }
    ```
 
@@ -171,9 +171,9 @@ There are several approaches to handle this.
 
    ```java
      @Override
-     public Optional<Office> findOneByOffice( final String office ) {
+     public Optional<Office> findOneByName( final String name ) {
        return repository
-         .findById( office )
+         .findById( name )
          .map( mapToOffice() );
      }
    ```
@@ -201,15 +201,15 @@ There are several approaches to handle this.
      public List<Office> list() { /* ... */ }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) {
+     public Optional<Office> findOneByName( final String name ) {
        return repository
-         .findById( office )
+         .findById( name )
          .map( mapToOffice() );
      }
 
      private Function<OfficeEntity, Office> mapToOffice() {
        return entity -> new Office(
-         entity.getOffice(),
+         entity.getName(),
          entity.getAddress(),
          entity.getPhone(),
          entity.getEmail()
@@ -232,7 +232,7 @@ There are several approaches to handle this.
 
 1. Test when the office with the given id is found
 
-   Update file: `/Users/albertattard/work/projects/albertattard/contact-us/src/test/java/demo/boot/JpaContactUsServiceTest.java`
+   Update file: `src/test/java/demo/boot/JpaContactUsServiceTest.java`
 
    ```java
    package demo.boot;
@@ -271,7 +271,7 @@ There are several approaches to handle this.
        when( repository.findById( eq( id ) ) ).thenReturn( Optional.of( entity ) );
 
        final ContactUsService service = new JpaContactUsService( repository );
-       final Optional<Office> office = service.findOneByOffice( id );
+       final Optional<Office> office = service.findOneByName( id );
 
        final Optional<Office> expected = Optional.of( new Office( "a1", "a2", "a4", "a5" ) );
        assertEquals( expected, office );

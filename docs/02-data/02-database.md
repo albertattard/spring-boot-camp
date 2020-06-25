@@ -127,7 +127,7 @@ While we can achieve the same thing with both libraries, we will opt for Flyway 
 
    ```sql
    CREATE TABLE "offices" (
-     "office"  VARCHAR(64) PRIMARY KEY,
+     "name"    VARCHAR(64) PRIMARY KEY,
      "address" VARCHAR(255) NOT NULL,
      "country" VARCHAR(64) NOT NULL,
      "phone"   VARCHAR(64),
@@ -143,12 +143,12 @@ While we can achieve the same thing with both libraries, we will opt for Flyway 
    Create file: `src/main/resources/db/migration/V2__populate_offices_table.sql`
 
    ```sql
-   INSERT INTO "offices" ("office","address","country","phone","email","webpage") VALUES ('ThoughtWorks Cologne','Lichtstr. 43i, 50825 Cologne, Germany','Germany','+49 221 64 30 70 63','contact-de@thoughtworks.com','https://www.thoughtworks.com/locations/cologne');
-   INSERT INTO "offices" ("office","address","country","phone","email","webpage") VALUES ('ThoughtWorks Berlin','Zimmerstraße 23, 1. OG, 10969 Berlin, Germany','Germany','+49 (0)30 555 73 5890','contact-de@thoughtworks.com','https://www.thoughtworks.com/locations/berlin');
-   INSERT INTO "offices" ("office","address","country","phone","email","webpage") VALUES ('ThoughtWorks Hamburg','Caffamacherreihe 7, 20355 Hamburg, Germany','Germany','+49 (040) 300 95 880','contact-de@thoughtworks.com','https://www.thoughtworks.com/locations/hamburg');
-   INSERT INTO "offices" ("office","address","country","phone","email","webpage") VALUES ('ThoughtWorks Munich','Bothestraße 11, 81675 Munich, Germany','Germany','+49 (0)89 262 057 72','contact-de@thoughtworks.com','https://www.thoughtworks.com/locations/munich');
-   INSERT INTO "offices" ("office","address","country","phone","email","webpage") VALUES ('ThoughtWorks London','76 Wardour Street, London W1F 0UR, UK','UK','+44 (0)20 3437 0990',null,'https://www.thoughtworks.com/locations/london');
-   INSERT INTO "offices" ("office","address","country","phone","email","webpage") VALUES ('ThoughtWorks Manchester','4th Floor Federation House, 2 Federation St., Manchester M4 4BF, UK','UK','+44 (0)161 923 6810',null,'https://www.thoughtworks.com/locations/manchester');
+   INSERT INTO "offices" ("name","address","country","phone","email","webpage") VALUES ('ThoughtWorks Cologne','Lichtstr. 43i, 50825 Cologne, Germany','Germany','+49 221 64 30 70 63','contact-de@thoughtworks.com','https://www.thoughtworks.com/locations/cologne');
+   INSERT INTO "offices" ("name","address","country","phone","email","webpage") VALUES ('ThoughtWorks Berlin','Zimmerstraße 23, 1. OG, 10969 Berlin, Germany','Germany','+49 (0)30 555 73 5890','contact-de@thoughtworks.com','https://www.thoughtworks.com/locations/berlin');
+   INSERT INTO "offices" ("name","address","country","phone","email","webpage") VALUES ('ThoughtWorks Hamburg','Caffamacherreihe 7, 20355 Hamburg, Germany','Germany','+49 (040) 300 95 880','contact-de@thoughtworks.com','https://www.thoughtworks.com/locations/hamburg');
+   INSERT INTO "offices" ("name","address","country","phone","email","webpage") VALUES ('ThoughtWorks Munich','Bothestraße 11, 81675 Munich, Germany','Germany','+49 (0)89 262 057 72','contact-de@thoughtworks.com','https://www.thoughtworks.com/locations/munich');
+   INSERT INTO "offices" ("name","address","country","phone","email","webpage") VALUES ('ThoughtWorks London','76 Wardour Street, London W1F 0UR, UK','UK','+44 (0)20 3437 0990',null,'https://www.thoughtworks.com/locations/london');
+   INSERT INTO "offices" ("name","address","country","phone","email","webpage") VALUES ('ThoughtWorks Manchester','4th Floor Federation House, 2 Federation St., Manchester M4 4BF, UK','UK','+44 (0)161 923 6810',null,'https://www.thoughtworks.com/locations/manchester');
    ```
 
    These are the same offices found in the [`offices.csv`]({{ '/assets/demo/01-primer/offices.csv' | absolute_url }}) file.

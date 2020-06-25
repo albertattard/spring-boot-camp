@@ -66,7 +66,7 @@ permalink: docs/primer/demo/one-office/
    ```json
    [
      {
-      "office": "ThoughtWorks Cologne",
+      "name": "ThoughtWorks Cologne",
       "address": "Lichtstr. 43i, 50825 Cologne, Germany",
       "phone": "+49 221 64 30 70 63",
       "email": "contact-de@thoughtworks.com"
@@ -254,7 +254,7 @@ permalink: docs/primer/demo/one-office/
    This should return the office
 
    ```json
-   [{"office":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
+   [{"name":"ThoughtWorks Cologne","address":"Lichtstr. 43i, 50825 Cologne, Germany","phone":"+49 221 64 30 70 63","email":"contact-de@thoughtworks.com"}]
    ```
 
    Access the endpoint from a browser: [http://localhost:8080/offices](http://localhost:8080/offices)

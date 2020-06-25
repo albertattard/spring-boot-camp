@@ -60,7 +60,7 @@ Entities are classes that map to a database table.
    public class OfficeEntity {
 
      @Id
-     private String office;
+     private String name;
      private String address;
      private String country;
      private String phone;
@@ -81,7 +81,7 @@ JPA requires a primary key.  This is annotated with the [`@Id`](https://docs.ora
 
 ```java
 @Id
-private String office;
+private String name;
 ```
 
 The properties name can have a different name from the table column name, in which case we need to use the [`@Column`](https://docs.oracle.com/javaee/7/api/javax/persistence/column.html) annotation and provide the table column name.
@@ -166,8 +166,8 @@ We can write a simple test to ensure that the entity is properly configured.
      @DisplayName( "should select the Cologne office" )
      public void shouldSelectCologne() {
        final OfficeEntity entity = entityManager
-         .createQuery( "SELECT c FROM OfficeEntity c WHERE c.office LIKE :office", OfficeEntity.class )
-         .setParameter( "office", COLOGNE.getOffice() )
+         .createQuery( "SELECT c FROM OfficeEntity c WHERE c.name LIKE :name", OfficeEntity.class )
+         .setParameter( "name", COLOGNE.getName() )
          .getSingleResult();
 
        assertThat( entity ).isEqualTo( COLOGNE );
@@ -243,8 +243,8 @@ We can write a simple test to ensure that the entity is properly configured.
         @DisplayName( "should select the Cologne office" )
         public void shouldSelectCologne() {
           final OfficeEntity entity = entityManager
-            .createQuery( "SELECT c FROM OfficeEntity c WHERE c.office LIKE :office", OfficeEntity.class )
-            .setParameter( "office", COLOGNE.getOffice() )
+            .createQuery( "SELECT c FROM OfficeEntity c WHERE c.name LIKE :name", OfficeEntity.class )
+            .setParameter( "name", COLOGNE.getName() )
             .getSingleResult();
 
           assertThat( entity ).isEqualTo( COLOGNE );
@@ -579,7 +579,7 @@ Read all rows in the `offices` table using the JPA repository.
 
      private Function<OfficeEntity, Office> mapToOffice() {
        return entity -> new Office(
-         entity.getOffice(),
+         entity.getName(),
          entity.getAddress(),
          entity.getPhone(),
          entity.getEmail()
@@ -686,7 +686,7 @@ Sometimes is it very useful to see what SQL code was generated and used to run a
    ```bash
    Hibernate:
        select
-           officeenti0_.office as office1_0_,
+           officeenti0_.name as name1_0_,
            officeenti0_.address as address2_0_,
            officeenti0_.country as country3_0_,
            officeenti0_.email as email4_0_,
@@ -755,6 +755,10 @@ Sometimes is it very useful to see what SQL code was generated and used to run a
    | Password | `SomeRandomPassword`     |
 
    Note that there is no need to provide the connection flags to the `JDBC URL` field.
+
+   ```sql
+   SELECT * FROM "offices";
+   ```
 
    ![H2 Console]({{ '/assets/images/H2-Console.png' | absolute_url }})
 

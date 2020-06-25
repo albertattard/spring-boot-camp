@@ -52,7 +52,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
 
      List<Office> list();
 
-     Optional<Office> findOneByOffice( final String office );
+     Optional<Office> findOneByName( final String name );
 
      List<Office> findAllInCountry( final String country );
 
@@ -83,7 +83,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      public List<Office> list() { /* ... */ }
 
      @Override
-     public Optional<Office> findOneByOffice( final String office ) { /* ... */ }
+     public Optional<Office> findOneByName( final String name ) { /* ... */ }
 
      @Override
      public List<Office> findAllInCountry( final String country ) { /* ... */ }
@@ -212,7 +212,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      @Override
      public Optional<Office> update( final Office office ) {
        return repository
-         .findById( office.getOffice() )
+         .findById( office.getName() )
          .map( mapToOffice() );
      }
 
@@ -345,7 +345,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      @Override
      public Optional<Office> update( final Office office ) {
        return repository
-         .findById( office.getOffice() )
+         .findById( office.getName() )
          .map( entity -> {
            entity.setAddress( office.getAddress() );
            entity.setPhone( office.getPhone() );
@@ -401,7 +401,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      @Override
      public Optional<Office> update( final Office office ) {
        return repository
-         .findById( office.getOffice() )
+         .findById( office.getName() )
          .map( updateEntity( office ) )
          .map( repository::save )
          .map( mapToOffice() );
@@ -438,7 +438,7 @@ Let's analyse the office update operation we have implemented so far.
   @Override
   public Optional<Office> update( final Office office ) {
     return repository
-      .findById( office.getOffice() )
+      .findById( office.getName() )
       .map( updateEntity( office ) )
       .map( repository::save )
       .map( mapToOffice() );
@@ -449,7 +449,7 @@ The above office update operation is subject to the _race condition_, or as also
 
 ```java
     return repository
-      .findById( office.getOffice() ) /* Check */
+      .findById( office.getName() )   /* Check */
       .map( updateEntity( office ) )
       .map( repository::save )        /* Act */
       .map( mapToOffice() );
@@ -484,7 +484,7 @@ We need to write a test that is able to delete the office right after the `findB
 
 ```java
     return repository
-      .findById( office.getOffice() ) /* Check */
+      .findById( office.getName() )   /* Check */
       .map( updateEntity( office ) )  /* <<< We need to delete the item at this point */
       .map( repository::save )        /* Act */
       .map( mapToOffice() );
@@ -593,7 +593,7 @@ Following is the complete test that replicates this problem.
      @Test
      @DisplayName( "should not save the office after this is deleted" )
      public void shouldHandleConcurrentUpdates() {
-       final Office office = new Office( ENTITY.getOffice(), "b", "c", "d" ) {
+       final Office office = new Office( ENTITY.getName(), "b", "c", "d" ) {
          @Override
          public String getAddress() {
            /* Delete the office between the findById() and save() */
@@ -605,7 +605,7 @@ Following is the complete test that replicates this problem.
        service.update( office );
 
        /* The office should not be in the database, as this was deleted, and the update should not succeed */
-       final Optional<OfficeEntity> entity = repository.findById( ENTITY.getOffice() );
+       final Optional<OfficeEntity> entity = repository.findById( ENTITY.getName() );
        assertThat( entity.isEmpty() ).isTrue();
      }
 
@@ -654,7 +654,7 @@ Following is the complete test that replicates this problem.
 
       ```java
           /* The office should not be in the database, as this was deleted, and the update should not succeed */
-          final Optional<OfficeEntity> entity = repository.findById( COLOGNE.getOffice() );
+          final Optional<OfficeEntity> entity = repository.findById( COLOGNE.getName() );
           assertThat( entity.isEmpty() ).isTrue();
       ```
 
@@ -721,7 +721,7 @@ We need to make the two operations, `findById()` and `save()` methods, atomic.  
      @Transactional
      public Optional<Office> update( final Office office ) {
        return repository
-         .findById( office.getOffice() )
+         .findById( office.getName() )
          .map( updateEntity( office ) )
          .map( repository::save )
          .map( mapToOffice() );
@@ -867,7 +867,7 @@ We can do better than simply failing.  In our case, we can retry the office upda
      @Retryable( ObjectOptimisticLockingFailureException.class )
      public Optional<Office> update( final Office office ) {
        return repository
-         .findById( office.getOffice() )
+         .findById( office.getName() )
          .map( updateEntity( office ) )
          .map( repository::save )
          .map( mapToOffice() );

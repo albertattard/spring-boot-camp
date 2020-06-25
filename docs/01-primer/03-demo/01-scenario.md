@@ -53,7 +53,7 @@ Our company, [ThoughtWorks](https://www.thoughtworks.com/), is thinking in build
    ``` json
    [
      {
-       "office": "string",
+       "name": "string",
        "address": "string",
        "phone": "string",
        "email": "string"
@@ -66,7 +66,7 @@ Our company, [ThoughtWorks](https://www.thoughtworks.com/), is thinking in build
    ```json
    [
      {
-       "office": "ThoughtWorks Cologne",
+       "name": "ThoughtWorks Cologne",
        "address": "Lichtstr. 43i, 50825 Cologne, Germany",
        "phone": "+49 221 64 30 70 63",
        "email": "contact-de@thoughtworks.com"

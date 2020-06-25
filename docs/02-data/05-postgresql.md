@@ -392,7 +392,7 @@ We have deleted the H2 dependency from the `build.gradle` file.  We still may ha
 
 1. Remove the H2 configuration
 
-   Update file: `/Users/albertattard/work/projects/albertattard/contact-us/src/main/resources/application.yaml`
+   Update file: `src/main/resources/application.yaml`
 
    Remove the `h2` configuration by deleting the following.
 
