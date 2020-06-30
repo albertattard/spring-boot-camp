@@ -43,7 +43,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    {% include custom/proceed_with_caution.html details="Do not reuse credentials between different services.<br/>For convenience, the following example uses the same credentials (<code>DATABASE_USERNAME</code> and <code>DATABASE_PASSWORD</code>) for both the PostgreSQL and PgAdmin services.  <strong>Do not do this in production!!</strong>" %}
 
    ```yaml
-   version: "3"
+   version: "3.8"
    services:
      postgres:
        container_name: ${DATABASE_NAME}-pg
@@ -65,6 +65,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
          interval: 10s
          timeout: 5s
          retries: 5
+         start_period: 30s
      pgadmin4:
        container_name: ${DATABASE_NAME}-pgadmin4
        image: dpage/pgadmin4:4.22

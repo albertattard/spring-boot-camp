@@ -30,11 +30,11 @@ We can rely on the [`Optional`](https://docs.oracle.com/en/java/javase/14/docs/a
 
 We need to indicate that the update was successful or not.  In the event an office does not exists, we may need to communicate that back to the caller.  We have three options
 
-1. Return an `Optional` together with the updated details.  This can be very helpful as we can continue working with the updated version of the office, should needs be.
+* Return an `Optional` together with the updated office.  This can be very helpful as we can continue working with the updated version of the office, should needs be.  The `Optional` type works very well with streams and makes it the ideal option.
 
-1. We can create an enum, such as `UpdateResult`, and return `UPDATED` when the update succeeds or `NOT_FOUND` when the office is not found.
+* We can create an enum, such as `UpdateResult`, and return `UPDATED` when the update succeeds or `NOT_FOUND` when the office is not found.
 
-1. Alternatively we can return a `boolean`, where `true` indicates a successful update.  This is the least preferred option.
+* Alternatively we can return a `boolean`, where `true` indicates a successful update.  This is the least preferred option.
 
 The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) provides a [`save()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#save-S-) which returns the updated version of our entity.  We can take advantage of this and return the updated `Office`.
 
@@ -100,7 +100,6 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    ```
 
    {% include custom/note.html details="The update method simply returns an empty optional, just enough to compile." %}
-
 
 1. Assert that an empty optional is return when the office does not exist.
 
@@ -299,6 +298,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
      }
    }
    ```
+
    Run the tests.
 
    ```bash
@@ -431,6 +431,8 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    All tests should pass.
 
 ## Are concurrent updates a problem?
+
+**YES**
 
 Let's analyse the office update operation we have implemented so far.
 
@@ -744,7 +746,7 @@ We need to make the two operations, `findById()` and `save()` methods, atomic.  
    The test will still fail, for a new reason.
 
    ```bash
-   $ open build/reports/tests/integrationTest/classes/demo.boot.JpaContactUsServiceDeleteWhileUpdateTest.html#shouldHandleConcurrentUpdates()
+   $ open "build/reports/tests/integrationTest/classes/demo.boot.JpaContactUsServiceDeleteWhileUpdateTest.html"
    ```
 
    Note that now the `update()` method, within the `JpaContactUsService` class, is failing with a [`ObjectOptimisticLockingFailureException`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/orm/ObjectOptimisticLockingFailureException.html).
