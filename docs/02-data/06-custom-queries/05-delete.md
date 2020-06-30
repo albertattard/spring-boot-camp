@@ -20,7 +20,7 @@ permalink: docs/data/custom-queries/delete/
 
 ## Delete an office
 
-An existing office can be deleted using a new method named `delete()`, that takes the office name and deletes it if this exists.  The `delete()` should return back the `Office` that was deleted.
+An existing office can be deleted using a new method, named `delete()`, that takes the office name and deletes it if this exists.  The `delete()` should return back the `Office` that was deleted.
 
 **What should we return if the office does not exists?**
 
@@ -28,15 +28,15 @@ We can rely on the [`Optional`](https://docs.oracle.com/en/java/javase/14/docs/a
 
 **Why do we need to return an office back?**
 
-We need to indicate that the delete was successful or not.  In the event an office does not exists, we may need to communicate that back to the caller.  We have three options
+We need to indicate whether the delete operation was successful or not.  In the event an office does not exists, we may need to communicate that back to the caller.  We have three options
 
 * Return an `Optional` together with the deleted office.  This can be very helpful as we can continue working with the deleted version of the office, should needs be.  The `Optional` type works very well with streams and makes it the ideal option.
 
-* We can create an enum, such as `DeleteResult`, and return `DELETED` when the deleted succeeds or `NOT_FOUND` when the office is not found.
+* We can create an enum, such as `DeleteResult`, and return `DELETED` when the delete operation succeeds or `NOT_FOUND` when the office is not found.
 
-* Alternatively we can return a `boolean`, where `true` indicates a successful delete.  This is the least preferred option.
+* Alternatively, we can return a `boolean`, where `true` indicates a successful delete and `false` otherwise.  This is the least preferred option.
 
-The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) provides a [`delete()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#delete-T-) which returns `void`.
+The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html) provides a [`delete()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#delete-T-) method which returns `void`.  Therefore, we cannot rely on this method to determine whether the office exists or not.  We have to first retrieve the office using the [`findById()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html#findById-ID-) method, and then if the office is found we delete it and return the office found before deletion.
 
 1. Add the new method to the interface
 
@@ -190,7 +190,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
        org.mockito.exceptions.verification.WantedButNotInvoked at JpaContactUsServiceTest.java:156
    ```
 
-   These should fail as despite the fact that the method returns what we expect (an empty optional), the service did not interact with the repository as expected.
+   These should fail as despite the fact that the method returns what we expect (an empty optional).  The service did not interact with the repository as expected.
 
 1. Make the test pass
 
@@ -254,6 +254,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    BUILD SUCCESSFUL in 5s
    5 actionable tasks: 5 executed
    ```
+
 1. Assert that the office is deleted, and the deleted office is returned
 
    Update file: `src/test/java/demo/boot/JpaContactUsServiceTest.java`
@@ -415,7 +416,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
    5 actionable tasks: 5 executed
    ```
 
-   The `delete()` method can be refactored and the delete operation moved out of it as shown next.
+   The `delete()` method can be refactored and the delete operation moved out of it, as shown next.
 
    Update file: `src/main/java/demo/boot/JpaContactUsService.java`
 
@@ -494,7 +495,7 @@ Let's analyse the office delete operation we have implemented so far.
   }
 ```
 
-The above office delete operation is subject to the _race condition_, or as also know to the _check then act_ concurrency problem.  We _check_ whether the office exists when we invoke the `findById()` method.  Then we _act_ by saving the updates by calling the `delete()` method (from within the `deleteEntity()` method).
+The above office delete operation is subject to the _race condition_, or as also know to the _check then act_ concurrency problem.  We _check_ whether the office exists when we invoke the `findById()` method.  Then we _act_ by deleting it by calling the `delete()` method (from within the `deleteEntity()` method).
 
 ```java
     return repository
@@ -503,11 +504,11 @@ The above office delete operation is subject to the _race condition_, or as also
       .map( mapToOffice() );
 ```
 
-Each individual database delete is atomic by nature, as the database ensures that.  In our current example, if two or more deletes happen at the same time, these are simply applied in the order they are received by the database.  The _check then act_ problem does not affect the result in the database, but the method output.
+Each individual database delete is atomic by nature, as the database ensures that.  In our current example, if two or more deletes happen at the same time, these are simply applied in the order they are received by the database.  The _check then act_ problem does not affect the result in the database state, but our method output.  The database cannot delete the same office twice.  It will simply delete the office the first time it receives the command, while any consecutive deletes will have no effect.
 
-Our contract says that the method should return the deleted office if the office exists, otherwise optional empty.  The caller may act based on the response received and trigger further actions.  While this will not have any impact at the data level, this may have an unexpected effect on other things that depends on this atomic action.
+Our contract for this method says that the method should return the deleted office if the office exists, otherwise optional empty.  The caller of the delete operation may act upon the response received and trigger further actions.  While this will not have any impact at the data level, this may have unexpected effects on other things that depends on this atomic action.
 
-Say two delete operations happen at the same time.  Consider the following scenario, where two delete operations happen simultaneously on two different threads (_T1_ and _T2_).
+Consider the following scenario, where two delete operations happen simultaneously on two different threads (_T1_ and _T2_).
 
 | Time | Delete (_T1_)                        | Delete (_T2_)                        |
 | :--: | ------------------------------------ | ------------------------------------ |
@@ -516,21 +517,9 @@ Say two delete operations happen at the same time.  Consider the following scena
 |   3  |                                      | `delete()` office (_act_)            |
 |   4  | `delete()` office (_act_)            |                                      |
 
-Both actions will return a successful delete, where only one of them should succeed.  At a first glance this may not be a problem, but in reality is.  In either case, the office is deleted from the database.  As mentioned before, both calls may do further action based on the result of the delete operation.  For example, an email is sent to a third party saying the that office was deleted only when the office is actually deleted.  In this example, the receiver will receive two identical emails, which may be confusing.
+Both actions will return a successful delete, where only one of them should succeed.  At a first glance this may not be a problem, as in either case, the office is deleted from the database.
 
-We can reuse [the same approach we used before when we dealt with a similar problem when dealing with updates]({{ '/docs/data/custom-queries/update/#how-can-we-protect-ourselves-against-issues-related-to-concurrency' | absolute_url }}), to ensure that the delete operation is atomic.
-
-```java
-  @Override
-  @Transactional
-  @Retryable( ObjectOptimisticLockingFailureException.class )
-  public Optional<Office> delete( final String name ) {
-    return repository
-      .findById( name )
-      .map( deleteEntity() )
-      .map( mapToOffice() );
-  }
-```
+As mentioned before, both calls may do further action based on the result of the delete operation.  For example, an email is sent to a third party saying the that office was deleted only when the office is actually deleted.  In this example, the receiver will receive two identical emails, which may be confusing.  Say that a payment needs to be affected once an office is deleted.  In this case the payment may be affected more than once.
 
 ## How can we protect ourselves against issues related to concurrency?
 
@@ -551,13 +540,15 @@ We need to write a test that is able to delete the office right after the `findB
       .map( mapToOffice() );
 ```
 
-Differenet from [the update test example we saw in the previous section]({{ '/docs/data/custom-queries/update/#replicate-problem' | absolute_url }}), we don't have a method we can take advantage from to coordinate the delete operations.
+Different from [the update test example we saw in the previous section]({{ '/docs/data/custom-queries/update/#replicate-problem' | absolute_url }}), we don't have a method we can take advantage from to coordinate the delete operations.
 
-We have to rely on another approach.  Instead, of coordinating, we can bombard the delete operation using multiple threads and assert that only one of them succeeds.  At a first glance this seems easy and should work.  Unfortunately this is a matter of chance and we may be able to run the test and the succeed when these should fail.  Using such approach we are subject to chance.
+We have to rely on another approach.  Instead, of coordinating two threads to reproduce the problem, we can bombard the delete operation using multiple threads and assert that only one of them succeeds.  At a first glance this seems easy and should do the trick.  Unfortunately, this is a matter of chance and we may be able to run the test and the succeed when these should fail.  Using such approach, we are subject to chance.
 
-Alternatively, we can introduce a hook method which we can use to coordinate the flow.  The downside of using a hook method is that, we are modifying the code to accomodate our tests.  The hook method is only available for testing and nothing else.
+Say that we are running the tests on a machine that has one core/CPU and each thread that is used to bombard the delete operation is executed in sequence.  This setup will make our test ineffective as each thread is only executed after the previous one finishes.
 
-We will use the first approach which is less invasive on the code.
+Alternatively, we can introduce a hook method, which we can use to coordinate the flow.  The downside of using a hook method is that, we are modifying the code to accommodate our tests.  The hook method is only required by this particular test and nothing else.
+
+We will use the first approach (bombarding the delete operation) which is less invasive on the code.
 
 1. Create new integration test
 
@@ -635,7 +626,7 @@ We will use the first approach which is less invasive on the code.
    6 actionable tasks: 6 executed
    ```
 
-   The test should pass as so far we have not yet tried to perform concurrent deletes.
+   The test should pass as so far, we have not yet tried to perform concurrent deletes.
 
 1. Simulate concurrent deletes (replicate the problem)
 
@@ -704,7 +695,7 @@ We will use the first approach which is less invasive on the code.
          }
        };
 
-       /* Invoke the delete operation from a multiple threads at 'the same time' (coordinated through the CyclicBarrier) */
+       /* Invoke the delete operation from multiple threads at 'the same time' (coordinated through the CyclicBarrier) */
        final List<Thread> threads = new ArrayList<>( numberOfThreads );
        for ( int i = 1; i <= numberOfThreads; i++ ) {
          final Thread thread = new Thread( deleteTask, String.format( "DELETE-%d", i ) );
@@ -717,14 +708,14 @@ We will use the first approach which is less invasive on the code.
          thread.join( TimeUnit.SECONDS.toMillis( 5 ) );
        }
 
+       /* Make sure that all threads ran */
+       assertThat( barrier.getNumberWaiting() ).isEqualTo( 0 );
+
        /* Make sure that only one delete operation succeeded */
        assertThat( deletedCount.intValue() ).isEqualTo( 1 );
 
        /* Make sure that no errors occurred  */
        assertThat( errorCount.intValue() ).isEqualTo( 0 );
-
-       /* Make sure that all threads ran */
-       assertThat( barrier.getNumberWaiting() ).isEqualTo( 0 );
      }
    }
    ```
@@ -976,7 +967,7 @@ We need to make the two operations, `findById()` and `delete()` methods, atomic.
    $ ./gradlew clean integrationTest
    ```
 
-   The test will still fail, but for a new reason.
+   The test will still fail, but for a different reason.
 
    ```bash
    $ open "build/reports/tests/integrationTest/classes/demo.boot.JpaContactUsServiceMultiDeleteTest.html"
