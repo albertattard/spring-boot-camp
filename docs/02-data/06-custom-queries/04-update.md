@@ -749,7 +749,7 @@ We need to make the two operations, `findById()` and `save()` methods, atomic.  
    $ open "build/reports/tests/integrationTest/classes/demo.boot.JpaContactUsServiceDeleteWhileUpdateTest.html"
    ```
 
-   Note that now the `update()` method, within the `JpaContactUsService` class, is failing with a [`ObjectOptimisticLockingFailureException`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/orm/ObjectOptimisticLockingFailureException.html).
+   The `update()` method, within the `JpaContactUsService` class, is now failing with a [`ObjectOptimisticLockingFailureException`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/orm/ObjectOptimisticLockingFailureException.html).
 
    ```bash
    org.springframework.orm.ObjectOptimisticLockingFailureException: Object of class [demo.boot.OfficeEntity] with identifier [ThoughtWorks Test Office]: optimistic locking failed; nested exception is org.hibernate.StaleObjectStateException: Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect) : [demo.boot.OfficeEntity#ThoughtWorks Test Office]

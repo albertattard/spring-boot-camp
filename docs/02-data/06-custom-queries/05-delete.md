@@ -518,7 +518,7 @@ Say two delete operations happen at the same time.  Consider the following scena
 
 Both actions will return a successful delete, where only one of them should succeed.  At a first glance this may not be a problem, but in reality is.  In either case, the office is deleted from the database.  As mentioned before, both calls may do further action based on the result of the delete operation.  For example, an email is sent to a third party saying the that office was deleted only when the office is actually deleted.  In this example, the receiver will receive two identical emails, which may be confusing.
 
-We can reuse [the same approach we used to ensure the update operation is atomic]({{ '/docs/data/custom-queries/update/#how-can-we-protect-ourselves-against-issues-related-to-concurrency' | absolute_url }}), to ensure that the delete operation is atomic.
+We can reuse [the same approach we used before when we dealt with a similar problem when dealing with updates]({{ '/docs/data/custom-queries/update/#how-can-we-protect-ourselves-against-issues-related-to-concurrency' | absolute_url }}), to ensure that the delete operation is atomic.
 
 ```java
   @Override
@@ -623,7 +623,7 @@ We will use the first approach which is less invasive on the code.
    }
    ```
 
-   {% include custom/note.html details="The delete test shown above only deletes the office once with one thread." %}
+   {% include custom/note.html details="The delete test shown above only deletes the office once using one thread." %}
 
    Run the test.
 
@@ -740,6 +740,14 @@ We will use the first approach which is less invasive on the code.
    ```
 
    As expected, the test now fails.
+
+   ```bash
+   $ open "build/reports/tests/integrationTest/classes/demo.boot.JpaContactUsServiceMultiDeleteTest.html"
+   ```
+
+   ![Office-Multiple-Delete-Test-Fail-1.png]({{ '/assets/images/Office-Multiple-Delete-Test-Fail-1.png' | absolute_url }})
+
+   Different from what is expected by the test, more than one thread was able to delete the same office, as shown in the above image.
 
 1. (_Optional_) Refactor the test
 
@@ -893,7 +901,13 @@ We will use the first approach which is less invasive on the code.
    6 actionable tasks: 6 executed
    ```
 
-   As expected, the test should still fail.
+   As expected, the test should still fail as it did before.
+
+   ```bash
+   $ open "build/reports/tests/integrationTest/classes/demo.boot.JpaContactUsServiceMultiDeleteTest.html"
+   ```
+
+   ![Office-Multiple-Delete-Test-Fail-1.png]({{ '/assets/images/Office-Multiple-Delete-Test-Fail-1.png' | absolute_url }})
 
 ### Transactions
 
@@ -962,13 +976,209 @@ We need to make the two operations, `findById()` and `delete()` methods, atomic.
    $ ./gradlew clean integrationTest
    ```
 
-   The test will still fail, for a new reason.
+   The test will still fail, but for a new reason.
 
    ```bash
    $ open "build/reports/tests/integrationTest/classes/demo.boot.JpaContactUsServiceMultiDeleteTest.html"
    ```
 
    ![Office-Multiple-Delete-Test-Fail-2.png]({{ '/assets/images/Office-Multiple-Delete-Test-Fail-2.png' | absolute_url }})
+
+   We have three assertions, two of which are passing.
+
+   ```java
+      assertAllThreadsRan();
+      assertOnlyOneOfficeIsDeleted();
+      assertNoErrorsOccurred();
+   ```
+
+   The last assertion failed.  Even though it is not visible, as the exceptions were suppressed for simplicity, the `delete()` method, within the `JpaContactUsService` class, is now failing with a [`ObjectOptimisticLockingFailureException`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/orm/ObjectOptimisticLockingFailureException.html).
+
+   This is an improvement as now the concurrency problem is not unnoticed.
+
+While this solves our race condition, we can do better as shown [next](#retry-on-error).
+
+### Retry on error
+
+We can do better than simply failing.  In our case, we can retry the office delete operation when we encounter this error.  [Spring Batch](https://spring.io/projects/spring-batch) provides the retry functionality.
+
+1. Add the [`spring-boot-starter-batch`](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-batch) dependency
+
+   Update file: `build.gradle`
+
+   {% include custom/note.html details="The following dependency may already be in the file as this may have been added while following a different example." %}
+
+   ```groovy
+   dependencies {
+     implementation 'org.springframework.boot:spring-boot-starter-batch'
+   }
+   ```
+
+   Following is a complete list of the dependencies used in the project.
+
+   ```groovy
+   dependencies {
+     /* Lombok */
+     compileOnly 'org.projectlombok:lombok'
+     annotationProcessor 'org.projectlombok:lombok'
+
+     /* Spring */
+     implementation 'org.springframework.boot:spring-boot-starter-web'
+     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+     testImplementation('org.springframework.boot:spring-boot-starter-test') {
+       exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+     }
+
+     /* Data */
+     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+     implementation 'org.springframework.boot:spring-boot-starter-batch'
+     runtimeOnly 'org.flywaydb:flyway-core'
+     runtimeOnly 'org.postgresql:postgresql'
+
+     /* Prometheus */
+     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+     /* Spring/OpenApi */
+     implementation 'org.springdoc:springdoc-openapi-ui:1.3.9'
+   }
+   ```
+
+1. Enable retry
+
+   Update file: `src/main/java/demo/boot/ContactUsApplication.java`
+
+   {% include custom/note.html details="The <code>@EnableRetry</code> annotation may already be in the file as this may have been added while following a different example." %}
+
+   ```java
+   package demo.boot;
+
+   import org.springframework.boot.SpringApplication;
+   import org.springframework.boot.autoconfigure.SpringBootApplication;
+   import org.springframework.retry.annotation.EnableRetry;
+
+   @EnableRetry
+   @SpringBootApplication
+   public class ContactUsApplication {
+     public static void main(String[] args) { /* ... */ }
+   }
+   ```
+
+   The [`@EnableRetry`](https://docs.spring.io/spring-retry/docs/api/current/org/springframework/retry/annotation/EnableRetry.html) annotation enables the use of the [`@Retryable`](https://docs.spring.io/spring-retry/docs/api/current/org/springframework/retry/annotation/Retryable.html) annotation.
+
+   Spring will scan our services and will create a [proxy](https://docs.oracle.com/javase/8/docs/technotes/guides/reflection/proxy.html) for any service which contains methods annotated with the `@Retryable` annotation, as shown next.
+
+   ![Proxy.png]({{ '/assets/images/Proxy.png' | absolute_url }})
+
+   Using the proxy, Spring will intercept calls to our method (that is annotated with the `@Retryable` annotation) and will wrap them in a try/catch, similar to the image shown above.
+
+1. Annotation the method with the `@Retryable` annotation
+
+   Update file: `src/main/java/demo/boot/JpaContactUsService.java`
+
+   ```java
+   package demo.boot;
+
+   import lombok.AllArgsConstructor;
+   import org.springframework.orm.ObjectOptimisticLockingFailureException;
+   import org.springframework.retry.annotation.Retryable;
+   import org.springframework.stereotype.Service;
+   import org.springframework.transaction.annotation.Transactional;
+
+   import java.util.List;
+   import java.util.Optional;
+   import java.util.function.Function;
+   import java.util.stream.Collectors;
+
+   @Service
+   @AllArgsConstructor
+   public class JpaContactUsService implements ContactUsService {
+
+     private final OfficesRepository repository;
+
+     @Override
+     public List<Office> list() {
+       return mapToOffices( repository.findAll() );
+     }
+
+     @Override
+     public Optional<Office> findOneByName( final String office ) {
+       return repository
+         .findById( office )
+         .map( mapToOffice() );
+     }
+
+     @Override
+     public List<Office> findAllInCountry( final String country ) {
+       return mapToOffices( repository.findAllByCountryIgnoreCase( country ) );
+     }
+
+     @Override
+     @Transactional
+     @Retryable( ObjectOptimisticLockingFailureException.class )
+     public Optional<Office> update( final Office office ) {
+       return repository
+         .findById( office.getName() )
+         .map( updateEntity( office ) )
+         .map( repository::save )
+         .map( mapToOffice() );
+     }
+
+     @Override
+     @Transactional
+     @Retryable( ObjectOptimisticLockingFailureException.class )
+     public Optional<Office> delete( final String name ) {
+       return repository
+         .findById( name )
+         .map( deleteEntity() )
+         .map( mapToOffice() );
+     }
+
+     private Function<OfficeEntity, OfficeEntity> deleteEntity() {
+       return entity -> {
+         repository.delete( entity );
+         return entity;
+       };
+     }
+
+     private List<Office> mapToOffices( final List<OfficeEntity> entities ) {
+       return entities
+         .stream()
+         .map( mapToOffice() )
+         .collect( Collectors.toList() );
+     }
+
+     private Function<OfficeEntity, Office> mapToOffice() {
+       return entity -> new Office(
+         entity.getName(),
+         entity.getAddress(),
+         entity.getPhone(),
+         entity.getEmail()
+       );
+     }
+
+     private Function<OfficeEntity, OfficeEntity> updateEntity( final Office office ) {
+       return entity -> {
+         entity.setAddress( office.getAddress() );
+         entity.setPhone( office.getPhone() );
+         entity.setEmail( office.getEmail() );
+         return entity;
+       };
+     }
+   }
+   ```
+
+1. Run the tests
+
+   ```bash
+   $ ./gradlew clean check
+
+   ...
+
+   BUILD SUCCESSFUL in 19s
+   7 actionable tasks: 7 executed
+   ```
+
+   The test should now pass.
 
 ## Tasks status
 
