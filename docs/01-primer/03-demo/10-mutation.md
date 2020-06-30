@@ -24,7 +24,7 @@ We developed this application using a [TDD approach](https://martinfowler.com/bl
 
 One of these approaches is [mutation testing](https://en.wikipedia.org/wiki/Mutation_testing).  Different from other approaches, mutation testing intelligently modifies the code, known as _mutations_, and verifies whether each modification is caught by a test or not.  If all mutations are caught by a test, then our code is well tested.  If a mutation does not break a test, then we have code which is not covered by tests.  This is better than simply test coverage as it is verifying that the test actually fails.
 
-[PIT Mutation Testing](https://pitest.org/) is a mutation testing library we can use to measure how well our code is tested and highlight any areas that are not well tested.
+[PIT Mutation Testing](https://pitest.org/) is a mutation testing library we can use to measure how well our Java code is tested and highlight any areas that are not well tested.  The [Stryker Mutator](https://stryker-mutator.io/) another mutation testing library for Javascript, C# and Scala.
 
 1. Add the [PIT test plugin](https://plugins.gradle.org/plugin/info.solidsoft.pitest) and configure it to run with JUnit 5.
 
