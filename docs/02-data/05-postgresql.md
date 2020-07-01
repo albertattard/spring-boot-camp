@@ -164,8 +164,8 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
    ```bash
    Creating network "contact-us_app-net" with driver "bridge"
-   Creating pgadmin4   ... done
-   Creating contact-us ... done
+   Creating contact-us-pgadmin4 ... done
+   Creating contact-us-pg       ... done
    ```
 
 1. Access PgAdmin; [http://localhost:8000/](http://localhost:8000/)
