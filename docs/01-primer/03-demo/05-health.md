@@ -178,7 +178,7 @@ permalink: docs/primer/demo/health/
    < HTTP/1.1 200
    < Content-Type: application/vnd.spring-boot.actuator.v3+json
    < Transfer-Encoding: chunked
-   < Date: Teu, 27 April 2077 12:34:56 GMT
+   < Date: Tue, 27 April 2077 12:34:56 GMT
    <
    * Connection #0 to host localhost left intact
    * Closing connection 0

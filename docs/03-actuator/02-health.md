@@ -139,10 +139,15 @@ import java.util.List;
 import java.util.function.Function;
 
 @Service
-@AllArgsConstructor
 public class AstronautsCountHealthIndicator implements HealthIndicator {
 
   private final RestTemplate restTemplate;
+
+  public AstronautsCountHealthIndicator( final RestTemplateBuilder builder ){
+    builder.setConnectTimeout( Duration.ofSeconds( 5 ) );
+    builder.setReadTimeout( Duration.ofSeconds( 5 ) );
+    restTemplate = builder.build();
+  }
 
   @Override
   public Health health() {
@@ -187,28 +192,23 @@ public class AstronautsCountHealthIndicator implements HealthIndicator {
 }
 ```
 
-Our new health indicator requires a [`RestTemplate`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html), which is used to retrieve the list of astronauts currently in space and map the received JSON response into a Java object.  Spring boot does not provide us with a `RestTemplate` and we need to create one as shown in the following example.
+The above example makes use from the [`vavr`](https://mvnrepository.com/artifact/io.vavr/vavr) dependency that provides the [`Either`](https://www.javadoc.io/doc/io.vavr/vavr/latest/io/vavr/control/Either.html) functional type.
+
+```groovy
+dependencies {
+  /* Either/Functional functions */
+  implementation 'io.vavr:vavr:0.10.3'
+}
+```
+
+Our new health indicator requires a [`RestTemplate`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html), which is used to retrieve the list of astronauts currently in space and map the received JSON response into a Java object.  Spring boot does not provide us with a `RestTemplate`.  Instead, Spring provides us with a builder of type [`RestTemplateBuilder`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/web/client/RestTemplateBuilder.html) and we need to create one from it.
 
 ```java
-package demo.boot;
-
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
-
-import java.time.Duration;
-
-@Configuration
-public class RestConfiguration {
-
-  @Bean
-  public RestTemplate restTemplate( final RestTemplateBuilder builder ) {
+  public AstronautsCountHealthIndicator( final RestTemplateBuilder builder ){
     builder.setConnectTimeout( Duration.ofSeconds( 5 ) );
     builder.setReadTimeout( Duration.ofSeconds( 5 ) );
-    return builder.build();
+    restTemplate = builder.build();
   }
-}
 ```
 
 This is just an example of a health indicator that checks the availability of a third-party endpoint that our application depends on using other Spring managed beans.
@@ -327,11 +327,11 @@ Each indicator has a name and provides two values, as shown next.
 
 ```json
 "custom": {
-      "status": "UP",
-      "details": {
-        "type": "demo"
-      }
-    }
+  "status": "UP",
+  "details": {
+    "type": "demo"
+  }
+}
 ```
 
 The `status` property shown the actual status for the respective health indicator, while the `details` property shows any details provided by the respective health indicator as shown in the following code fragment.
@@ -346,6 +346,8 @@ The `status` property shown the actual status for the respective health indicato
 ```
 
 In the example we saw above, all five health indicators are `UP`.  If one of these is down, using the details we can identify the root cause of the problem.
+
+## Simulate a problem
 
 Let's simulate a problem, by stopping the database while the application is running.
 
@@ -384,7 +386,7 @@ Let's simulate a problem, by stopping the database while the application is runn
 
 1. With our application running and the database stopped, retrieve the application's health status
 
-   {% include custom/note.html details="Each health indicator is evaluated on request.  In our example, the request will take 30 seconds to reply, defined by the database connection timeout." %}
+   {% include custom/note.html details="Each health indicator is evaluated on request.  In our example, the request will take about 30 seconds to reply, the time needed by the database connection to timeout." %}
 
    ```bash
    $ curl "http://localhost:8080/health" | jq .
@@ -468,6 +470,15 @@ Let's simulate a problem, by stopping the database while the application is runn
    < HTTP/1.1 503
    < Content-Type: application/vnd.spring-boot.actuator.v3+json
    < Transfer-Encoding: chunked
-   < Date: Tue, 30 Jun 2020 18:30:35 GMT
+   < Date: Tue, 27 April 2077 12:34:56 GMT
    < Connection: close
    ```
+
+## Cleanup
+
+In this section we created two health indicators (`AstronautsCountHealthIndicator` and `CustomHealthIndicator`) which are not required by our application.  These can be safely deleted from the application.
+
+```bash
+$ rm src/main/java/demo/boot/AstronautsCountHealthIndicator.java
+$ rm src/main/java/demo/boot/CustomHealthIndicator.java
+```
