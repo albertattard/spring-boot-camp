@@ -994,7 +994,7 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    When an office is deleted, we need to decrement the office count to reflect the new deletion.
 
-   {% include custom/note.html details="In a <a href='/spring-boot-camp/docs/data/custom-queries/delete/'>previous section</a>, we invested some effort in making the `delete()` method thread-safe.  This will pay off now as this decorator relies on the output of the `delete()` method.  We do not want our decorator to decrement the number of offices more that it should." %}
+   {% include custom/note.html details="In a <a href='/spring-boot-camp/docs/data/custom-queries/delete/'>previous section</a>, we invested some effort in making the <code>delete()</code> method thread-safe.  This will pay off now as this decorator relies on the output of the <code>delete()</code> method.  We do not want our decorator to decrement the number of offices more that it should." %}
 
    Update file: `src/test/java/demo/boot/OfficeCountMetricDecoratorTest.java`
 
@@ -1189,6 +1189,8 @@ Will use the decorator pattern, not because it uses less code, but because it is
      }
    }
    ```
+
+   Rerun the tests after the refactoring.  These should still pass.
 
 1. Make the `OfficeCountMetricDecorator` the primary service
 
