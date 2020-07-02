@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Env
+title: Environment Information
 parent: Spring Boot Actuator
 nav_order: 4
 permalink: docs/actuator/env/
@@ -21,7 +21,7 @@ permalink: docs/actuator/env/
 
 When debugging a problem with an application running in production, know its environment will help you determining how the application is configured and whether it is properly configured.
 
-Spring boot provides an endpoint, `/env` that returns all environment information that the application has access too.
+Spring Boot provides an endpoint, `/env` that returns all environment information that the application has access too.
 
 ```bash
 $ curl "http://localhost:8080/env" | jq .
@@ -39,7 +39,7 @@ Hitting this endpoint will return a `404` as shown next.
 }
 ```
 
-By default, Spring boot exposes only the health and the info endpoints.  The env endpoint is not exposed.  We can include the env endpoint to the list of endpoints exposed by the actuator by editing the `src/main/resources/application.yaml` properties file, as shown next.
+By default, Spring Boot exposes only the health and the info endpoints.  The env endpoint is not exposed.  We can include the env endpoint to the list of endpoints exposed by the actuator by editing the `src/main/resources/application.yaml` properties file, as shown next.
 
 ```yaml
 management:

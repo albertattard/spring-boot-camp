@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Info
+title: Application Information
 parent: Spring Boot Actuator
 nav_order: 3
 permalink: docs/actuator/info/
@@ -19,10 +19,10 @@ permalink: docs/actuator/info/
 
 ## Application information
 
-[Spring boot actuator]( https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-application-info) allows us to provide information about our application through [`InfoContributor`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/actuate/info/InfoContributor.html).
+[Spring Boot actuator]( https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-application-info) allows us to provide information about our application through [`InfoContributor`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/actuate/info/InfoContributor.html).
 
 
-Spring boot collects the information from all `InfoContributor` and returns one JSON object as a reply to the `/info` endpoint.
+Spring Boot collects the information from all `InfoContributor` and returns one JSON object as a reply to the `/info` endpoint.
 
 ```bash
 $ curl "http://localhost:8080/info" | jq .
@@ -94,7 +94,7 @@ One way that we can be certain that the latest and greatest version of our appli
 
 We can easily achieve this using the `/info` endpoint.
 
-The [`GitInfoContributor`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/actuate/info/GitInfoContributor.html) is one of the contributors provided by Spring boot.  This simply looks for the properties file `git.properties` on the classpath.
+The [`GitInfoContributor`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/actuate/info/GitInfoContributor.html) is one of the contributors provided by Spring Boot.  This simply looks for the properties file `git.properties` on the classpath.
 
 Following is an example of such file.
 

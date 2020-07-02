@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Health
+title: Health Information
 parent: Spring Boot Actuator
 nav_order: 2
 permalink: docs/actuator/health/
@@ -86,13 +86,13 @@ If our application is not healthy, the health endpoint will return a different s
 
 ## How does the health check works?
 
-[Spring boot](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-health) provides a registry, [`HealthContributorRegistry`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/actuate/health/HealthContributorRegistry.html), where all health information is gathered as shown in the following diagram.
+[Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-health) provides a registry, [`HealthContributorRegistry`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/actuate/health/HealthContributorRegistry.html), where all health information is gathered as shown in the following diagram.
 
 ![Health-Contributor-Registry.png]({{ '/assets/images/Health-Contributor-Registry.png' | absolute_url }})
 
 Spring scans our application for beans that implement the [`HealthContributor`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/actuate/health/HealthContributor.html) marker interface and automatically adds them to the registry.  Every time we request for the health status, Spring will get all contributors and checks their health status, and aggregates their response.
 
-Spring boot provides several health indicators, such as database connectivity health indicator.  We can also add custom health indicators as shown next.
+Spring Boot provides several health indicators, such as database connectivity health indicator.  We can also add custom health indicators as shown next.
 
 ```java
 package demo.boot;
@@ -201,7 +201,7 @@ dependencies {
 }
 ```
 
-Our new health indicator requires a [`RestTemplate`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html), which is used to retrieve the list of astronauts currently in space and map the received JSON response into a Java object.  Spring boot does not provide us with a `RestTemplate`.  Instead, Spring provides us with a builder of type [`RestTemplateBuilder`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/web/client/RestTemplateBuilder.html) and we need to create one from it.
+Our new health indicator requires a [`RestTemplate`](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html), which is used to retrieve the list of astronauts currently in space and map the received JSON response into a Java object.  Spring Boot does not provide us with a `RestTemplate`.  Instead, Spring provides us with a builder of type [`RestTemplateBuilder`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/web/client/RestTemplateBuilder.html) and we need to create one from it.
 
 ```java
   public AstronautsCountHealthIndicator( final RestTemplateBuilder builder ){
@@ -215,7 +215,7 @@ This is just an example of a health indicator that checks the availability of a 
 
 ## How can we determine what health indicators we have?
 
-Spring boot retrieves the `Health` from each indicator and using a [`StatusAggregator`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/actuate/health/StatusAggregator.html) to constructs the application overall health status.  If one of the indicators is down, then the whole application status is considered a down, as shown next.
+Spring Boot retrieves the `Health` from each indicator and using a [`StatusAggregator`](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/actuate/health/StatusAggregator.html) to constructs the application overall health status.  If one of the indicators is down, then the whole application status is considered a down, as shown next.
 
 ```json
 {
@@ -319,9 +319,9 @@ In the above response, we have health information from five health indicators, o
 | ----------------- | ---------------------------------------------------------------------------------------------------- |
 | `astronautsCount` | Checks the [http://api.open-notify.org/astros.json](http://api.open-notify.org/astros.json) endpoint |
 | `custom`          | A basic health indicator that always returns the same response                                       |
-| `db`              | Database health indicator provided by Spring boot                                                    |
-| `diskSpace`       | Disk space health indicator provided by Spring boot                                                  |
-| `ping`            | Ping health indicator provided by Spring boot                                                        |
+| `db`              | Database health indicator provided by Spring Boot                                                    |
+| `diskSpace`       | Disk space health indicator provided by Spring Boot                                                  |
+| `ping`            | Ping health indicator provided by Spring Boot                                                        |
 
 Each indicator has a name and provides two values, as shown next.
 

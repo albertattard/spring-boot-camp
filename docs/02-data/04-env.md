@@ -273,7 +273,9 @@ Gradle is very customisable and we can easily have a new set of tests, referred 
       }
       ```
 
-      The `build` task depends on the `check` task, which in turn it depends on our `integrationTest` task as shown in the following task tree.
+      The `build` task depends on the `check` task, which in turn depends on the `test` task, and will depend on our `integrationTest` task, as shown in the following task tree.
+
+      {% include custom/note.html details="Our <code>integrationTest</code> Gradle task is not shown in the following dependency tree as we still need to include the new <code>integration-test.gradle</code> file in our <code>build.gradle</code> file." %}
 
       ```bash
       $ ./gradlew build taskTree
@@ -291,28 +293,6 @@ Gradle is very customisable and we can easily have a new set of tests, referred 
       |              +--- :compileJava
       |              \--- :processResources
       \--- :check
-           +--- :integrationTest
-           |    +--- :classes
-           |    |    +--- :compileJava
-           |    |    \--- :processResources
-           |    +--- :integrationTestClasses
-           |    |    +--- :compileIntegrationTestJava
-           |    |    |    +--- :classes
-           |    |    |    |    +--- :compileJava
-           |    |    |    |    \--- :processResources
-           |    |    |    \--- :testClasses
-           |    |    |         +--- :compileTestJava
-           |    |    |         |    \--- :classes
-           |    |    |         |         +--- :compileJava
-           |    |    |         |         \--- :processResources
-           |    |    |         \--- :processTestResources
-           |    |    \--- :processIntegrationTestResources
-           |    \--- :testClasses
-           |         +--- :compileTestJava
-           |         |    \--- :classes
-           |         |         +--- :compileJava
-           |         |         \--- :processResources
-           |         \--- :processTestResources
            \--- :test
                 +--- :classes
                 |    +--- :compileJava
@@ -325,7 +305,7 @@ Gradle is very customisable and we can easily have a new set of tests, referred 
                      \--- :processTestResources
       ```
 
-      {% include custom/note.html details="Our <code>integrationTest</code> Gradle task does not depend on the <code>test</code> Gradle task as we can run each of these Gradle tasks independent.   With that said, the integration test code, depends on the test code and we can reuse classes that are defined in the tests." %}
+      {% include custom/note.html details="Our <code>integrationTest</code> Gradle task will not depend on the <code>test</code> Gradle task as we can run each of these Gradle tasks independent.   With that said, the integration test code, depends on the test code and we can reuse classes that are defined in the tests." %}
 
    **Why are we creating a second Gradle build file?**
 
@@ -501,6 +481,12 @@ So far we have configured Gradle to use the `.env` file defined before.
        ... 56 common frames omitted
    ...
    ```
+
+1. Add the [EnvFile](https://plugins.jetbrains.com/plugin/7861-envfile) plugin
+
+   ![EnvFile]({{ '/assets/images/Plugin-EnvFile.png' | absolute_url }})
+
+   {% include custom/note.html details="The following steps depend on the EnvFile plugin shown above." %}
 
 1. Open the run configuration
 

@@ -107,7 +107,7 @@ Our FatJAR contains all our code, the code of our dependencies and the applicati
 | [Quarkus](https://quarkus.io/)                        | Red Hat/IBM            |
 | [Helidon](https://helidon.io/)                        | Oracle                 |
 
-Since its introduction, Spring boot dominated the market.  According to [Google trends](https://trends.google.com/trends/explore?q=Spring%20Boot,Dropwizard,Micronaut,Quarkus,Helidon), the competitors do not come close.
+Since its introduction, Spring Boot dominated the market.  According to [Google trends](https://trends.google.com/trends/explore?q=Spring%20Boot,Dropwizard,Micronaut,Quarkus,Helidon), the competitors do not come close.
 
 ![Spring Boot - Popularity]({{ '/assets/images/Spring-Boot-Popularity.png' | absolute_url }})
 
@@ -139,6 +139,6 @@ Spring is very productive as it takes away much boilerplate code that is otherwi
 
 Take for example [Axon Framework](https://axoniq.io/), a [CQRS framework](https://martinfowler.com/bliki/CQRS.html).  This framework works effortlessly with the Spring echo system but takes some time to set it up without using Spring.  Like this, many other libraries or frameworks leverage Spring to simplify their adoption.
 
-Spring boot take this to the next level as it simplifies the integration of third-party libraries with little or no effort at all.  You can create an application without adding one line of configuration.
+Spring Boot take this to the next level as it simplifies the integration of third-party libraries with little or no effort at all.  You can create an application without adding one line of configuration.
 
 There are other alternatives such as [Micronaut]( https://micronaut.io/) which provide even better performance without sacrificing performance.  Yet, these alternatives do not enjoy the support Spring does and you may find yourself alone.

@@ -20,7 +20,7 @@ permalink: docs/primer/demo/banner/
 
 ## Run the application
 
-1. Run the application using the [Spring boot Gradle task `bootRun`](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/api/org/springframework/boot/gradle/tasks/run/BootRun.html)
+1. Run the application using the [Spring Boot Gradle task `bootRun`](https://docs.spring.io/spring-boot/docs/current/gradle-plugin/api/org/springframework/boot/gradle/tasks/run/BootRun.html)
 
    ```bash
    $ ./gradlew bootRun

@@ -263,7 +263,7 @@ Nowadays, it is uncommon to have Spring Framework without Spring Boot.  Most tut
 
 Any Java library, referred to in this section as _dependency_, can take advantage of Spring Boot to improve its adoption.  Take for example the [Axon Framework](https://axoniq.io/), a [CQRS framework](https://martinfowler.com/bliki/CQRS.html).  This dependency takes advantage of Spring Boot to simplify the adoption of the same dependency.
 
-Consider the applications mentioned in the [previous section](#what-is-the-difference-between-spring-framework-and-spring-boot), when we compare an application without Spring Boot with the same version of the application that makes use of Spring boot.
+Consider the applications mentioned in the [previous section](#what-is-the-difference-between-spring-framework-and-spring-boot), when we compare an application without Spring Boot with the same version of the application that makes use of Spring Boot.
 
 1. Without Spring Boot, we simply imported the dependency.
 
