@@ -27,13 +27,15 @@ There are many tools from different vendors that can help us with this, such as 
 
 ## Which tool/vendor should we use?
 
-I like to use [Google trends](https://trends.google.com/trends/explore?q=Prometheus,Datadog,StatsD,New%20Relic,JMX) to get a feel about their popularity, as shown next.
+I like to use [Google trends](https://trends.google.com/trends/explore?q=Prometheus,Datadog,StatsD,New%20Relic,JMX) to get a feel about the popularity of the different technologies, as shown next.
 
 {% include custom/note.html details="The following result is very skewed as some of these names have different meanings.  For example, <em>Prometheus</em> is the name of a <a href='https://prometheus.io/'>monitoring and analysis tool</a>, and also the name of a <a href='https://en.wikipedia.org/wiki/Prometheus'>Greek God</a>, and there is a <a href='https://en.wikipedia.org/wiki/Prometheus_(2012_film)'>movie</a> with that name too." %}
 
 ![Metrics-Vendors-Trends.png]({{ '/assets/images/Metrics-Vendors-Trends.png' | absolute_url }})
 
-**I have little experience in this field**, and only used Prometheus with [Grafana](https://grafana.com/) as the visualisation tool.  Prometheus seems to be very popular in this field, irrespective from the Google trends results shown above.  This is an open-source project and that joined the [Cloud Native Computing Foundation](https://www.cncf.io/) in 2016 as the second hosted project, after [Kubernetes](https://kubernetes.io/) ([reference](https://prometheus.io/docs/introduction/overview/)).
+**I have little experience in this field**, and only used Prometheus with [Grafana](https://grafana.com/) as the visualisation tool.  Prometheus seems to be very popular in this field, irrespective from the skewed Google trends results, shown above.  This is an open-source project and that joined the [Cloud Native Computing Foundation](https://www.cncf.io/) in 2016 as the second hosted project, after [Kubernetes](https://kubernetes.io/) ([reference](https://prometheus.io/docs/introduction/overview/)).  Furthermore, [Prometheus is marked as trial on the ThoughtWorks technology radar](https://www.thoughtworks.com/radar/tools/prometheus), which indicates that it is worth investing in this tool.
+
+{% include custom/note.html details="By no means I am saying that Prometheus is the best tool available for this job.  I picked Prometheus because this is an open source project and I can easily spin an instance up using docker and docker compose." %}
 
 Each vendor has its own API and switching to a different vendor may be quite a daunting task as we need to redo all metrics code to fit the new vendor's API.  An alternative solution is to use a facade, such as Micrometer, to standardise the interaction between our application and the vendor we picked.  Switching from one vendor to another should be a seamless thing, at least from the application point of view.
 
@@ -195,7 +197,7 @@ The details returned vary between different metrics.
 
 ## What is the difference between metrics and tracing?
 
-Metrics can be used to measure various parts and aspects of our applications.  [Tracing]({{ '/docs/sleuth/' | absolute_url }}) is the ability to connect a series of steps that one request goes through.  Consider a request made to our application as shown in the following diagram.
+Metrics can be used to measure various parts and aspects of our applications.  [Tracing]({{ '/docs/sleuth/' | absolute_url }}) is the ability to connect a series of steps that one request goes through.  Consider a request made to our application to retrieve all offices that [ThoughtWorks](https://www.thoughtworks.com/) has, as shown in the following diagram.
 
 ![Request-From-Browser-To-Db]({{ '/assets/images/Request-From-Browser-To-Db.png' | absolute_url }})
 
@@ -208,7 +210,7 @@ With metrics we can measure the number of such requests, the time taken to proce
 
 **YES**
 
-Our application manages the offices [ThoughtWorks](https://www.thoughtworks.com/) has around the world.  Let's create a custom metrics that measures the number of offices ThoughtWorks currently has.
+Our application manages the offices ThoughtWorks has around the world.  Let's create a custom metrics that measures the number of offices ThoughtWorks currently has.
 
 We would like to add a new metrics, with the name `app.office.count`, which returns the number of offices in the database.
 
@@ -308,11 +310,13 @@ Will use the decorator pattern, not because it uses less code, but because it is
    }
    ```
 
-   Our decorator will start by registering a `Counter` with the `MeterRegistry` and set the initial value to the current number of offices in the database.  We will use the `OfficesRepository` to get the number of offices in the database using the [`count()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html?is-external=true#count--) method, as this more efficient than calling the `list()` method on `JpaContactUsService` and then get its size.
+   Our decorator will start by registering a `Counter` with the `MeterRegistry` and set the initial value to the current number of offices in the database.  We will use the `OfficesRepository` to get the number of offices in the database using the [`count()`](https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html?is-external=true#count--) method, as this is more efficient than calling the `list()` method on `JpaContactUsService` and then get its size.
 
 1. Make the test compile
 
    Create file `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
+
+   {% include custom/note.html details="The following example is barely enough to make the test compile.  I prefer empty responses over of throwing exceptions in such cases as these are less invasive.  If this method is called by the controlled before it was expected, then we simply get the wrong, blank, result instead of an error." %}
 
    ```java
    package demo.boot;
