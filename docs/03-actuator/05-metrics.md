@@ -269,6 +269,8 @@ There are several approaches we can take, some of which are highlighted below.
 
 Will use the decorator pattern, not because it uses less code, but because it is easier to follow and understand.
 
+Our decorator will start by reading the current number of offices in the database and then it will decrement this count when offices are deleted.  In our implementations, offices can be updated (which does not change the number of offices) and deleted.  The latter changes the number of offices.  Our decorator needs to decrement the office count once an office is deleted.
+
 1. Create a test
 
    Create file `src/test/java/demo/boot/OfficeCountMetricDecoratorTest.java`
@@ -373,12 +375,9 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    The test will fail as the `Counter` is not properly setup.
 
-
 1. Fix the failing test.
 
    Update file `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
-
-   {% include custom/note.html details="Our <code>OfficeCountMetricDecorator</code> is initialising the counter at the constructor.  Alternatively, we can use a post construct annotation, such as <a href='https://docs.oracle.com/javaee/7/api/javax/annotation/PostConstruct.html'><code>@PostConstruct</code></a>, or implement the <a href='https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/InitializingBean.html'><code>InitializingBean</code></a> interface and have Spring initialising the counter post construction.  The downside with these approaches is that we will need to hang on the <code>OfficesRepository</code> instance (and possibly the <code>MeterRegistry</code> instance too) from within the <code>OfficeCountMetricDecorator</code> class." %}
 
    ```java
    package demo.boot;
@@ -418,9 +417,149 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    Run the tests.  These should all pass.
 
-1. Prepare the delegator, `OfficeCountMetricDecorator`, to work with `JpaContactUsService`
+1. Refactor
 
-   We need to introduce the `JpaContactUsService` and pass all requests to it.  Before we can add any new tests, we need to refactor the existing test to take the new parameter.
+   The `OfficeCountMetricDecorator` only needs the `officeCounter` to adjust the number of offices.  The `officeCounter` will be used to decrement the number of offices when an office is successfully deleted.  Yet we are passing an instance of `MeterRegistry` and `OfficesRepository` to the constructor and initalise the counter from within the constructor.
+
+   The approach we used has some disadvantages.  Every time we create an instance of `OfficeCountMetricDecorator` we need to fetch the value from the database.  This will complicate the tests more than necessary, we need to mock the `MeterRegistry` and `OfficesRepository` classes, even when these are not needed.
+
+   There are several other approaches we can adopt.
+
+   * **Post-construct** (_not-preferred approach_): Instead of initialising the counter in the constructor, we can use a post construct annotation, such as [`@PostConstruct`](https://docs.oracle.com/javaee/7/api/javax/annotation/PostConstruct.html), or implement the [`InitializingBean`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/InitializingBean.html) interface and have Spring initialising the counter post construction.  This approach still requires an instance of both `MeterRegistry` and `OfficesRepository`.
+
+   * **Factory method** (_preferred approach_):  We can create another class, will be known as `Factory`, which will be responsible from creating the counter and sets its initial value.  It then passes this counter to the `OfficeCountMetricDecorator`.
+
+   Update file: `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
+
+   {% include custom/project_dose_not_compile.html details="The following change will break the test class <code>OfficeCountMetricDecoratorTest</code> as we change the way our object is created." %}
+
+   ```java
+   package demo.boot;
+
+   import io.micrometer.core.instrument.Counter;
+   import io.micrometer.core.instrument.MeterRegistry;
+
+   import java.util.Collections;
+   import java.util.List;
+   import java.util.Optional;
+
+   public class OfficeCountMetricDecorator implements ContactUsService {
+
+     public static class Factory {
+
+       public OfficeCountMetricDecorator create( final MeterRegistry registry, final OfficesRepository repository ) {
+         final Counter officeCounter = createAndInitCounter( registry, repository );
+         return new OfficeCountMetricDecorator( officeCounter );
+       }
+
+       private Counter createAndInitCounter( final MeterRegistry registry, final OfficesRepository repository ) {
+         final Counter officeCounter = registry.counter( "app.office.count" );
+         officeCounter.increment( repository.count() );
+         return officeCounter;
+       }
+     }
+
+     private final Counter officeCounter;
+
+     public OfficeCountMetricDecorator( final Counter officeCounter ) {
+       this.officeCounter = officeCounter;
+     }
+
+     @Override
+     public List<Office> list() { /* ... */ }
+
+     @Override
+     public Optional<Office> findOneByName( final String name ) { /* ... */ }
+
+     @Override
+     public List<Office> findAllInCountry( final String country ) { /* ... */ }
+
+     @Override
+     public Optional<Office> update( final Office office ) { /* ... */ }
+
+     @Override
+     public Optional<Office> delete( final String name ) { /* ... */ }
+   }
+   ```
+
+   **Why are we using an inner static class instead of a static factory method?**
+
+   We can use a static factory method to initialise our `OfficeCountMetricDecorator` class.  That will add a challenge at a later stage when we will use annotations to hookup our classes with Spring.  If we use a static factory method, then we need to use XML to configure this bean.  Using the above approach will save us from using XML to configure our beans.
+
+   Change the way our class is initialised in the test.
+
+   {% include custom/note.html details="We need to change the test and test the factory instead." %}
+
+   In the test, we are creating the `OfficeCountMetricDecorator` using its constructor, as shown in the following fragment.
+
+   ```java
+       new OfficeCountMetricDecorator( registry, repository );
+   ```
+
+   The above needs to make use of the `Factory`, as shown next.
+
+   ```java
+       final Factory factory = new Factory();
+       final OfficeCountMetricDecorator decorator = factory.create( registry, repository );
+       assertThat( decorator ).isNotNull();
+   ```
+
+   Update file: `src/test/java/demo/boot/OfficeCountMetricDecoratorTest.java`
+
+   ```java
+   package demo.boot;
+
+   import io.micrometer.core.instrument.Counter;
+   import io.micrometer.core.instrument.MeterRegistry;
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+
+   import static demo.boot.OfficeCountMetricDecorator.Factory;
+   import static org.assertj.core.api.Assertions.assertThat;
+   import static org.mockito.ArgumentMatchers.eq;
+   import static org.mockito.Mockito.mock;
+   import static org.mockito.Mockito.times;
+   import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.verifyNoMoreInteractions;
+   import static org.mockito.Mockito.when;
+
+   @DisplayName( "Office count metric" )
+   public class OfficeCountMetricDecoratorTest {
+
+     @Test
+     @DisplayName( "should set the counter to the number of offices in the repository" )
+     public void shouldInitCounter() {
+       final long initialNumberOfOffices = 10L;
+       final String counterName = "app.office.count";
+
+       final MeterRegistry registry = mock( MeterRegistry.class );
+       final Counter counter = mock( Counter.class );
+       final OfficesRepository repository = mock( OfficesRepository.class );
+
+       when( registry.counter( eq( counterName ) ) ).thenReturn( counter );
+       when( repository.count() ).thenReturn( initialNumberOfOffices );
+
+       final Factory factory = new Factory();
+       final OfficeCountMetricDecorator decorator = factory.create( registry, repository );
+       assertThat( decorator ).isNotNull();
+
+       verify( registry, times( 1 ) ).counter( counterName );
+       verify( repository, times( 1 ) ).count();
+       verify( counter, times( 1 ) ).increment( eq( (double) initialNumberOfOffices ) );
+       verifyNoMoreInteractions( registry, repository, counter );
+     }
+   }
+   ```
+
+   Run the tests.  The test should compile and still pass.
+
+1. Prepare the delegator, `OfficeCountMetricDecorator`, and its factory `OfficeCountMetricDecorator.Factory`, to work with `JpaContactUsService`
+
+   We need to introduce the `JpaContactUsService` and pass all requests to it, as shown in the following diagram.
+
+   ![Office-Count-Decorator]({{ '/assets/images/Office-Count-Decorator.png' | absolute_url }})
+
+   Before we can add any new tests, we need to refactor the existing test to take the new parameter.
 
    Update file: `src/test/java/demo/boot/OfficeCountMetricDecoratorTest.java`
 
@@ -434,6 +573,8 @@ Will use the decorator pattern, not because it uses less code, but because it is
    import org.junit.jupiter.api.DisplayName;
    import org.junit.jupiter.api.Test;
 
+   import static demo.boot.OfficeCountMetricDecorator.Factory;
+   import static org.assertj.core.api.Assertions.assertThat;
    import static org.mockito.ArgumentMatchers.eq;
    import static org.mockito.Mockito.mock;
    import static org.mockito.Mockito.times;
@@ -458,7 +599,9 @@ Will use the decorator pattern, not because it uses less code, but because it is
        when( registry.counter( eq( counterName ) ) ).thenReturn( counter );
        when( repository.count() ).thenReturn( initialNumberOfOffices );
 
-       new OfficeCountMetricDecorator( registry, repository, target );
+       final Factory factory = new Factory();
+       final OfficeCountMetricDecorator decorator = factory.create( registry, repository, target );
+       assertThat( decorator ).isNotNull();
 
        verify( registry, times( 1 ) ).counter( counterName );
        verify( repository, times( 1 ) ).count();
@@ -484,12 +627,26 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    public class OfficeCountMetricDecorator implements ContactUsService {
 
-     private final Counter officeCounter;
+     public static class Factory {
 
-     public OfficeCountMetricDecorator( final MeterRegistry registry, final OfficesRepository repository,
-       final JpaContactUsService target ) {
-       officeCounter = registry.counter( "app.office.count" );
-       officeCounter.increment( repository.count() );
+       public OfficeCountMetricDecorator create( final MeterRegistry registry, final OfficesRepository repository, final JpaContactUsService target ) {
+         final Counter officeCounter = createAndInitCounter( registry, repository );
+         return new OfficeCountMetricDecorator( officeCounter, target );
+       }
+
+       private Counter createAndInitCounter( final MeterRegistry registry, final OfficesRepository repository ) {
+         final Counter officeCounter = registry.counter( "app.office.count" );
+         officeCounter.increment( repository.count() );
+         return officeCounter;
+       }
+     }
+
+     private final Counter officeCounter;
+     private final JpaContactUsService target;
+
+     public OfficeCountMetricDecorator( final Counter officeCounter, final JpaContactUsService target ) {
+       this.officeCounter = officeCounter;
+       this.target = target;
      }
 
      @Override
@@ -520,7 +677,7 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    These should still pass.
 
-1. Make sure that `list()` call is passed to the `JpaContactUsService`
+1. Make sure that `list()` call is passed to the `JpaContactUsService` and that the counter is not updated.
 
    Update file: `src/test/java/demo/boot/OfficeCountMetricDecoratorTest.java`
 
@@ -534,6 +691,7 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    import java.util.List;
 
+   import static demo.boot.OfficeCountMetricDecorator.Factory;
    import static org.assertj.core.api.Assertions.assertThat;
    import static org.mockito.ArgumentMatchers.eq;
    import static org.mockito.Mockito.mock;
@@ -552,34 +710,24 @@ Will use the decorator pattern, not because it uses less code, but because it is
      @Test
      @DisplayName( "should call the target list() method without changing the counter's value" )
      public void shouldPassListRequestsThrough() {
-       final long initialNumberOfOffices = 10L;
-       final String counterName = "app.office.count";
-
-       final MeterRegistry registry = mock( MeterRegistry.class );
        final Counter counter = mock( Counter.class );
-       final OfficesRepository repository = mock( OfficesRepository.class );
        final JpaContactUsService target = mock( JpaContactUsService.class );
        final Office office = mock( Office.class );
-
-       when( registry.counter( eq( counterName ) ) ).thenReturn( counter );
-       when( repository.count() ).thenReturn( initialNumberOfOffices );
 
        final List<Office> expected = List.of( office );
        when( target.list() ).thenReturn( expected );
 
-       final ContactUsService subject = new OfficeCountMetricDecorator( registry, repository, target );
+       final ContactUsService subject = new OfficeCountMetricDecorator( counter, target );
        final List<Office> actual = subject.list();
        assertThat( actual ).isSameAs( expected );
 
        verify( target, times( 1 ) ).list();
-
-       verify( registry, times( 1 ) ).counter( counterName );
-       verify( repository, times( 1 ) ).count();
-       verify( counter, times( 1 ) ).increment( eq( (double) initialNumberOfOffices ) );
-       verifyNoMoreInteractions( registry, repository, counter, target, office );
+       verifyNoMoreInteractions( counter, target, office );
      }
    }
    ```
+
+   In the newly created test, we are not using the factory to initialise our object, but its constructor.  This simplifies our test as we only need to mock the `Counter` and the `JpaContactUsService` classes.  The classes `MeterRegistry` and `OfficesRepository` are not used here and also the initialisation process is not involved in the newly created test.  More importantly, if the counter initialisation has a bug, only the test relative to that part fails, while the other tests, such as out newly added test will not be effected.
 
    Run the tests.
 
@@ -589,7 +737,7 @@ Will use the decorator pattern, not because it uses less code, but because it is
    ...
 
    Office count metric > should call the target list() method without changing the counter's value FAILED
-       java.lang.AssertionError at OfficeCountMetricDecoratorTest.java:63
+       java.lang.AssertionError at OfficeCountMetricDecoratorTest.java:58
 
    ...
 
@@ -613,14 +761,12 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    public class OfficeCountMetricDecorator implements ContactUsService {
 
+     public static class Factory { /* ... */ }
+
      private final Counter officeCounter;
      private final JpaContactUsService target;
 
-     public OfficeCountMetricDecorator( final MeterRegistry registry, final OfficesRepository repository, final JpaContactUsService target ) {
-       officeCounter = registry.counter( "app.office.count" );
-       officeCounter.increment( repository.count() );
-       this.target = target;
-     }
+     public OfficeCountMetricDecorator( final Counter officeCounter, final JpaContactUsService target ) { /* ... */ }
 
      @Override
      public List<Office> list() {
@@ -654,89 +800,6 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    This time they should pass.
 
-1. Refactor the tests
-
-   Both test methods have lots of similarities and these can be refactored as shown next.
-
-   Update file: `src/test/java/demo/boot/OfficeCountMetricDecoratorTest.java`
-
-   ```java
-   package demo.boot;
-
-   import io.micrometer.core.instrument.Counter;
-   import io.micrometer.core.instrument.MeterRegistry;
-   import org.junit.jupiter.api.AfterEach;
-   import org.junit.jupiter.api.BeforeEach;
-   import org.junit.jupiter.api.DisplayName;
-   import org.junit.jupiter.api.Test;
-
-   import java.util.List;
-
-   import static org.assertj.core.api.Assertions.assertThat;
-   import static org.mockito.ArgumentMatchers.eq;
-   import static org.mockito.Mockito.mock;
-   import static org.mockito.Mockito.reset;
-   import static org.mockito.Mockito.times;
-   import static org.mockito.Mockito.verify;
-   import static org.mockito.Mockito.verifyNoMoreInteractions;
-   import static org.mockito.Mockito.when;
-
-   @DisplayName( "Office count metric" )
-   public class OfficeCountMetricDecoratorTest {
-
-     private final long initialNumberOfOffices = 10L;
-     private final String counterName = "app.office.count";
-
-     private final MeterRegistry registry = mock( MeterRegistry.class );
-     private final Counter counter = mock( Counter.class );
-     private final OfficesRepository repository = mock( OfficesRepository.class );
-     private final JpaContactUsService target = mock( JpaContactUsService.class );
-     private final Office office = mock( Office.class );
-
-     @BeforeEach
-     public void setUp() {
-       reset( registry, repository, counter, target, office );
-
-       when( registry.counter( eq( counterName ) ) ).thenReturn( counter );
-       when( repository.count() ).thenReturn( initialNumberOfOffices );
-     }
-
-     @AfterEach
-     public void tearDown() {
-       verify( registry, times( 1 ) ).counter( counterName );
-       verify( repository, times( 1 ) ).count();
-       verify( counter, times( 1 ) ).increment( eq( (double) initialNumberOfOffices ) );
-       verifyNoMoreInteractions( registry, repository, counter, target, office );
-     }
-
-     private ContactUsService withService() {
-       return new OfficeCountMetricDecorator( registry, repository, target );
-     }
-
-     @Test
-     @DisplayName( "should set the counter to the number of offices in the repository" )
-     public void shouldInitCounter() {
-       withService();
-     }
-
-     @Test
-     @DisplayName( "should call the target list() method without changing the counter's value" )
-     public void shouldPassListRequestsThrough() {
-       final List<Office> expected = List.of( office );
-       when( target.list() ).thenReturn( expected );
-
-       final List<Office> actual = withService().list();
-       assertThat( actual ).isSameAs( expected );
-
-       verify( target, times( 1 ) ).list();
-     }
-   }
-   ```
-
-   Each test method now is very concise, just focuses on the test being carried out.
-
-   {% include custom/note.html details="Our <code>OfficeCountMetricDecorator</code> is initialising the counter at the constructor.  This means that we need to call the <code>OfficesRepository</code> and the <code>Counter</code> with every test we run.  Alternatively, we can use a post construct annotation, such as <a href='https://docs.oracle.com/javaee/7/api/javax/annotation/PostConstruct.html'><code>@PostConstruct</code></a>, or implement the <a href='https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/InitializingBean.html'><code>InitializingBean</code></a> interface and have these only called once.  The downside with these approaches is that we will need to hang on the <code>OfficesRepository</code> instance (and possibly the <code>MeterRegistry</code> instance too) from within the <code>OfficeCountMetricDecorator</code> class." %}
-
 1. Test the `findOneByName()`, `findAllInCountry()` and `update()` methods.  None of these should affect the counter.
 
    Update file: `src/test/java/demo/boot/OfficeCountMetricDecoratorTest.java`
@@ -746,19 +809,17 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    import io.micrometer.core.instrument.Counter;
    import io.micrometer.core.instrument.MeterRegistry;
-   import org.junit.jupiter.api.AfterEach;
-   import org.junit.jupiter.api.BeforeEach;
    import org.junit.jupiter.api.DisplayName;
    import org.junit.jupiter.api.Test;
 
    import java.util.List;
    import java.util.Optional;
 
+   import static demo.boot.OfficeCountMetricDecorator.Factory;
    import static org.assertj.core.api.Assertions.assertThat;
    import static org.mockito.ArgumentMatchers.eq;
    import static org.mockito.ArgumentMatchers.same;
    import static org.mockito.Mockito.mock;
-   import static org.mockito.Mockito.reset;
    import static org.mockito.Mockito.times;
    import static org.mockito.Mockito.verify;
    import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -766,23 +827,6 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    @DisplayName( "Office count metric" )
    public class OfficeCountMetricDecoratorTest {
-
-     private final long initialNumberOfOffices = 10L;
-     private final String counterName = "app.office.count";
-
-     private final MeterRegistry registry = mock( MeterRegistry.class );
-     private final Counter counter = mock( Counter.class );
-     private final OfficesRepository repository = mock( OfficesRepository.class );
-     private final JpaContactUsService target = mock( JpaContactUsService.class );
-     private final Office office = mock( Office.class );
-
-     @BeforeEach
-     public void setUp() { /* ... */ }
-
-     @AfterEach
-     public void tearDown() { /* ... */ }
-
-     private ContactUsService withService() { /* ... */ }
 
      @Test
      @DisplayName( "should set the counter to the number of offices in the repository" )
@@ -795,39 +839,57 @@ Will use the decorator pattern, not because it uses less code, but because it is
      @Test
      @DisplayName( "should call the target findOneByName() method without changing the counter's value" )
      public void shouldPassFindOneByNameRequestsThrough() {
+       final Counter counter = mock( Counter.class );
+       final JpaContactUsService target = mock( JpaContactUsService.class );
+       final Office office = mock( Office.class );
+
        final String name = "office name";
        final Optional<Office> expected = Optional.of( office );
        when( target.findOneByName( same( name ) ) ).thenReturn( expected );
 
-       final Optional<Office> actual = withService().findOneByName( name );
+       final ContactUsService subject = new OfficeCountMetricDecorator( counter, target );
+       final Optional<Office> actual = subject.findOneByName( name );
        assertThat( actual ).isSameAs( expected );
 
        verify( target, times( 1 ) ).findOneByName( name );
+       verifyNoMoreInteractions( counter, target, office );
      }
 
      @Test
      @DisplayName( "should call the target findAllInCountry() method without changing the counter's value" )
      public void shouldPassFindAllInCountryRequestsThrough() {
+       final Counter counter = mock( Counter.class );
+       final JpaContactUsService target = mock( JpaContactUsService.class );
+       final Office office = mock( Office.class );
+
        final String country = "Germany";
        final List<Office> expected = List.of( office );
        when( target.findAllInCountry( same( country ) ) ).thenReturn( expected );
 
-       final List<Office> actual = withService().findAllInCountry( country );
+       final ContactUsService subject = new OfficeCountMetricDecorator( counter, target );
+       final List<Office> actual = subject.findAllInCountry( country );
        assertThat( actual ).isSameAs( expected );
 
        verify( target, times( 1 ) ).findAllInCountry( country );
+       verifyNoMoreInteractions( counter, target, office );
      }
 
      @Test
      @DisplayName( "should call the target update() method without changing the counter's value" )
      public void shouldPassUpdateRequestsThrough() {
+       final Counter counter = mock( Counter.class );
+       final JpaContactUsService target = mock( JpaContactUsService.class );
+       final Office office = mock( Office.class );
+
        final Optional<Office> expected = Optional.of( office );
        when( target.update( same( office ) ) ).thenReturn( expected );
 
-       final Optional<Office> actual = withService().update( office );
+       final ContactUsService subject = new OfficeCountMetricDecorator( counter, target );
+       final Optional<Office> actual = subject.update( office );
        assertThat( actual ).isSameAs( expected );
 
        verify( target, times( 1 ) ).update( office );
+       verifyNoMoreInteractions( counter, target, office );
      }
    }
    ```
@@ -847,10 +909,12 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    public class OfficeCountMetricDecorator implements ContactUsService {
 
+     public static class Factory { /* ... */ }
+
      private final Counter officeCounter;
      private final JpaContactUsService target;
 
-     public OfficeCountMetricDecorator( final MeterRegistry registry, final OfficesRepository repository, final JpaContactUsService target ) { /* ... */ }
+     public OfficeCountMetricDecorator( final Counter officeCounter, final JpaContactUsService target ) { /* ... */ }
 
      @Override
      public List<Office> list() { /* ... */ }
@@ -876,6 +940,195 @@ Will use the decorator pattern, not because it uses less code, but because it is
    ```
 
    The tests should now all pass.
+
+1. (Optional) Refactor tests
+
+   {% include custom/note.html details="This following refactoring is not affected in the code as I believe it hinders readability.  With that said the following refactoring shows some features related to testing which are worth nothing.  You are free to apply this refactoring if you believe that it does not hinder readability." %}
+
+   You may have noticed that some of the tests (`shouldPassListRequestsThrough()`, `shouldPassFindOneByNameRequestsThrough()`, `shouldPassFindAllInCountryRequestsThrough()`, and `shouldPassUpdateRequestsThrough()`) have a similar form.
+
+   * Code that is common to these test
+
+     ![Decorator Test Common Code]({{ '/assets/images/Decorator-Test-Common-Code.png' | absolute_url }})
+
+   * Code that is specific to each test
+
+     ![Decorator Test Specific Code]({{ '/assets/images/Decorator-Test-Specific-Code.png' | absolute_url }})
+
+   We can take advantage of JUnit 5 nested test classes and the [`@Nested`](https://junit.org/junit5/docs/current/api/org.junit.jupiter.api/org/junit/jupiter/api/Nested.html) annotation and move out the common parts from the test methods, as shown next.
+
+   ```java
+   package demo.boot;
+
+   import io.micrometer.core.instrument.Counter;
+   import io.micrometer.core.instrument.MeterRegistry;
+   import org.junit.jupiter.api.AfterEach;
+   import org.junit.jupiter.api.BeforeEach;
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Nested;
+   import org.junit.jupiter.api.Test;
+
+   import java.util.List;
+   import java.util.Optional;
+
+   import static demo.boot.OfficeCountMetricDecorator.Factory;
+   import static org.assertj.core.api.Assertions.assertThat;
+   import static org.mockito.ArgumentMatchers.eq;
+   import static org.mockito.ArgumentMatchers.same;
+   import static org.mockito.Mockito.mock;
+   import static org.mockito.Mockito.reset;
+   import static org.mockito.Mockito.times;
+   import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.verifyNoMoreInteractions;
+   import static org.mockito.Mockito.when;
+
+   @DisplayName( "Office count metric" )
+   public class OfficeCountMetricDecoratorTest {
+
+     @Test
+     @DisplayName( "should set the counter to the number of offices in the repository" )
+     public void shouldInitCounter() { /* ... */ }
+
+     @Nested
+     @DisplayName( "already initialised" )
+     public class WithAnInitialised {
+
+       private final Counter counter = mock( Counter.class );
+       private final JpaContactUsService target = mock( JpaContactUsService.class );
+       private final Office office = mock( Office.class );
+
+       @BeforeEach
+       void setUp() {
+         reset( counter, target, office );
+       }
+
+       @AfterEach
+       void tearDown() {
+         verifyNoMoreInteractions( counter, target, office );
+       }
+
+       private OfficeCountMetricDecorator withSubject() {
+         return new OfficeCountMetricDecorator( counter, target );
+       }
+
+       @Test
+       @DisplayName( "should call the target list() method without changing the counter's value" )
+       public void shouldPassListRequestsThrough() {
+         final List<Office> expected = List.of( office );
+         when( target.list() ).thenReturn( expected );
+
+         final List<Office> actual = withSubject().list();
+         assertThat( actual ).isSameAs( expected );
+
+         verify( target, times( 1 ) ).list();
+       }
+
+       @Test
+       @DisplayName( "should call the target findOneByName() method without changing the counter's value" )
+       public void shouldPassFindOneByNameRequestsThrough() {
+         final String name = "office name";
+         final Optional<Office> expected = Optional.of( office );
+         when( target.findOneByName( same( name ) ) ).thenReturn( expected );
+
+         final Optional<Office> actual = withSubject().findOneByName( name );
+         assertThat( actual ).isSameAs( expected );
+
+         verify( target, times( 1 ) ).findOneByName( name );
+       }
+
+       @Test
+       @DisplayName( "should call the target findAllInCountry() method without changing the counter's value" )
+       public void shouldPassFindAllInCountryRequestsThrough() {
+         final String country = "Germany";
+         final List<Office> expected = List.of( office );
+         when( target.findAllInCountry( same( country ) ) ).thenReturn( expected );
+
+         final List<Office> actual = withSubject().findAllInCountry( country );
+         assertThat( actual ).isSameAs( expected );
+
+         verify( target, times( 1 ) ).findAllInCountry( country );
+       }
+
+       @Test
+       @DisplayName( "should call the target update() method without changing the counter's value" )
+       public void shouldPassUpdateRequestsThrough() {
+         final Optional<Office> expected = Optional.of( office );
+         when( target.update( same( office ) ) ).thenReturn( expected );
+
+         final Optional<Office> actual = withSubject().update( office );
+         assertThat( actual ).isSameAs( expected );
+
+         verify( target, times( 1 ) ).update( office );
+       }
+     }
+   }
+   ```
+
+   This may seem quite a big change, so let's break it down.
+
+   1. Move the four tests that are being refactored inside the `@Nested` test class
+
+      {% include custom/note.html details="The nested test (inner) class <code>WithAnInitialised</code> can be <code>static</code> as it is not accessing anything from its enclosing class.  In most examples, this class is not marked as <code>static</code> as it makes use of properties set at the enclosing class." %}
+
+      ```java
+      @DisplayName( "Office count metric" )
+      public class OfficeCountMetricDecoratorTest {
+
+        @Test
+        @DisplayName( "should set the counter to the number of offices in the repository" )
+        public void shouldInitCounter() { /* ... */ }
+
+        @Nested
+        @DisplayName( "already initialised" )
+        public class WithAnInitialised { /* ... */ }
+      }
+      ```
+
+   1. Extract the common properties, to the nested test class.
+
+      ```java
+        @Nested
+        @DisplayName( "already initialised" )
+        public class WithAnInitialised {
+
+          private final Counter counter = mock( Counter.class );
+          private final JpaContactUsService target = mock( JpaContactUsService.class );
+          private final Office office = mock( Office.class );
+      ```
+
+   1. Reset the mocks between tests
+
+       {% include custom/note.html details="The following has no effect in our case as a new instance of the nested class is created for every test.  This can be modified using <a href='https://junit.org/junit5/docs/current/api/org.junit.jupiter.api/org/junit/jupiter/api/TestInstance.html'>test instance lifecycle annotations</a>.  With that said, it is always a good practice to reset the mocks that are shared between test." %}
+
+       ```java
+          @BeforeEach
+          void setUp() {
+            reset( counter, target, office );
+          }
+       ```
+
+   1. These four tests verify that no further interaction with the mocks occur other than what was already verified.
+
+       ```java
+          @AfterEach
+          void tearDown() {
+            verifyNoMoreInteractions( counter, target, office );
+          }
+       ```
+
+   1. Move the initialisation of the `OfficeCountMetricDecorator` class to another method.
+
+      ```java
+          private OfficeCountMetricDecorator withSubject() {
+            return new OfficeCountMetricDecorator( counter, target );
+          }
+      ```
+
+      A new instance of the `OfficeCountMetricDecorator` class is created for every test.  Instead we can create one instance and share it between the four tests within the nested test class.
+
+   1.  Refactor the tests to only contain the test specific code.
+
+   Each of the four tests now only contains the code specific to it.  I likes this approach, but I understand that it may hinder readability.  **This approach may seem harder to read as the code for each test is now spread into multiple places**.
 
 1. Delete an office that does not exists
 
