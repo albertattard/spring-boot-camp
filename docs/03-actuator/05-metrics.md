@@ -1141,19 +1141,17 @@ Our decorator will start by reading the current number of offices in the databas
 
    import io.micrometer.core.instrument.Counter;
    import io.micrometer.core.instrument.MeterRegistry;
-   import org.junit.jupiter.api.AfterEach;
-   import org.junit.jupiter.api.BeforeEach;
    import org.junit.jupiter.api.DisplayName;
    import org.junit.jupiter.api.Test;
 
    import java.util.List;
    import java.util.Optional;
 
+   import static demo.boot.OfficeCountMetricDecorator.Factory;
    import static org.assertj.core.api.Assertions.assertThat;
    import static org.mockito.ArgumentMatchers.eq;
    import static org.mockito.ArgumentMatchers.same;
    import static org.mockito.Mockito.mock;
-   import static org.mockito.Mockito.reset;
    import static org.mockito.Mockito.times;
    import static org.mockito.Mockito.verify;
    import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -1161,23 +1159,6 @@ Our decorator will start by reading the current number of offices in the databas
 
    @DisplayName( "Office count metric" )
    public class OfficeCountMetricDecoratorTest {
-
-     private final long initialNumberOfOffices = 10L;
-     private final String counterName = "app.office.count";
-
-     private final MeterRegistry registry = mock( MeterRegistry.class );
-     private final Counter counter = mock( Counter.class );
-     private final OfficesRepository repository = mock( OfficesRepository.class );
-     private final JpaContactUsService target = mock( JpaContactUsService.class );
-     private final Office office = mock( Office.class );
-
-     @BeforeEach
-     public void setUp() { /* ... */ }
-
-     @AfterEach
-     public void tearDown() { /* ... */ }
-
-     private ContactUsService withService() { /* ... */ }
 
      @Test
      @DisplayName( "should set the counter to the number of offices in the repository" )
@@ -1202,21 +1183,45 @@ Our decorator will start by reading the current number of offices in the databas
      @Test
      @DisplayName( "should call the target delete() method for an office that does not exists and without changing the counter's value" )
      public void shouldPassDeleteRequestsThroughAndDoesNotAdjustTheCounter() {
+       final Counter counter = mock( Counter.class );
+       final JpaContactUsService target = mock( JpaContactUsService.class );
+       final Office office = mock( Office.class );
+
        final String name = "Office name";
        final Optional<Office> expected = Optional.empty();
        when( target.delete( same( name ) ) ).thenReturn( expected );
 
-       final Optional<Office> actual = withService().delete( name );
+       final ContactUsService subject = new OfficeCountMetricDecorator( counter, target );
+       final Optional<Office> actual = subject.delete( name );
        assertThat( actual ).isSameAs( expected );
 
        verify( target, times( 1 ) ).delete( name );
+       verifyNoMoreInteractions( counter, target, office );
      }
    }
    ```
 
-   Run the tests.  These should fail.  Fix the failing test.
+   Run the tests.  These should fail.
+
+   ```bash
+   $ ./gradlew clean test
+
+   ...
+
+   Office count metric > should call the target delete() method for an office that does not exists and without changing the counter's value FAILED
+       org.mockito.exceptions.verification.WantedButNotInvoked at OfficeCountMetricDecoratorTest.java:137
+
+   ...
+
+   BUILD FAILED in 7s
+   6 actionable tasks: 6 executed
+   ```
+
+   Fix the failing test.
 
    Update file: `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
+
+   {% include custom/note.html details="The following solution simply addresses this test and does not decrement the number of offices, as this test deletes an office that does not exists." %}
 
    ```java
    package demo.boot;
@@ -1229,10 +1234,12 @@ Our decorator will start by reading the current number of offices in the databas
 
    public class OfficeCountMetricDecorator implements ContactUsService {
 
+     public static class Factory { /* ... */ }
+
      private final Counter officeCounter;
      private final JpaContactUsService target;
 
-     public OfficeCountMetricDecorator( final MeterRegistry registry, final OfficesRepository repository, final JpaContactUsService target ) { /* ... */ }
+     public OfficeCountMetricDecorator( final Counter officeCounter, final JpaContactUsService target ) { /* ... */ }
 
      @Override
      public List<Office> list() { /* ... */ }
@@ -1268,19 +1275,17 @@ Our decorator will start by reading the current number of offices in the databas
 
    import io.micrometer.core.instrument.Counter;
    import io.micrometer.core.instrument.MeterRegistry;
-   import org.junit.jupiter.api.AfterEach;
-   import org.junit.jupiter.api.BeforeEach;
    import org.junit.jupiter.api.DisplayName;
    import org.junit.jupiter.api.Test;
 
    import java.util.List;
    import java.util.Optional;
 
+   import static demo.boot.OfficeCountMetricDecorator.Factory;
    import static org.assertj.core.api.Assertions.assertThat;
    import static org.mockito.ArgumentMatchers.eq;
    import static org.mockito.ArgumentMatchers.same;
    import static org.mockito.Mockito.mock;
-   import static org.mockito.Mockito.reset;
    import static org.mockito.Mockito.times;
    import static org.mockito.Mockito.verify;
    import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -1288,23 +1293,6 @@ Our decorator will start by reading the current number of offices in the databas
 
    @DisplayName( "Office count metric" )
    public class OfficeCountMetricDecoratorTest {
-
-     private final long initialNumberOfOffices = 10L;
-     private final String counterName = "app.office.count";
-
-     private final MeterRegistry registry = mock( MeterRegistry.class );
-     private final Counter counter = mock( Counter.class );
-     private final OfficesRepository repository = mock( OfficesRepository.class );
-     private final JpaContactUsService target = mock( JpaContactUsService.class );
-     private final Office office = mock( Office.class );
-
-     @BeforeEach
-     public void setUp() { /* ... */ }
-
-     @AfterEach
-     public void tearDown() { /* ... */ }
-
-     private ContactUsService withService() { /* ... */ }
 
      @Test
      @DisplayName( "should set the counter to the number of offices in the repository" )
@@ -1333,17 +1321,23 @@ Our decorator will start by reading the current number of offices in the databas
      @Test
      @DisplayName( "should call the target delete() method for an office that exists and decrement the counter's value" )
      public void shouldPassDeleteRequestsThroughAndAdjustTheCounter() {
+       final Counter counter = mock( Counter.class );
+       final JpaContactUsService target = mock( JpaContactUsService.class );
+       final Office office = mock( Office.class );
+
        final String name = "Office name";
        final Optional<Office> expected = Optional.of( office );
        when( target.delete( same( name ) ) ).thenReturn( expected );
 
-       final Optional<Office> result = withService().delete( name );
+       final ContactUsService subject = new OfficeCountMetricDecorator( counter, target );
+       final Optional<Office> result = subject.delete( name );
        /* The result will be wrapped in a new Optional, thus we cannot use the isSameAs() for the Optional */
        assertThat( result ).isEqualTo( expected );
        assertThat( result.get() ).isSameAs( office );
 
        verify( target, times( 1 ) ).delete( name );
        verify( counter, times( 1 ) ).increment( -1D );
+       verifyNoMoreInteractions( counter, target, office );
      }
    }
    ```
@@ -1356,7 +1350,7 @@ Our decorator will start by reading the current number of offices in the databas
    ...
 
    Office count metric > should call the target delete() method for an office that exists and decrement the counter's value FAILED
-       org.mockito.exceptions.verification.opentest4j.ArgumentsAreDifferent at OfficeCountMetricDecoratorTest.java:137
+       org.mockito.exceptions.verification.opentest4j.ArgumentsAreDifferent at OfficeCountMetricDecoratorTest.java:159
 
    ...
 
@@ -1377,10 +1371,12 @@ Our decorator will start by reading the current number of offices in the databas
 
    public class OfficeCountMetricDecorator implements ContactUsService {
 
+     public static class Factory { /* ... */ }
+
      private final Counter officeCounter;
      private final JpaContactUsService target;
 
-     public OfficeCountMetricDecorator( final MeterRegistry registry, final OfficesRepository repository, final JpaContactUsService target ) { /* ... */ }
+     public OfficeCountMetricDecorator( final Counter officeCounter, final JpaContactUsService target ) { /* ... */ }
 
      @Override
      public List<Office> list() { /* ... */ }
@@ -1422,10 +1418,12 @@ Our decorator will start by reading the current number of offices in the databas
 
    public class OfficeCountMetricDecorator implements ContactUsService {
 
+     public static class Factory { /* ... */ }
+
      private final Counter officeCounter;
      private final JpaContactUsService target;
 
-     public OfficeCountMetricDecorator( final MeterRegistry registry, final OfficesRepository repository, final JpaContactUsService target ) { /* ... */ }
+     public OfficeCountMetricDecorator( final Counter officeCounter, final JpaContactUsService target ) { /* ... */ }
 
      @Override
      public List<Office> list() { /* ... */ }
@@ -1514,23 +1512,55 @@ Our decorator will start by reading the current number of offices in the databas
    7 actionable tasks: 7 executed
    ```
 
-   Annotate the `OfficeCountMetricDecorator` with both the [`@Primary`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Primary.html) and [`@Service`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html) annotations
+   Annotate the `OfficeCountMetricDecorator.Factory` class with both the [`@Configuration`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Configuration.html) annotation.  Spring will use this to construct new beans.  Annotate the `create()` method with the [`@Bean`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Bean.html) and the [`@Primary`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Primary.html) annotations.
 
    ```java
    package demo.boot;
 
    import io.micrometer.core.instrument.Counter;
    import io.micrometer.core.instrument.MeterRegistry;
+   import org.springframework.context.annotation.Bean;
+   import org.springframework.context.annotation.Configuration;
    import org.springframework.context.annotation.Primary;
-   import org.springframework.stereotype.Service;
 
    import java.util.List;
    import java.util.Optional;
    import java.util.function.Function;
 
-   @Primary
-   @Service
-   public class OfficeCountMetricDecorator implements ContactUsService { /* ... */ }
+   public class OfficeCountMetricDecorator implements ContactUsService {
+
+     @Configuration
+     public static class Factory {
+
+       @Bean
+       @Primary
+       public OfficeCountMetricDecorator create( final MeterRegistry registry, final OfficesRepository repository, final JpaContactUsService target ) { /* ... */ }
+
+       private Counter createAndInitCounter( final MeterRegistry registry, final OfficesRepository repository ) { /* ... */ }
+     }
+
+     private final Counter officeCounter;
+     private final JpaContactUsService target;
+
+     public OfficeCountMetricDecorator( final Counter officeCounter, final JpaContactUsService target ) { /* ... */ }
+
+     @Override
+     public List<Office> list() { /* ... */ }
+
+     @Override
+     public Optional<Office> findOneByName( final String name ) { /* ... */ }
+
+     @Override
+     public List<Office> findAllInCountry( final String country ) { /* ... */ }
+
+     @Override
+     public Optional<Office> update( final Office office ) { /* ... */ }
+
+     @Override
+     public Optional<Office> delete( final String name ) { /* ... */ }
+
+     private Function<Office, Office> decrementOfficeCount() { /* ... */ }
+   }
    ```
 
    Run the integration tests.  These should now work.
