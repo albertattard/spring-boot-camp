@@ -419,19 +419,19 @@ Our decorator will start by reading the current number of offices in the databas
 
 1. Refactor
 
-   The `OfficeCountMetricDecorator` only needs the `officeCounter` to adjust the number of offices.  The `officeCounter` will be used to decrement the number of offices when an office is successfully deleted.  Yet we are passing an instance of `MeterRegistry` and `OfficesRepository` to the constructor and initalise the counter from within the constructor.
+   The `OfficeCountMetricDecorator` class only needs the `officeCounter` to adjust the number of offices.  The `officeCounter` will be used to decrement the number of offices when an office is successfully deleted.  Yet we are passing an instance of `MeterRegistry` and `OfficesRepository` to the constructor and initialise the counter from within the constructor.
 
-   The approach we used has some disadvantages.  Every time we create an instance of `OfficeCountMetricDecorator` we need to fetch the value from the database.  This will complicate the tests more than necessary, we need to mock the `MeterRegistry` and `OfficesRepository` classes, even when these are not needed.
+   The constructor of the `OfficeCountMetricDecorator` class is serving two purposes.  It initialises the class and also fetches the initial counter value.  The approach we used has some disadvantages.  Every time we create an instance of `OfficeCountMetricDecorator` we need to fetch the value from the database.  This will complicate the tests more than necessary, we need to mock the `MeterRegistry` and `OfficesRepository` classes, even when these are not needed.
 
    There are several other approaches we can adopt.
 
    * **Post-construct** (_not-preferred approach_): Instead of initialising the counter in the constructor, we can use a post construct annotation, such as [`@PostConstruct`](https://docs.oracle.com/javaee/7/api/javax/annotation/PostConstruct.html), or implement the [`InitializingBean`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/InitializingBean.html) interface and have Spring initialising the counter post construction.  This approach still requires an instance of both `MeterRegistry` and `OfficesRepository`.
 
-   * **Factory method** (_preferred approach_):  We can create another class, will be known as `Factory`, which will be responsible from creating the counter and sets its initial value.  It then passes this counter to the `OfficeCountMetricDecorator`.
+   * **Factory method** (_preferred approach_):  We can create another class, will be known as `Factory`, which will be responsible from creating the counter and sets its initial value.  It then passes this initialised counter to the `OfficeCountMetricDecorator`.
 
    Update file: `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
 
-   {% include custom/project_dose_not_compile.html details="The following change will break the test class <code>OfficeCountMetricDecoratorTest</code> as we change the way our object is created." %}
+   {% include custom/project_dose_not_compile.html details="The following change will break the test class <code>OfficeCountMetricDecoratorTest</code> as we changed the way our object is created." %}
 
    ```java
    package demo.boot;
@@ -484,7 +484,7 @@ Our decorator will start by reading the current number of offices in the databas
 
    **Why are we using an inner static class instead of a static factory method?**
 
-   We can use a static factory method to initialise our `OfficeCountMetricDecorator` class.  That will add a challenge at a later stage when we will use annotations to hookup our classes with Spring.  If we use a static factory method, then we need to use XML to configure this bean.  Using the above approach will save us from using XML to configure our beans.
+   We can use a static factory method to initialise our `OfficeCountMetricDecorator` class.  That will add a challenge at a later stage when we hook-up our class with Spring.  If we use a static factory method, then we need to use XML to configure this bean.  Using the above approach will save us from using XML to configure our beans.
 
    Change the way our class is initialised in the test.
 
@@ -727,7 +727,7 @@ Our decorator will start by reading the current number of offices in the databas
    }
    ```
 
-   In the newly created test, we are not using the factory to initialise our object, but its constructor.  This simplifies our test as we only need to mock the `Counter` and the `JpaContactUsService` classes.  The classes `MeterRegistry` and `OfficesRepository` are not used here and also the initialisation process is not involved in the newly created test.  More importantly, if the counter initialisation has a bug, only the test relative to that part fails, while the other tests, such as out newly added test will not be effected.
+   In the newly created test, we are not using the factory to initialise our object, but its constructor instead.  This simplifies our test as we only need to mock the `Counter` and the `JpaContactUsService` classes.  The classes `MeterRegistry` and `OfficesRepository` are not used here and also the counter initialisation process is not involved in the newly created test.  More importantly, if the counter initialisation process has a bug, only the test relative to that part fails, while the other tests, such as out newly added test will not be affected.
 
    Run the tests.
 
@@ -894,7 +894,7 @@ Our decorator will start by reading the current number of offices in the databas
    }
    ```
 
-   Run the tests. These should fail.  Fix the failing tests.
+   Run the tests.  These should fail.  Fix the failing tests.
 
    Update file: `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
 
@@ -943,9 +943,9 @@ Our decorator will start by reading the current number of offices in the databas
 
 1. (Optional) Refactor tests
 
-   {% include custom/note.html details="This following refactoring is not affected in the code as I believe it hinders readability.  With that said the following refactoring shows some features related to testing which are worth nothing.  You are free to apply this refactoring if you believe that it does not hinder readability." %}
+   {% include custom/note.html details="The following refactoring is not applied to the code as it may hinder readability.  With that said, the following refactoring shows some features related to <a href='https://junit.org/junit5/'>JUnit 5</a>, which are worth nothing.  You are free to apply this refactoring if you believe that it does not hinder readability." %}
 
-   You may have noticed that some of the tests (`shouldPassListRequestsThrough()`, `shouldPassFindOneByNameRequestsThrough()`, `shouldPassFindAllInCountryRequestsThrough()`, and `shouldPassUpdateRequestsThrough()`) have a similar form.
+   You may have noticed that some of the tests (`shouldPassListRequestsThrough()`, `shouldPassFindOneByNameRequestsThrough()`, `shouldPassFindAllInCountryRequestsThrough()`, and `shouldPassUpdateRequestsThrough()`) take a similar form.
 
    * Code that is common to these test
 
@@ -1124,7 +1124,7 @@ Our decorator will start by reading the current number of offices in the databas
           }
       ```
 
-      A new instance of the `OfficeCountMetricDecorator` class is created for every test.  Instead we can create one instance and share it between the four tests within the nested test class.
+      A new instance of the `OfficeCountMetricDecorator` class is created for every test.  Instead we can create one instance and share it between the four tests within the nested test class.  This will have the same affect in our case as a new instance of the nested class is created for every test.
 
    1.  Refactor the tests to only contain the test specific code.
 
@@ -1590,21 +1590,21 @@ The above command should return the number of offices available, as shown next.
 
 ## Prometheus
 
-Our application is producing metrics data.  We need to use another tool to collect the metrics and produces meaningful information out of this data.  There are many tools that can do this, such as DataDog, [Atlas](https://github.com/Netflix/atlas) and many more.  We will use Prometheus as we can easily spin an instance locally.
+Our application is producing metrics data, as we saw in the [previous section](#can-we-create-custom-metrics).  We need to use another tool that collects the metrics and produces meaningful information out of this data.  There are many tools that can do this, such as DataDog, [Netflix's Atlas](https://github.com/Netflix/atlas) and many more.  We will use Prometheus as we can easily spin an instance locally.
 
-{% include custom/note.html details="Spring Boot Actuator supports many vendors and switching from one vendor to another is relatively easy." %}
+{% include custom/note.html details="Spring Boot Actuator supports many vendors and switching from one vendor to another is relatively easy.  Our custom metric will work with all supported vendors." %}
 
-Our application has one custom metric, `app.office.count` created in a [previous section](#can-we-create-custom-metrics), which returns the number of offices ThoughtWorks has.  We can see what metrics are being exposed through the `/metrics` endpoint.  Now we need to configure our application to work with Prometheus.  Prometheus requires a differenet endpoint, `/prometheus`, that returns metrics in a format that Prometheus understand.
+Our application has one custom metric, `app.office.count` created in a [previous section](#can-we-create-custom-metrics), which returns the number of offices ThoughtWorks has.  We can see what metrics are being exposed through the `/metrics` endpoint.  Now we need to configure our application to work with Prometheus.  Prometheus requires a different endpoint, `/prometheus`, that returns metrics in a format that Prometheus understand.
 
-{% include custom/note.html details="The <code>/metrics</code> is not required by Prometheus and we can disable this endpoint and still have Prometheus working." %}
+{% include custom/note.html details="The <code>/metrics</code> endpoint is not required by Prometheus and we can disable this endpoint and still have Prometheus working." %}
 
-Prometheus will pull metrics from our application.  We can simulate Prometheus pulling metrics using the `CURL` command, as shown next.
+Prometheus will pull metrics from our application using the new endpoint `/prometheus`.  We can simulate Prometheus pulling our metrics using the `CURL` command, as shown next.
 
 ```bash
 $ curl "http://localhost:8080/prometheus/"
 ```
 
-The response can be quite long and it is truncated in the following response example.
+The response can be quite long, and it is truncated in the following response example for brevity.
 
 ```bash
 # HELP hikaricp_connections_pending Pending threads
@@ -1682,7 +1682,7 @@ Let's enable Prometheus
    }
    ```
 
-   We have not yet enabled the Prometheus endpoint, thus the above test will fail.
+   We have not yet enabled the Prometheus endpoint, thus the above integration test will fail.
 
    ```bash
    $ ./gradlew clean integrationTest
@@ -1707,9 +1707,9 @@ Let's enable Prometheus
    }
    ```
 
-   We are using Micrometer as a facade and will publish our metrics through Micrometer.  We need to use the Micrometer/Prometheus dependncay and not the [Prometheus dependencies](https://mvnrepository.com/artifact/io.prometheus).
+   We are using Micrometer as a facade and will publish our metrics through Micrometer.  We need to use the Micrometer/Prometheus dependency and not the [Prometheus dependencies](https://mvnrepository.com/artifact/io.prometheus).
 
-   There is no point in running the tests after this step as we have not yet exposed the Prometheus endpoint.
+   There is no point in running the tests after this step as we have not yet exposed the Prometheus endpoint.  The integration tests will still fail.
 
 1. Expose the Prometheus endpoint
 
@@ -1750,7 +1750,7 @@ Our application is now exposing the `/prometheus` endpoint.  All we have left is
 
 1. Configure Prometheus
 
-   Prometheus will be running in a docker container locally.  We can create a configuration file which will instruct Prometheus to pull metrics from our application.
+   Prometheus will be running in a docker container locally.  We can create a configuration file which will instruct Prometheus to pull metrics from our application.  This is always preferred over configuring any tool manually through a user interface ([infrastructure as code](https://learning.oreilly.com/library/view/infrastructure-as-code/9781098114664/)).
 
    Create file: `docker/prometheus/prometheus.yaml`
 
@@ -1765,11 +1765,11 @@ Our application is now exposing the `/prometheus` endpoint.  All we have left is
          - targets: ['host.docker.internal:8080'] # Points to the laptop
    ```
 
-   {% include custom/note.html details="We are using the <code>host.docker.internal</code> domain because we are running within a docker container and our application is running on the (Mac OS) laptop." %}
+   {% include custom/note.html details="We are using the <code>host.docker.internal</code> domain because we are running within a docker container that is running on the (Mac OS) laptop, like our application, as shown in the following image." %}
 
    ![Prometheus Docker Container]({{ '/assets/images/Prometheus-Docker-Container.png' | absolute_url }})
 
-   We will mount this configuration file in a Prometheus container and have Prometheus pulling metrics from our application every 5 seconds.
+   We will mount this configuration file in the Prometheus container and have Prometheus pulling metrics from our application every 5 seconds.
 
 1. Add a new service
 
@@ -1821,7 +1821,7 @@ Our application is now exposing the `/prometheus` endpoint.  All we have left is
 
    ![Prometheus Targets]({{ '/assets/images/Prometheus-Targets-Down.png' | absolute_url }})
 
-   If Prometheus is not able to reach the application, make sure that the application is running and the Prometheus is able to access it.
+   If Prometheus is not able to reach the application, make sure that the application is running, and the Prometheus is able to access it.  The domain `host.docker.internal` may not work on a Windows OS.
 
 1. Access our metric ([http://localhost:9090/graph](http://localhost:9090/graph))
 
@@ -1835,5 +1835,4 @@ Our application is now exposing the `/prometheus` endpoint.  All we have left is
 
    We can query other metrics as shown next.
 
-   ![Prometheus Graph]({{ '/assets/images/Prometheus-Graph.png' | absolute_url }})
-
+   ![Prometheus Graph]({{ '/assets/images/Prometheus-Graph-HTTP.png' | absolute_url }})
