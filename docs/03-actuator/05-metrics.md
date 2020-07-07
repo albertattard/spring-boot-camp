@@ -941,7 +941,7 @@ Our decorator will start by reading the current number of offices in the databas
 
    The tests should now all pass.
 
-1. (Optional) Refactor tests
+1. (_Optional_) Refactor tests
 
    {% include custom/note.html details="The following refactoring is not applied to the code as it may hinder readability.  With that said, the following refactoring shows some features related to <a href='https://junit.org/junit5/'>JUnit 5</a>, which are worth nothing.  You are free to apply this refactoring if you believe that it does not hinder readability." %}
 
