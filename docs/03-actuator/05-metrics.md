@@ -9,7 +9,7 @@ permalink: docs/actuator/metrics/
 # Metrics
 {: .no_toc }
 
-The _Contact Us_ application needs to be monitored and we need to make sure that the application does not behave funnily, and any anomalies needs to be tracked.  Metrics can help us with this task.  [Spring Boot Actuator](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-metrics) provides dependency management and auto-configuration for [Micrometer](https://micrometer.io/), an application metrics facade that supports numerous monitoring systems, such as [Prometheus](https://prometheus.io/) and [DataDog](https://www.datadoghq.com/).
+The _Contact Us_ application needs to be monitored and we need to make sure that the application does not behave funnily, and any anomalies needs to be tracked.  Metrics can help us with this task.  [Spring Boot Actuator](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-features.html#production-ready-metrics) provides dependency management and auto-configuration for [Micrometer](https://micrometer.io/), an application metrics facade that supports numerous monitoring systems, such as [Prometheus](https://prometheus.io/) and [DataDog](https://www.datadoghq.com/), to name just two.
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -23,9 +23,13 @@ The _Contact Us_ application needs to be monitored and we need to make sure that
 
 Our application will receive traffic, use CPU and memory, connect to a database and carry out other tasks.  We can measure these tasks to gain insight on how our application behaves.  This can help us identify slow areas in our code and prioritise work where it is needed the most.
 
-There are many tools from different vendors that can help us with this, such as Prometheus and DataDog.
+Metrics goes beyond measuring the performance of the code itself.  We can use metrics to measure data volumes.  For example, our application contains the offices that ThoughtWorks has.  The number of offices can be a metric.  Businesspeople may not appreciate the impact of CPU and memory consumption and such values may not mean much to them.  They may be more interested into business related numbers, such as number of hits on a particular endpoint.
+
+There are many tools from different vendors that can help us with capturing metrics and help us navigate through these, such as Prometheus and DataDog.  Different vendors provide different functionality, such as visual dashboards and error notifications.
 
 ## Which tool/vendor should we use?
+
+{% include custom/note.html details="Spring Boot Actuator tones down the importance of this question as it makes our application vendor independent.  This allows us to switch from one vendor to another seamlessly." %}
 
 I like to use [Google trends](https://trends.google.com/trends/explore?q=Prometheus,Datadog,StatsD,New%20Relic,JMX) to get a feel about the popularity of the different technologies, as shown next.
 
@@ -33,7 +37,7 @@ I like to use [Google trends](https://trends.google.com/trends/explore?q=Prometh
 
 ![Metrics-Vendors-Trends.png]({{ '/assets/images/Metrics-Vendors-Trends.png' | absolute_url }})
 
-**I have little experience in this field**, and only used Prometheus with [Grafana](https://grafana.com/) as the visualisation tool.  Prometheus seems to be very popular in this field, irrespective from the skewed Google trends results, shown above.  This is an open-source project and that joined the [Cloud Native Computing Foundation](https://www.cncf.io/) in 2016 as the second hosted project, after [Kubernetes](https://kubernetes.io/) ([reference](https://prometheus.io/docs/introduction/overview/)).  Furthermore, [Prometheus is marked as trial on the ThoughtWorks technology radar](https://www.thoughtworks.com/radar/tools/prometheus), which indicates that it is worth investing in this tool.
+**I have little experience in this field, and I am not going to recommend on over the other**.  I have only used Prometheus with [Grafana](https://grafana.com/) as the visualisation tool.  Prometheus seems to be very popular in this field, irrespective from the **skewed** Google trends results, shown above.  This is an open-source project, that joined the [Cloud Native Computing Foundation](https://www.cncf.io/) in 2016 as the second hosted project, after [Kubernetes](https://kubernetes.io/) ([reference](https://prometheus.io/docs/introduction/overview/)).  Furthermore, [Prometheus is marked as trial on the ThoughtWorks technology radar](https://www.thoughtworks.com/radar/tools/prometheus), which indicates that it is worth investing in this tool.
 
 {% include custom/note.html details="By no means I am saying that Prometheus is the best tool available for this job.  I picked Prometheus because this is an open source project and I can easily spin an instance up using docker and docker compose." %}
 
@@ -50,7 +54,7 @@ Metrics, about our application, can be collected and analysed by different tools
 
 Micrometer is a facade, a dependency that our project will depend on, for various vendors.  Micrometer is not a service running somewhere but will be packed part of our application like other Spring related dependencies.
 
-This provides us a single interface which we can use to publish metrics about our application.  Having one facade simplifies life as we do not have to worry about each individual vendor.  For example, Prometheus polls metrics from our application, whereas DataDog requires our application to push the metrics to it.  These are not trivial differences, as in the latter case (DataDog) we need to make a request while in the former case (Prometheus) we need to expose an endpoint.
+This provides us a single interface which we can use to publish metrics about our application.  Having one facade simplifies our lives, as we do not have to worry about each individual vendor.  For example, Prometheus polls metrics from our application, whereas DataDog requires our application to push the metrics to it.  These are not trivial differences, as in the latter case (DataDog) we need to make a request while in the former case (Prometheus) we need to expose an endpoint.
 
 ## Enable metrics
 
@@ -210,7 +214,7 @@ With metrics we can measure the number of such requests, the time taken to proce
 
 **YES**
 
-Our application manages the offices ThoughtWorks has around the world.  Let's create a custom metrics that measures the number of offices ThoughtWorks currently has.
+Our application manages the offices ThoughtWorks has around the world.  Let's create a custom metric that measures the number of offices ThoughtWorks currently has.
 
 We would like to add a new metrics, with the name `app.office.count`, which returns the number of offices in the database.
 
@@ -235,7 +239,7 @@ The above command should return the number of office present as shown next.
 }
 ```
 
-The database currently has 6 office, therefore the count should reflect that number.
+The database currently has 6 offices, therefore the count should reflect that number.
 
 No tags need to be used in this example (`availableTags`), and no need to get fancy with `description` and `baseUnit` to keep things simple.  If these are needed we can use [`DistributionSummary`](https://www.javadoc.io/doc/io.micrometer/micrometer-core/latest/io/micrometer/core/instrument/DistributionSummary.html) instead.
 
@@ -316,7 +320,7 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    Create file `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
 
-   {% include custom/note.html details="The following example is barely enough to make the test compile.  I prefer empty responses over of throwing exceptions in such cases as these are less invasive.  If this method is called by the controlled before it was expected, then we simply get the wrong, blank, result instead of an error." %}
+   {% include custom/note.html details="The following example is barely enough to make the test compile.  I prefer empty responses over of throwing exceptions in such cases as these are less invasive.  If this method is called by the controlled before it was expected, then we simply get the wrong, empty, result instead of an error." %}
 
    ```java
    package demo.boot;
@@ -371,6 +375,8 @@ Will use the decorator pattern, not because it uses less code, but because it is
 1. Fix the failing test.
 
    Update file `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
+
+   {% include custom/note.html details="Our <code>OfficeCountMetricDecorator</code> is initialising the counter at the constructor.  Alternatively, we can use a post construct annotation, such as <a href='https://docs.oracle.com/javaee/7/api/javax/annotation/PostConstruct.html'><code>@PostConstruct</code></a>, or implement the <a href='https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/InitializingBean.html'><code>InitializingBean</code></a> interface and have Spring initialising the counter post construction.  The downside with these approaches is that we will need to hang on the <code>OfficesRepository</code> instance (and possibly the <code>MeterRegistry</code> instance too) from within the <code>OfficeCountMetricDecorator</code> class." %}
 
    ```java
    package demo.boot;
@@ -1274,64 +1280,275 @@ Will use the decorator pattern, not because it uses less code, but because it is
 
    Run the integration tests.  These should now work.
 
-## Prometheus
+Our application now is exposing the new `app.office.count` metric.  We can retrieve the new metric using the following command.
 
-```groovy
-dependencies {
-  /* Prometheus */
-  runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+```bash
+$ curl "http://localhost:8080/metrics/app.office.count" | jq .
+```
+
+The above command should return the number of offices available, as shown next.
+
+```json
+{
+  "name": "app.office.count",
+  "description": null,
+  "baseUnit": null,
+  "measurements": [
+    {
+      "statistic": "COUNT",
+      "value": 6
+    }
+  ],
+  "availableTags": []
 }
 ```
 
-```yaml
-management:
-  endpoints:
-    web:
-      base-path:
-      exposure:
-        include: env, health, info, metrics, prometheus
-  endpoint:
-    health:
-      show-details: always
-```
+## Prometheus
+
+Our application is producing metrics data.  We need to use another tool to collect the metrics and produces meaningful information out of this data.  There are many tools that can do this, such as DataDog, [Atlas](https://github.com/Netflix/atlas) and many more.  We will use Prometheus as we can easily spin an instance locally.
+
+{% include custom/note.html details="Spring Boot Actuator supports many vendors and switching from one vendor to another is relatively easy." %}
+
+Our application has one custom metric, `app.office.count` created in a [previous section](#can-we-create-custom-metrics), which returns the number of offices ThoughtWorks has.  We can see what metrics are being exposed through the `/metrics` endpoint.  Now we need to configure our application to work with Prometheus.  Prometheus requires a differenet endpoint, `/prometheus`, that returns metrics in a format that Prometheus understand.
+
+{% include custom/note.html details="The <code>/metrics</code> is not required by Prometheus and we can disable this endpoint and still have Prometheus working." %}
+
+Prometheus will pull metrics from our application.  We can simulate Prometheus pulling metrics using the `CURL` command, as shown next.
 
 ```bash
-$ curl "http://localhost:8080/prometheus"
+$ curl "http://localhost:8080/prometheus/"
 ```
 
-`docker/prometheus/prometheus.yaml`
-```yaml
-global:
-  scrape_interval: 15s
-scrape_configs:
-  - job_name: 'contact-us'
-    scrape_interval: 5s
-    metrics_path: '/prometheus'
-    static_configs:
-      - targets: ['host.docker.internal:8080'] # Points to the laptop
+The response can be quite long and it is truncated in the following response example.
+
+```bash
+# HELP hikaricp_connections_pending Pending threads
+# TYPE hikaricp_connections_pending gauge
+hikaricp_connections_pending{pool="HikariPool-1",} 0.0
+...
+# HELP app_office_count_total
+# TYPE app_office_count_total counter
+app_office_count_total 6.0
+...
 ```
 
-`docker-compose.yml`
-```yaml
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: ${DATABASE_NAME}-prometheus
-    ports:
-      - 9090:9090
-    env_file:
-      - .env
-    command:
-      - --config.file=/etc/prometheus/prometheus.yaml
-    volumes:
-      - ./docker/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+Our custom metric, `app.office.count`, should be there too and should have the name `app_office_count_total`.  We can use [`grep`](https://linux.die.net/man/1/grep) to filter the response and only show what we want, as shown next.
+
+```bash
+$ curl "http://localhost:8080/prometheus/" | grep "^app_office_count_total"
 ```
 
+The above command will only show our metric.
 
-http://localhost:9090/targets
+```bash
+app_office_count_total 6.0
+```
 
-![Prometheus Targets]({{ '/assets/images/Prometheus-Targets.png' | absolute_url }})
+### Enable Prometheus
 
-HTTP Requests
+Let's enable Prometheus
 
-![Prometheus Graph]({{ '/assets/images/Prometheus-Graph.png' | absolute_url }})
+1. Add an integration test
+
+   Update file: `src/test-integration/java/demo/boot/ContactUsApplicationTests.java`
+
+   ```java
+   package demo.boot;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.context.SpringBootTest;
+   import org.springframework.boot.test.web.client.TestRestTemplate;
+   import org.springframework.http.HttpEntity;
+   import org.springframework.http.HttpStatus;
+
+   import static org.assertj.core.api.Assertions.assertThat;
+   import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+
+   @DisplayName( "Contact Us application" )
+   @SpringBootTest( webEnvironment = WebEnvironment.RANDOM_PORT )
+   public class ContactUsApplicationTests {
+
+     @Autowired
+     private TestRestTemplate restTemplate;
+
+     @Test
+     @DisplayName( "should return 200 when the health endpoint is accessed" )
+     public void shouldReturn200HealthEndpoint() { /* ...  */ }
+
+     @Test
+     @DisplayName( "should return 200 when the metric office count endpoint is accessed" )
+     public void shouldReturn200MetricsOfficeCountEndpoint() { /* ...  */ }
+
+     @Test
+     @DisplayName( "should return 200 when the Prometheus endpoint is accessed and should contain the metric office count present" )
+     public void shouldReturn200PrometheusOfficeCountEndpoint() {
+       assertThat( restTemplate.getForEntity( "/prometheus", String.class ) )
+         .matches( r -> r.getStatusCode() == HttpStatus.OK )
+         .matches( HttpEntity::hasBody )
+         .matches( r -> r.getBody().contains( "app_office_count_total " ) )
+       ;
+     }
+
+     @Test
+     @DisplayName( "should return the offices" )
+     public void shouldReturnTheOffices() { /* ...  */ }
+   }
+   ```
+
+   We have not yet enabled the Prometheus endpoint, thus the above test will fail.
+
+   ```bash
+   $ ./gradlew clean integrationTest
+
+   ...
+   Contact Us application > should return 200 when the Prometheus endpoint is accessed and should contain the metric office count present FAILED
+       java.lang.AssertionError at ContactUsApplicationTests.java:39
+   ...
+
+   BUILD FAILED in 23s
+   7 actionable tasks: 7 executed
+   ```
+
+1. Add the [`micrometer-registry-prometheus`](https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus)
+
+   Update file: `build.gradle`
+
+   ```groovy
+   dependencies {
+     /* Prometheus */
+     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+   }
+   ```
+
+   We are using Micrometer as a facade and will publish our metrics through Micrometer.  We need to use the Micrometer/Prometheus dependncay and not the [Prometheus dependencies](https://mvnrepository.com/artifact/io.prometheus).
+
+   There is no point in running the tests after this step as we have not yet exposed the Prometheus endpoint.
+
+1. Expose the Prometheus endpoint
+
+   Update file: `src/main/resources/application.yaml`
+
+   ```yaml
+   management:
+     endpoints:
+       web:
+         base-path:
+         exposure:
+           include: env, health, info, metrics, prometheus
+   ```
+
+   Run the integration tests
+
+   ```bash
+   $ ./gradlew clean integrationTest
+
+   ...
+
+   BUILD SUCCESSFUL in 22s
+   7 actionable tasks: 7 executed
+   ```
+
+   The integration tests should now pass.
+
+We can access the new `/prometheus` using `CURL`.
+
+```bash
+$ curl "http://localhost:8080/prometheus/" | grep "^app_office_count_total"
+app_office_count_total 6.0
+```
+
+### Run Prometheus locally
+
+Our application is now exposing the `/prometheus` endpoint.  All we have left is to configure a Prometheus instance to start fetching metrics from our application.  We can start Prometheus locally using docker.
+
+1. Configure Prometheus
+
+   Prometheus will be running in a docker container locally.  We can create a configuration file which will instruct Prometheus to pull metrics from our application.
+
+   Create file: `docker/prometheus/prometheus.yaml`
+
+   ```yaml
+   global:
+     scrape_interval: 15s
+   scrape_configs:
+     - job_name: 'contact-us'
+       scrape_interval: 5s
+       metrics_path: '/prometheus'
+       static_configs:
+         - targets: ['host.docker.internal:8080'] # Points to the laptop
+   ```
+
+   {% include custom/note.html details="We are using the <code>host.docker.internal</code> domain because we are running within a docker container and our application is running on the (Mac OS) laptop." %}
+
+   ![Prometheus Docker Container]({{ '/assets/images/Prometheus-Docker-Container.png' | absolute_url }})
+
+   We will mount this configuration file in a Prometheus container and have Prometheus pulling metrics from our application every 5 seconds.
+
+1. Add a new service
+
+   Update file: `docker-compose.yml`
+
+   {% include custom/note.html details="We are using the latest version of Prometheus.  It is best to use the same Prometheus version you have in production to mitigate the risk of undesired surprises." %}
+
+   ```yaml
+     prometheus:
+       image: prom/prometheus:latest
+       container_name: ${DATABASE_NAME}-prometheus
+       ports:
+         - 9090:9090
+       command:
+         - --config.file=/etc/prometheus/prometheus.yaml
+       volumes:
+         - ./docker/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+   ```
+
+   Our Prometheus service defined above will mount the `docker/prometheus/prometheus.yaml` defined before.
+
+1. Start Prometheus (through the docker compose)
+
+   {% include custom/proceed_with_caution.html details="The following command stops the services defined in the <code>docker-compose.yml</code> file and then deletes all stopped containers.  If you do not want to delete the stopped containers, please do not run the <code>docker system prune -f</code> command." %}
+
+   ```bash
+   $ docker-compose stop && docker system prune -f && docker-compose up -d
+   ```
+
+1. Start our application
+
+   ```bash
+   $ ./gradlew bootRun
+   ```
+
+   {% include custom/note.html details="The following steps depends on both our application and Prometheus running.  Our application does not require Prometheus to be running." %}
+
+1. Access Prometheus ([http://localhost:9090/targets](http://localhost:9090/targets))
+
+   ```bash
+   open http://localhost:9090/targets
+   ```
+
+   Our application should be listed and up and running, as shown in the following image.
+
+   ![Prometheus Targets]({{ '/assets/images/Prometheus-Targets-Up.png' | absolute_url }})
+
+   If Prometheus is not able to access our application, then our application will appear down as shown next.
+
+   ![Prometheus Targets]({{ '/assets/images/Prometheus-Targets-Down.png' | absolute_url }})
+
+   If Prometheus is not able to reach the application, make sure that the application is running and the Prometheus is able to access it.
+
+1. Access our metric ([http://localhost:9090/graph](http://localhost:9090/graph))
+
+   ![Prometheus Graph]({{ '/assets/images/Prometheus-Graph-APP-1.png' | absolute_url }})
+
+   Our metric, `app_office_count_total`, should be listed with the others.  Alternatively, you can click [http://localhost:9090/graph?g0.range_input=1h&g0.expr=app_office_count_total&g0.tab=0](http://localhost:9090/graph?g0.range_input=1h&g0.expr=app_office_count_total&g0.tab=0), which queries our metric.
+
+   ![Prometheus Graph]({{ '/assets/images/Prometheus-Graph-APP-2.png' | absolute_url }})
+
+   {% include custom/note.html details="Note that there is a small gap in the line.  That's when we stopped our application to simulate an error.  Prometheus was not able to get our metric during that period." %}
+
+   We can query other metrics as shown next.
+
+   ![Prometheus Graph]({{ '/assets/images/Prometheus-Graph.png' | absolute_url }})
 
