@@ -58,7 +58,9 @@ This provides us a single interface which we can use to publish metrics about ou
 
 ## Enable metrics
 
-Spring Boot Actuator provides metrics.  The metrics endpoint needs to be enabled through the `src/main/resources/application.yaml`
+Spring Boot Actuator provides metrics.  The metrics endpoint needs to be enabled through the `src/main/resources/application.yaml` configuration file.
+
+{% include custom/note.html details="Always write tests, even when an endpoint is enabled through configuration.  Tests are skipped here as we will cover them later on, when we work with <a href='#can-we-create-custom-metrics'>custom metrics</a>." %}
 
 ```yaml
 management:
