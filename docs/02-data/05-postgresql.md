@@ -46,7 +46,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    version: "3.8"
    services:
      postgres:
-       container_name: ${DATABASE_NAME}-pg
+       container_name: ${APPLICATION_NAME}-pg
        image: postgres:11.1
        restart: unless-stopped
        networks:
@@ -65,7 +65,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
          retries: 5
          start_period: 30s
      pgadmin4:
-       container_name: ${DATABASE_NAME}-pgadmin4
+       container_name: ${APPLICATION_NAME}-pgadmin4
        image: dpage/pgadmin4:4.23
        restart: unless-stopped
        networks:
@@ -88,7 +88,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
       ```yaml
         postgres:
-          container_name: ${DATABASE_NAME}-pg
+          container_name: ${APPLICATION_NAME}-pg
           image: postgres:11.1
           restart: unless-stopped
           networks:
@@ -111,7 +111,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
       ```yaml
         pgadmin4:
-          container_name: ${DATABASE_NAME}-pgadmin4
+          container_name: ${APPLICATION_NAME}-pgadmin4
           image: dpage/pgadmin4:4.23
           restart: unless-stopped
           networks:
@@ -181,7 +181,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
       ```yaml
         pgadmin4:
-          container_name: ${DATABASE_NAME}-pgadmin4
+          container_name: ${APPLICATION_NAME}-pgadmin4
           image: dpage/pgadmin4:4.23
           restart: unless-stopped
           networks:

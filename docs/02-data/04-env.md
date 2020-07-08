@@ -42,6 +42,7 @@ Another approach is to use an `.env` file as shown next.
 {% include custom/proceed_with_caution.html details="Do not save production passwords as plain text" %}
 
 ```properties
+APPLICATION_NAME=contact-us
 DATABASE_NAME=contact-us
 DATABASE_PORT=
 DATABASE_URL=jdbc:h2:mem:contact-us;DATABASE_TO_UPPER=false;
@@ -59,6 +60,10 @@ The above example only contains development and test credentials.  While that ma
    {% include custom/proceed_with_caution.html details="Do not save production passwords as plain text" %}
 
    ```properties
+   # Application
+   APPLICATION_NAME=contact-us
+
+   # Database
    DATABASE_NAME=contact-us
    DATABASE_PORT=
    DATABASE_URL=jdbc:h2:mem:contact-us;DATABASE_TO_UPPER=false;
@@ -179,10 +184,13 @@ Gradle is very customisable and we can easily have a new set of tests, referred 
      }
 
      doFirst {
-       file("$rootDir/.env").readLines().each() {
-         def (key, value) = it.split('=', 2)
-         environment key, value
-       }
+       file("$rootDir/.env")
+         .readLines()
+         .findAll({ line -> !line.isBlank() && !line.startsWith("#") })
+         .each() {
+           def (key, value) = it.split('=', 2)
+           environment key, value
+         }
      }
    }
 
@@ -244,10 +252,13 @@ Gradle is very customisable and we can easily have a new set of tests, referred 
         }
 
         doFirst {
-          file("$rootDir/.env").readLines().each() {
-            def (key, value) = it.split('=', 2)
-            environment key, value
-          }
+          file("$rootDir/.env")
+            .readLines()
+            .findAll({ line -> !line.isBlank() && !line.startsWith("#") })
+            .each() {
+              def (key, value) = it.split('=', 2)
+              environment key, value
+            }
         }
       }
       ```
@@ -256,10 +267,13 @@ Gradle is very customisable and we can easily have a new set of tests, referred 
 
       ```groovy
         doFirst {
-          file("$rootDir/.env").readLines().each() {
-            def (key, value) = it.split('=', 2)
-            environment key, value
-          }
+          file("$rootDir/.env")
+            .readLines()
+            .findAll({ line -> !line.isBlank() && !line.startsWith("#") })
+            .each() {
+              def (key, value) = it.split('=', 2)
+              environment key, value
+            }
         }
       ```
 
@@ -431,10 +445,13 @@ Gradle is very customisable and we can easily have a new set of tests, referred 
    ```groovy
    bootRun {
      doFirst {
-       file("$rootDir/.env").readLines().each() {
-         def (key, value) = it.split('=', 2)
-         environment key, value
-       }
+       file("$rootDir/.env")
+         .readLines()
+         .findAll({ line -> !line.isBlank() && !line.startsWith("#") })
+         .each() {
+           def (key, value) = it.split('=', 2)
+           environment key, value
+         }
      }
    }
    ```
