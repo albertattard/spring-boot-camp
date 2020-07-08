@@ -239,9 +239,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
 1. Delete the existing containers
 
-   {% include custom/proceed_with_caution.html details="The following command will delete <strong>all</strong> stopped containers" %}
-
-   If you do not want to delete old containers, please do not run the `docker system prune -f` command.
+   {% include custom/proceed_with_caution.html details="The following command will delete <strong>all</strong> stopped containers.  If you do not want to delete old containers, please do not run the <code>docker system prune -f</code> command." %}
 
    PgAdmin is stateful and we need to delete the container first to delete any existing state.
 
@@ -340,9 +338,7 @@ The database is setup and ready to be used by our application.
 
 1. Restart the services
 
-   {% include custom/proceed_with_caution.html details="The following command will delete <strong>all</strong> stopped containers." %}
-
-   If you do not want to delete old containers, please do not run the `docker system prune -f` command.
+   {% include custom/proceed_with_caution.html details="The following command will delete <strong>all</strong> stopped containers.  If you do not want to delete old containers, please do not run the <code>docker system prune -f</code> command." %}
 
    ```bash
    $ docker-compose stop
