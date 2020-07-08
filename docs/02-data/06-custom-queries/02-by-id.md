@@ -122,6 +122,7 @@ There are several approaches to handle this.
    import static org.mockito.Mockito.mock;
    import static org.mockito.Mockito.times;
    import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.verifyNoMoreInteractions;
    import static org.mockito.Mockito.when;
 
    @DisplayName( "JPA contact us service" )
@@ -145,6 +146,7 @@ There are several approaches to handle this.
        assertEquals( Optional.empty(), office );
 
        verify( repository, times( 1 ) ).findById( name );
+       verifyNoMoreInteractions( repository );
      }
    }
    ```
@@ -248,6 +250,7 @@ There are several approaches to handle this.
    import static org.mockito.Mockito.mock;
    import static org.mockito.Mockito.times;
    import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.verifyNoMoreInteractions;
    import static org.mockito.Mockito.when;
 
    @DisplayName( "JPA contact us service" )
@@ -277,6 +280,7 @@ There are several approaches to handle this.
        assertEquals( expected, office );
 
        verify( repository, times( 1 ) ).findById( name );
+       verifyNoMoreInteractions( repository );
      }
    }
    ```

@@ -251,6 +251,7 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
    import static org.mockito.Mockito.mock;
    import static org.mockito.Mockito.times;
    import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.verifyNoMoreInteractions;
    import static org.mockito.Mockito.when;
 
    @DisplayName( "JPA contact us service" )
@@ -292,6 +293,7 @@ A new method will be added to the `ContactUsService`, named `findAllInCountry()`
        assertEquals( expected, offices );
 
        verify( repository, times( 1 ) ).findAllByCountryIgnoreCase( country );
+       verifyNoMoreInteractions( repository );
      }
    }
    ```

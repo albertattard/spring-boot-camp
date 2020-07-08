@@ -326,6 +326,7 @@ The [repository]( https://docs.spring.io/spring-data/commons/docs/current/api/or
 
        verify( repository, times( 1 ) ).findById( name );
        verify( repository, times( 1 ) ).delete( entity );
+       verifyNoMoreInteractions( repository );
      }
    }
    ```

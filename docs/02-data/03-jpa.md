@@ -502,6 +502,7 @@ Read all rows in the `offices` table using the JPA repository.
    import static org.mockito.Mockito.mock;
    import static org.mockito.Mockito.times;
    import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.verifyNoMoreInteractions;
    import static org.mockito.Mockito.when;
 
    @DisplayName( "JPA contact us service" )
@@ -529,6 +530,7 @@ Read all rows in the `offices` table using the JPA repository.
        assertEquals( expected, offices );
 
        verify( repository, times( 1 ) ).findAll();
+       verifyNoMoreInteractions( repository );
      }
    }
    ```
