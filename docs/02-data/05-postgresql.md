@@ -51,8 +51,6 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
        restart: unless-stopped
        networks:
          - app-net
-       env_file:
-         - .env
        ports:
          - ${DATABASE_PORT}:5432
        environment:
@@ -72,14 +70,11 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
        restart: unless-stopped
        networks:
          - app-net
-       env_file:
-         - .env
        volumes:
-         - ./docker/pgadmin4:/pgadmin4/external
+         - ./docker/pgadmin4/servers.json:/pgadmin4/servers.json:ro
        environment:
          PGADMIN_DEFAULT_EMAIL: ${DATABASE_USERNAME}
          PGADMIN_DEFAULT_PASSWORD: ${DATABASE_PASSWORD}
-         PGADMIN_SERVER_JSON_FILE: /pgadmin4/external/servers.json
        ports:
          - "8000:80"
    networks:
@@ -98,8 +93,6 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
           restart: unless-stopped
           networks:
             - app-net
-          env_file:
-            - .env
           ports:
             - ${DATABASE_PORT}:5432
           environment:
@@ -123,14 +116,11 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
           restart: unless-stopped
           networks:
             - app-net
-          env_file:
-            - .env
           volumes:
-            - ./docker/pgadmin4:/pgadmin4/external
+            - ./docker/pgadmin4/servers.json:/pgadmin4/servers.json:ro
           environment:
             PGADMIN_DEFAULT_EMAIL: ${DATABASE_USERNAME}
             PGADMIN_DEFAULT_PASSWORD: ${DATABASE_PASSWORD}
-            PGADMIN_SERVER_JSON_FILE: /pgadmin4/external/servers.json
           ports:
             - "8000:80"
       ```
@@ -187,7 +177,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
 1. Setup database connection
 
-   The `pgadmin4` service, defined in `docker-compose.yml`, defines [`PGADMIN_SERVER_JSON_FILE`](https://www.pgadmin.org/docs/pgadmin4/development/container_deployment.html#environment-variables) environment variable.  The _server json file_ points to a volume that is mounted from the `./docker/pgadmin4` directory.  This allows us to manage the database connection settings as part of the code.
+   The `pgadmin4` service, defined in `docker-compose.yml`, uses the _server json file_, which points to a volume that is mounted from the `./docker/pgadmin4` directory.  This allows us to manage the database connection settings as part of the code.
 
       ```yaml
         pgadmin4:
@@ -196,14 +186,11 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
           restart: unless-stopped
           networks:
             - app-net
-          env_file:
-            - .env
           volumes:
-            - ./docker/pgadmin4:/pgadmin4/external
+            - ./docker/pgadmin4/servers.json:/pgadmin4/servers.json:ro
           environment:
             PGADMIN_DEFAULT_EMAIL: ${DATABASE_USERNAME}
             PGADMIN_DEFAULT_PASSWORD: ${DATABASE_PASSWORD}
-            PGADMIN_SERVER_JSON_FILE: /pgadmin4/external/servers.json
           ports:
             - "8000:80"
       ```
