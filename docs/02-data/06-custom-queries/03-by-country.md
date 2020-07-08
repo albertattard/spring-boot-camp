@@ -511,7 +511,7 @@ public class JpaContactUsService implements ContactUsService {
   @Override
   public List<Office> findAllInCountry( final String country ) {
     final OfficeEntity office = new OfficeEntity();
-    office.setCountry( "germany" );
+    office.setCountry( country );
 
     final ExampleMatcher matcher = ExampleMatcher.matching()
       .withIgnoreNullValues()
