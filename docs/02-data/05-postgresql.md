@@ -66,7 +66,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
          start_period: 30s
      pgadmin4:
        container_name: ${DATABASE_NAME}-pgadmin4
-       image: dpage/pgadmin4:4.22
+       image: dpage/pgadmin4:4.23
        restart: unless-stopped
        networks:
          - app-net
@@ -112,7 +112,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
       ```yaml
         pgadmin4:
           container_name: ${DATABASE_NAME}-pgadmin4
-          image: dpage/pgadmin4:4.22
+          image: dpage/pgadmin4:4.23
           restart: unless-stopped
           networks:
             - app-net
@@ -182,7 +182,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
       ```yaml
         pgadmin4:
           container_name: ${DATABASE_NAME}-pgadmin4
-          image: dpage/pgadmin4:4.22
+          image: dpage/pgadmin4:4.23
           restart: unless-stopped
           networks:
             - app-net
