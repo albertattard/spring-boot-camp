@@ -1779,8 +1779,11 @@ Our application is now exposing the `/prometheus` endpoint.  All we have left is
 
    ```yaml
      prometheus:
+       container_name: ${APPLICATION_NAME}-prometheus
        image: prom/prometheus:latest
-       container_name: ${DATABASE_NAME}-prometheus
+       restart: unless-stopped
+       networks:
+         - app-net
        ports:
          - 9090:9090
        command:
