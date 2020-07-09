@@ -221,7 +221,7 @@ permalink: docs/primer/demo/health/
 
    Use `[control] + [c]` to stop the application
 
-## Tasks status
+## Objectives status
 
 The health endpoint is implemented and tested
 

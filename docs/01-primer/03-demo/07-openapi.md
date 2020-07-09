@@ -47,7 +47,7 @@ permalink: docs/primer/demo/openapi/
 
    ![OpenApi Demo]({{ '/assets/gifs/OpenApi-Demo.gif' | absolute_url }})
 
-## Tasks status
+## Objectives status
 
 The application endpoints are exposed through OpenAPI
 

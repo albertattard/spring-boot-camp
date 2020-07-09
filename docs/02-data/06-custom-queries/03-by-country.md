@@ -533,7 +533,7 @@ public class JpaContactUsService implements ContactUsService {
 
 This is an overkill for our example but shows how we can fine tune the query to the required need.
 
-## Tasks status
+## Objectives status
 
 - [X] Return one office by id
 - [X] Return all offices in country

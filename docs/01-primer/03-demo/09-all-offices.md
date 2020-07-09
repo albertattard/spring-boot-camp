@@ -584,7 +584,7 @@ The REST controller simply converts the HTTP/REST requests to Java objects and t
 
 The REST controller may use [path variables](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/PathVariable.html), or [request parameters](https://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/web/bind/annotation/RequestParam.html), each of which needs to b covered by tests.  In some cases, these parameters may be optional and have a default value while other times these parameters are mandatory.  Testing such cases outside Spring is not possible as the logic behind the validation is performed by Spring, through the annotations used.
 
-## Tasks status
+## Objectives status
 
 The application now returns all offices found in the CSV file
 

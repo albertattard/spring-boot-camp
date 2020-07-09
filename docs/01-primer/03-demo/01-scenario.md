@@ -76,7 +76,7 @@ Our company, [ThoughtWorks](https://www.thoughtworks.com/), is thinking in build
 
    The application needs to be deployed as a docker image.
 
-## Tasks
+## Objectives
 
 We need to carry out the following tasks
 

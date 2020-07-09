@@ -261,7 +261,7 @@ permalink: docs/primer/demo/one-office/
 
    ![One Office Result]({{ '/assets/images/One-Office-Result.png' | absolute_url }})
 
-## Tasks status
+## Objectives status
 
 The office endpoint is implemented and tested with one contact
 

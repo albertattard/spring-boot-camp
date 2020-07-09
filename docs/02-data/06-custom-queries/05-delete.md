@@ -1172,7 +1172,7 @@ We can do better than simply failing.  In our case, we can retry the office dele
 
    The test should now pass.
 
-## Tasks status
+## Objectives status
 
 - [X] Return one office by id
 - [X] Return all offices in country

@@ -403,7 +403,7 @@ Spring Boot provides [the Gradle `bootBuildImage` task](https://docs.spring.io/s
 
    Note that this approach is not as efficient as one would have hoped so.  The application layer still contains both our code and the application dependencies.
 
-## Tasks status
+## Objectives status
 
 The application can now be deployed as a docker image
 

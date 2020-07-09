@@ -29,7 +29,7 @@ Mistakes happen and some attendees may not get the food they selected.  This can
 
 The food caterer provides an [application](https://github.com/albertattard/event-food-demo) that handles food ordering for events.  The food supplier is also willing to improve the existing application to improve its accessibility.
 
-## Tasks
+## Objectives
 
 - [ ] Provide an endpoint from where attendees can register to an event
 - [ ] Submit the food preference to the food supplier as part of the registration process

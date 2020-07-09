@@ -311,7 +311,7 @@ The difference between these two methods is that the `findById()` method is eage
 
 Say that we have another table containing all employees which is linked to the offices table and also another entity that represent the employee in Java.  Then using the `findById()` method will retrieve the office and all employees that are linked to this office immediately.  On the other hand, if we use the `getOne()` method, the office details are read from the table but the employees are not.  Only when we request the list of employees, these are fetched from the database and then returned.
 
-## Tasks status
+## Objectives status
 
 - [X] Return one office by id
 - [ ] Return all offices in country
