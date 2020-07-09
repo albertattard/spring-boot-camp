@@ -55,7 +55,7 @@ The above example only contains development and test credentials.  While that ma
 
 1. Create the `.env` file
 
-   Create file `.env`
+   Create file: `.env`
 
    {% include custom/proceed_with_caution.html details="Do not save production passwords as plain text" %}
 
@@ -76,7 +76,7 @@ The above example only contains development and test credentials.  While that ma
 
 1. Update the properties
 
-   Update file `src/main/resources/application.yaml`
+   Update file: `src/main/resources/application.yaml`
 
    ```yaml
    spring:
@@ -327,7 +327,7 @@ Gradle is very customisable and we can easily have a new set of tests, referred 
 
 1. Import the new definition
 
-   Update file `build.gradle`
+   Update file: `build.gradle`
 
    ```groovy
    /* Integration Tests */
@@ -440,7 +440,7 @@ Gradle is very customisable and we can easily have a new set of tests, referred 
 
 1. Use the `.env` file from the `bootRun` task
 
-   Update file `build.gradle`
+   Update file: `build.gradle`
 
    ```groovy
    bootRun {

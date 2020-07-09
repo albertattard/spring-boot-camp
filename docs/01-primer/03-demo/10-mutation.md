@@ -84,7 +84,7 @@ One of these approaches is [mutation testing](https://en.wikipedia.org/wiki/Muta
 
 1. Exclude the Lombok generated files
 
-   Create file `lombok.config`
+   Create file: `lombok.config`
 
    ```properties
    lombok.addLombokGeneratedAnnotation=true

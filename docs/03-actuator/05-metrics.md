@@ -273,7 +273,7 @@ Our decorator will start by reading the current number of offices in the databas
 
 1. Create a test
 
-   Create file `src/test/java/demo/boot/OfficeCountMetricDecoratorTest.java`
+   Create file: `src/test/java/demo/boot/OfficeCountMetricDecoratorTest.java`
 
    {% include custom/dose_not_compile.html %}
 
@@ -322,7 +322,7 @@ Our decorator will start by reading the current number of offices in the databas
 
 1. Make the test compile
 
-   Create file `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
+   Create file: `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
 
    {% include custom/note.html details="The following example is barely enough to make the test compile.  I prefer empty responses over of throwing exceptions in such cases as these are less invasive.  If this method is called by the controlled before it was expected, then we simply get the wrong, empty, result instead of an error." %}
 
@@ -377,7 +377,7 @@ Our decorator will start by reading the current number of offices in the databas
 
 1. Fix the failing test.
 
-   Update file `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
+   Update file: `src/main/java/demo/boot/OfficeCountMetricDecorator.java`
 
    ```java
    package demo.boot;

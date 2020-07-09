@@ -147,7 +147,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    {% include custom/note.html details="The application will fail the integration tests until we include the new PostgreSQL database driver dependency." %}
 
    ```properties
-   # Application Name
+   # Application
    APPLICATION_NAME=contact-us
 
    # Database
@@ -220,7 +220,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
 
    This file can be used to preconfigure the server connections.
 
-   Create file `docker/pgadmin4/servers.json`
+   Create file: `docker/pgadmin4/servers.json`
 
    ```json
    {
@@ -309,7 +309,7 @@ The database is setup and ready to be used by our application.
 
 1. Replace the database dependency
 
-   Update file `build.gradle`, delete the H2 database driver
+   Update file: `build.gradle`, delete the H2 database driver
 
    ```groovy
      runtimeOnly 'com.h2database:h2'

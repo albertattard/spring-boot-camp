@@ -75,7 +75,7 @@ permalink: docs/primer/demo/all-offices/
 
    Add the service skeleton (_just enough to make the test compiles_).
 
-   Create file `src/main/java/demo/boot/ContactUsService.java`
+   Create file: `src/main/java/demo/boot/ContactUsService.java`
 
    ```java
    package demo.boot;
@@ -104,7 +104,7 @@ permalink: docs/primer/demo/all-offices/
 
 1. Implement the service
 
-   Update file `src/main/java/demo/boot/ContactUsService.java`
+   Update file: `src/main/java/demo/boot/ContactUsService.java`
 
    ```java
    package demo.boot;
@@ -314,7 +314,7 @@ permalink: docs/primer/demo/all-offices/
 
 1. Update the test `ContactUsApplicationTests`, as this is expecting only one office
 
-   Update file `src/test/java/demo/boot/ContactUsApplicationTests.java`
+   Update file: `src/test/java/demo/boot/ContactUsApplicationTests.java`
 
    ```java
    package demo.boot;

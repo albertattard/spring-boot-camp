@@ -43,7 +43,7 @@ Note that while we are not adding any actual code, the method name has logic bou
 
    {% include custom/note.html details="Our new test will interact with a <a href='https://www.postgresql.org/'>PostgreSQL</a> database, thus it is an integration test." %}
 
-   Update file `src/test-integration/java/demo/boot/OfficesRepositoryTest.java`
+   Update file: `src/test-integration/java/demo/boot/OfficesRepositoryTest.java`
 
    ```java
    package demo.boot;

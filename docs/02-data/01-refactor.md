@@ -63,7 +63,7 @@ We can perform the refactoring either using IntelliJ or rename the file manually
 
    1. Implement the new interface
 
-      Update file `src/main/java/demo/boot/CsvContactUsService.java`
+      Update file: `src/main/java/demo/boot/CsvContactUsService.java`
 
       ```java
       package demo.boot;
@@ -97,7 +97,7 @@ We can perform the refactoring either using IntelliJ or rename the file manually
 
       1. Refactor the `OfficeController` class
 
-         Update file `src/main/java/demo/boot/OfficeController.java`
+         Update file: `src/main/java/demo/boot/OfficeController.java`
 
          Make sure that the `OfficeController` uses the interface (`ContactUsService`) and not the implementation (`CsvContactUsService`), as shown next.
 
@@ -129,7 +129,7 @@ We can perform the refactoring either using IntelliJ or rename the file manually
 
       1. Refactor the `OfficeControllerTest` test class
 
-         Update file `src/test/java/demo/boot/OfficeControllerTest.java`
+         Update file: `src/test/java/demo/boot/OfficeControllerTest.java`
 
          Make sure that the `OfficeControllerTest` uses the interface (`ContactUsService`) and not the implementation (`CsvContactUsService`), as shown next.
 
