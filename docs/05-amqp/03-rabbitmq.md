@@ -115,3 +115,18 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    Creating contact-us-prometheus ... done
    Creating contact-us-pg         ... done
    ```
+
+1. Access RabbitMQ Management: [http://localhost:15672/#/queues](http://localhost:15672/#/queues)
+
+   The RabbitMQ management service is using the message queue credentials (`MESSAGE_QUEUE_USERNAME` and `MESSAGE_QUEUE_PASSWORD`) defined in the `.env` file.
+
+   | Property | Environment Variable      | Value                |
+   | -------- | ------------------------- | -------------------- |
+   | Username | `MESSAGE_QUEUE_USERNAME`  | `tw-data`            |
+   | Password | `MESSAGE_QUEUE_PASSWORD`  | `SomeRandomPassword` |
+
+   ![RabbitMQ-Login.png]({{ '/assets/images/RabbitMQ-Login.png' | absolute_url }})
+
+   RabbitMQ will show the queues, configured before (in file `docker/rabbitmq/definitions.json`).
+
+   ![RabbitMQ-Queues-Empty.png]({{ '/assets/images/RabbitMQ-Queues-Empty.png' | absolute_url }})

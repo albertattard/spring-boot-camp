@@ -175,7 +175,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    Creating contact-us-pg       ... done
    ```
 
-1. Access PgAdmin; [http://localhost:8000/](http://localhost:8000/)
+1. Access PgAdmin: [http://localhost:8000/](http://localhost:8000/)
 
    PgAmin is using the database credentials (`DATABASE_USERNAME` and `DATABASE_PASSWORD`) defined in the `.env` file.
 
