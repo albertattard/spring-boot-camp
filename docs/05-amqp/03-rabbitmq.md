@@ -1,9 +1,15 @@
 ---
 layout: default
 title: RabbitMQ
+description: Setup RabbitMQ and RabbitMQ Management using docker compose
 parent: Advanced Message Queuing Protocol
 nav_order: 3
 permalink: docs/amqp/rabbit-mq/
+lang: en
+social:
+  name: Albert Attard
+  links:
+    - https://www.linkedin.com/in/javacreed/
 ---
 
 # RabbitMQ
