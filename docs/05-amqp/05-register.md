@@ -18,3 +18,13 @@ permalink: docs/amqp/register/
 {:toc}
 
 ---
+
+
+
+1. Create new `event` package
+
+   ```bash
+   $ mkdir src/main/java/demo/boot/event
+   $ mkdir src/test/java/demo/boot/event
+   $ mkdir src/test-integration/java/demo/boot/event
+   ```

@@ -11,7 +11,7 @@ permalink: docs/amqp/refactor/
 # Reorganise classes
 {: .no_toc }
 
-Upto now, all classes are placed into one package, `demo.boot`.  This worked well as we only had one feature, that is managing offices.  Now we will introduce a new feature, managing events.
+Up to now, all classes are placed into one package, `demo.boot`.  This worked well as we only had one feature, that is, managing offices.  Now we will introduce a new feature, managing events.  While we can keep all class in one package, that can become hard to navigate.
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -108,13 +108,11 @@ Upto now, all classes are placed into one package, `demo.boot`.  This worked wel
                └── OfficesRepositoryTest.java
    ```
 
-1. Create new `event` package
+1. Remove unnecessary imports
 
-   ```bash
-   $ mkdir src/main/java/demo/boot/event
-   $ mkdir src/test/java/demo/boot/event
-   $ mkdir src/test-integration/java/demo/boot/event
-   ```
+   While moving classes around, unnecessary imports may have been added to some of the classes by the IDE.  Right click on the _src_ folder and then select _Optimize Imports_
+
+   ![Contact-Us-Organise-Imports.png]({{ '/assets/images/Contact-Us-Organise-Imports.png' | absolute_url }})
 
 1. Build the project
 
