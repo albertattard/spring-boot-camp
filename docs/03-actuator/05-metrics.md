@@ -1787,6 +1787,12 @@ Our application is now exposing the `/prometheus` endpoint.  All we have left is
          - --config.file=/etc/prometheus/prometheus.yaml
        volumes:
          - ./docker/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+       healthcheck:
+         test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/"]
+         interval: 30s
+         timeout: 5s
+         retries: 5
+         start_period: 30s
    ```
 
    Our Prometheus service defined above will mount the `docker/prometheus/prometheus.yaml` defined before.
