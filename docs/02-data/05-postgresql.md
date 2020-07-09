@@ -60,7 +60,7 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
          POSTGRES_DB: ${DATABASE_NAME}
        healthcheck:
          test: ["CMD", "pg_isready", "-U", "postgres", "-d", "${DATABASE_NAME}"]
-         interval: 10s
+         interval: 30s
          timeout: 5s
          retries: 5
          start_period: 30s
@@ -70,13 +70,19 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
        restart: unless-stopped
        networks:
          - app-net
+       ports:
+         - 8000:80
        volumes:
          - ./docker/pgadmin4/servers.json:/pgadmin4/servers.json:ro
        environment:
          PGADMIN_DEFAULT_EMAIL: ${DATABASE_USERNAME}
          PGADMIN_DEFAULT_PASSWORD: ${DATABASE_PASSWORD}
-       ports:
-         - "8000:80"
+       healthcheck:
+         test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+         interval: 30s
+         timeout: 5s
+         retries: 5
+         start_period: 30s
    networks:
      app-net:
        driver: bridge
@@ -102,9 +108,10 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
             POSTGRES_DB: ${DATABASE_NAME}
           healthcheck:
             test: ["CMD", "pg_isready", "-U", "postgres", "-d", "${DATABASE_NAME}"]
-            interval: 10s
+            interval: 30s
             timeout: 5s
             retries: 5
+            start_period: 30s
       ```
 
    1. The `pgadmin4` service
@@ -116,13 +123,19 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
           restart: unless-stopped
           networks:
             - app-net
+          ports:
+            - 8000:80
           volumes:
             - ./docker/pgadmin4/servers.json:/pgadmin4/servers.json:ro
           environment:
             PGADMIN_DEFAULT_EMAIL: ${DATABASE_USERNAME}
             PGADMIN_DEFAULT_PASSWORD: ${DATABASE_PASSWORD}
-          ports:
-            - "8000:80"
+          healthcheck:
+            test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+            interval: 30s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
       ```
 
    Both services make use of the same `.env` file.  This ensures that the database and our application refer to the same credentials and saves us the hassle of syncing all parts.
@@ -134,6 +147,10 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
    {% include custom/note.html details="The application will fail the integration tests until we include the new PostgreSQL database driver dependency." %}
 
    ```properties
+   # Application Name
+   APPLICATION_NAME=contact-us
+
+   # Database
    DATABASE_NAME=contact-us
    DATABASE_PORT=5432
    DATABASE_URL=jdbc:postgresql://localhost:5432/contact-us
@@ -186,13 +203,19 @@ We can take advantage of [docker](https://docs.docker.com/) and [docker compose]
           restart: unless-stopped
           networks:
             - app-net
+          ports:
+            - 8000:80
           volumes:
             - ./docker/pgadmin4/servers.json:/pgadmin4/servers.json:ro
           environment:
             PGADMIN_DEFAULT_EMAIL: ${DATABASE_USERNAME}
             PGADMIN_DEFAULT_PASSWORD: ${DATABASE_PASSWORD}
-          ports:
-            - "8000:80"
+          healthcheck:
+            test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+            interval: 30s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
       ```
 
    This file can be used to preconfigure the server connections.
