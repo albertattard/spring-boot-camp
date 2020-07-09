@@ -75,6 +75,20 @@ The service will process the registration and will reply to the controller.  The
 
 ![Contact-Us-Controller-Service-Exchange-Of-Objects.png]({{ '/assets/images/Contact-Us-Controller-Service-Exchange-Of-Objects.png' | absolute_url }})
 
+The service will use a repository to interact with the database.  The object that is received from the controller is mapped to an entity, which is then passed to the repository.  The service needs to first verify that the event exists and is not expired.  In these two cases, the service should simply return an empty optional.
+
+{% include custom/pending.html details="Missing image" %}
+
+In this example, we have two entities.
+* Events
+* Attendees
+
+One or more attendees may attend an event.  We need to represent these into two tables, as shown next.
+
+{% include custom/pending.html details="Missing image" %}
+
+We can take advantage of JPA and use one repository to persist both the events and attendees entities.
+
 ## Controller
 
 We will start from the frontend, the controller, and we will work our way back.
@@ -571,4 +585,12 @@ We will start from the frontend, the controller, and we will work our way back.
    }
    ```
 
-The controller is complete.  It parses the request into Java objects and invokes the service and the reply back to the attendee based on the service's response.
+The controller is complete.  It parses the request into Java objects and invokes the service and then reply to the attendee based on the service's response.
+
+## Service
+
+{% include custom/pending.html %}
+
+## Repository
+
+{% include custom/pending.html %}
