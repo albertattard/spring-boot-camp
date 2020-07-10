@@ -131,7 +131,7 @@ We will start from the frontend, the controller, and we will work our way back.
    }
    ```
 
-1. Test for registration for an event that does not exist or has expired
+1. Test registration for an event that does not exist or has expired (happens in the past)
 
    {% include custom/note.html details="From the controller point-of-view expired events are treated the same as event not found.  The service will return an <a href='https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/Optional.html#empty()'>empty optional</a> for both cases." %}
 
@@ -383,7 +383,7 @@ We will start from the frontend, the controller, and we will work our way back.
 
    All tests should now pass.
 
-1. Test for registration for an active event
+1. Test registration for an active event
 
    Update file: `src/test/java/demo/boot/event/EventRegistrationControllerTest.java`
 
@@ -604,7 +604,7 @@ The controller is complete.  It parses the request into Java objects and invokes
    }
    ```
 
-1. Test for registration for an event that does not exist
+1. Test registration for an event that does not exist
 
    {% include custom/note.html details="The service needs two tests to cover events that do not exist and expired events.  In the latter, the repository will return an optional with the expired entity, while in the former case the repository will return an empty optional." %}
 
@@ -658,7 +658,7 @@ The controller is complete.  It parses the request into Java objects and invokes
 
    1. Create file: `src/main/java/demo/boot/event/EventRepository.java`
 
-      {% include custom/note.html details="We are using an <code>Object</code> (<code>extends JpaRepository&lt;Object, UUID&gt;</code>) and not our entity, which is not yet created." %}
+      {% include custom/note.html details="We are using an <code>Object</code> (<code>extends JpaRepository&lt;Object, UUID&gt;</code>) and not our entity, which is not yet created.  We will replace this with a proper entity class later on." %}
 
       ```java
       package demo.boot.event;
@@ -746,6 +746,632 @@ The controller is complete.  It parses the request into Java objects and invokes
    ```
 
    All tests should now pass.
+
+1. Test registration for an expired event
+
+   Update file: `src/test/java/demo/boot/event/EventRegistrationServiceTest.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+
+   import java.time.LocalDate;
+   import java.util.Optional;
+   import java.util.UUID;
+
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   import static org.mockito.ArgumentMatchers.eq;
+   import static org.mockito.Mockito.mock;
+   import static org.mockito.Mockito.times;
+   import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.verifyNoMoreInteractions;
+   import static org.mockito.Mockito.when;
+
+   @DisplayName( "Event registration service" )
+   public class EventRegistrationServiceTest {
+
+     @Test
+     @DisplayName( "should return Optional empty when registering to an non existing event" )
+     public void shouldReturnOptionalEmptyWhenNotFound() { /* ... */ }
+
+     @Test
+     @DisplayName( "should return Optional empty when registering to an expired event" )
+     public void shouldReturnOptionalEmptyWhenExpired() {
+       final EventRepository eventRepository = mock( EventRepository.class );
+       final EventEntity eventEntity = mock( EventEntity.class );
+
+       final UUID eventId = UUID.randomUUID();
+       final String name = "Jade Attard";
+       final FoodPreference foodPreference = FoodPreference.VEGETARIAN;
+       final RegistrationDetails details = new RegistrationDetails( eventId, name, foodPreference );
+
+       when( eventRepository.findById( eq( eventId ) ) ).thenReturn( Optional.of( eventEntity ) );
+       when( eventEntity.getDate() ).thenReturn( LocalDate.now().minusDays( 1 ) );
+
+       final EventRegistrationService service = new EventRegistrationService( eventRepository );
+       final Optional<RegistrationConfirmation> confirmation = service.register( details );
+       assertEquals( Optional.empty(), confirmation );
+
+       verify( eventRepository, times( 1 ) ).findById( eventId );
+       verify( eventEntity, times( 1 ) ).getDate();
+       verifyNoMoreInteractions( eventRepository, eventEntity );
+     }
+   }
+   ```
+
+   Make the test compile.
+
+   1. Create file: `src/main/java/demo/boot/event/EventEntity.java`
+
+      {% include custom/note.html details="While the following class will be used as an entity, we are not yet using and JPA annotations.  We do not need these annotations yet and our service can work well without these annotations.  We will implement them when we cover the <a href='#repository'>repository</a>." %}
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.Data;
+
+      import java.time.LocalDate;
+
+      @Data
+      public class EventEntity {
+
+        private LocalDate date;
+      }
+      ```
+
+   1. Update file: `src/main/java/demo/boot/event/EventRepository.java`
+
+      ```java
+      package demo.boot.event;
+
+      import org.springframework.data.jpa.repository.JpaRepository;
+
+      import java.util.UUID;
+
+      public interface EventRepository extends JpaRepository<EventEntity, UUID> {
+      }
+      ```
+
+   The test should now compile. Run the test.
+
+   ```bash
+   $ ./gradlew clean test
+
+   ...
+
+   Event registration service > should return Optional empty when registering to an expired event FAILED
+       org.mockito.exceptions.verification.WantedButNotInvoked at EventRegistrationServiceTest.java:60
+
+   ...
+
+   BUILD FAILED in 9s
+   5 actionable tasks: 5 executed
+   ```
+
+1. Make the test pass
+
+   Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+   {% include custom/note.html details="The following example simply makes teh test pass.  Later on we make good use of the event date." %}
+
+   ```java
+   package demo.boot.event;
+
+   import lombok.AllArgsConstructor;
+
+   import java.util.Optional;
+
+   @AllArgsConstructor
+   public class EventRegistrationService {
+
+     private final EventRepository repository;
+
+     public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
+       repository
+         .findById( registration.getEventId() )
+         .ifPresent( EventEntity::getDate )
+       ;
+       return Optional.empty();
+     }
+   }
+   ```
+
+   Run the tests.
+
+   ```bash
+   $ ./gradlew clean test
+
+   ...
+
+   BUILD SUCCESSFUL in 7s
+   5 actionable tasks: 5 executed
+   ```
+
+   All tests should now pass.
+
+1. Test registration for an active event
+
+   Update file: `src/test/java/demo/boot/event/EventRegistrationServiceTest.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+
+   import java.time.LocalDate;
+   import java.util.Optional;
+   import java.util.UUID;
+
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   import static org.junit.jupiter.api.Assertions.assertTrue;
+   import static org.mockito.ArgumentMatchers.eq;
+   import static org.mockito.Mockito.doNothing;
+   import static org.mockito.Mockito.mock;
+   import static org.mockito.Mockito.times;
+   import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.verifyNoMoreInteractions;
+   import static org.mockito.Mockito.when;
+
+   @DisplayName( "Event registration service" )
+   public class EventRegistrationServiceTest {
+
+     @Test
+     @DisplayName( "should return Optional empty when registering to an non existing event" )
+     public void shouldReturnOptionalEmptyWhenNotFound() { /* ... */ }
+
+     @Test
+     @DisplayName( "should return Optional empty when registering to an expired event" )
+     public void shouldReturnOptionalEmptyWhenExpired() { /* ... */ }
+
+     @Test
+     @DisplayName( "should return the registration confirmation when registering to an active event" )
+     public void shouldReturnConfirmationWhenActive() {
+       final EventRepository eventRepository = mock( EventRepository.class );
+       final EventEntity eventEntity = mock( EventEntity.class );
+       final UuidGeneratorService uuidGeneratorService = mock( UuidGeneratorService.class );
+
+       final UUID eventId = UUID.randomUUID();
+       final UUID attendeeId = UUID.randomUUID();
+       final String name = "Aden Attard";
+       final FoodPreference foodPreference = FoodPreference.VEGAN;
+       final RegistrationDetails details = new RegistrationDetails( eventId, name, foodPreference );
+       final EventAttendeeEntity attendeeEntity = new EventAttendeeEntity( attendeeId, name, foodPreference, eventEntity );
+
+       when( eventRepository.findById( eq( eventId ) ) ).thenReturn( Optional.of( eventEntity ) );
+       when( eventEntity.getDate() ).thenReturn( LocalDate.now().plusDays( 1 ) );
+       when( uuidGeneratorService.nextAttendeeId() ).thenReturn( attendeeId );
+       doNothing().when( eventEntity ).addAttendee( attendeeEntity );
+       when( eventRepository.save( eq( eventEntity ) ) ).thenReturn( eventEntity );
+
+       final EventRegistrationService service = new EventRegistrationService( eventRepository );
+       final Optional<RegistrationConfirmation> confirmation = service.register( details );
+       assertEquals( Optional.of( new RegistrationConfirmation( attendeeId ) ), confirmation );
+
+       verify( eventRepository, times( 1 ) ).findById( eventId );
+       verify( eventEntity, times( 1 ) ).getDate();
+       verify( uuidGeneratorService, times( 1 ) ).nextAttendeeId();
+       verify( eventEntity, times( 1 ) ).addAttendee( attendeeEntity );
+       verify( eventRepository, times( 1 ) ).save( eventEntity );
+       verifyNoMoreInteractions( eventRepository, eventEntity, uuidGeneratorService );
+     }
+   }
+   ```
+
+   This test is more complicated than the previous two.  When we register a new attendee, we need to create a new entity objects and also create an id (of type `UUID`).  If we create this from within the service's `regiater()` method, then we will have no way to asscertain that the right objects are used and passed around.
+
+   To address this problem, we need to have a new service that generates the ids for us.  Having a service that provides this, we can mock the service and control its behaviour for our tests.
+
+   Make the test compile.
+
+   1. Create file: `src/main/java/demo/boot/event/UuidGeneratorService.java`
+
+      ```java
+      package demo.boot.event;
+
+      import java.util.UUID;
+
+      public class UuidGeneratorService {
+        public UUID nextAttendeeId() {
+          return UUID.randomUUID();
+        }
+      }
+      ```
+
+      While it is heigly improbable to produce the same UUID twice, it is important to check that our UUIDs are unique and once produces we are certain that these are not reproduced.  We can do that by saving all generated ids in a dedicated table (such as `generated_ids`) and check with the table before returning the newly generated id.  This will ensure that an ID is only generated once
+
+   1. Create file: `src/main/java/demo/boot/event/EventAttendeeEntity.java`
+
+      {% include custom/note.html details="While the following class will be used as an entity, we are not yet using and JPA annotations.  We do not need these annotations yet and our service can work well without these annotations.  We will implement them when we cover the <a href='#repository'>repository</a>." %}
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.AllArgsConstructor;
+      import lombok.Data;
+      import lombok.NoArgsConstructor;
+
+      import java.util.UUID;
+
+      @Data
+      @NoArgsConstructor
+      @AllArgsConstructor
+      public class EventAttendeeEntity {
+
+        private UUID id;
+        private String name;
+        private FoodPreference foodPreference;
+        private EventEntity event;
+      }
+      ```
+
+   1. Update file: `src/main/java/demo/boot/event/EventEntity.java`
+
+      {% include custom/note.html details="We do not need to add functionality to the <code>addAttendee()</code> method.  We will implement this method when we cover the <a href='#repository'>repository</a>." %}
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.Data;
+
+      import java.time.LocalDate;
+
+      @Data
+      public class EventEntity {
+
+        private LocalDate date;
+
+        public void addAttendee( final EventAttendeeEntity attendee ) {
+        }
+      }
+      ```
+
+   The test should now compile. Run the test.
+
+   ```bash
+   $ ./gradlew clean test
+
+   ...
+
+   Event registration service > should return the registration confirmation when registering to an active event FAILED
+       org.opentest4j.AssertionFailedError at EventRegistrationServiceTest.java:87
+
+   ...
+
+   BUILD FAILED in 7s
+   5 actionable tasks: 5 executed
+   ```
+
+   The test will fail, as expected.
+
+1. Make the test pass
+
+   This test requires a long and complicated change.  We will do it in several iterations.  Most of the changes shown next apply to the same file, `src/main/java/demo/boot/event/EventRegistrationService.java`.
+
+   1. Filter expired events
+
+      Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+      Replace
+
+      ```java
+            .ifPresent( EventEntity::getDate )
+      ```
+
+      with
+
+      ```java
+            .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
+      ```
+
+      Following is the complete example.
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.AllArgsConstructor;
+
+      import java.time.LocalDate;
+      import java.util.Optional;
+
+      @AllArgsConstructor
+      public class EventRegistrationService {
+
+        private final EventRepository repository;
+
+        public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
+          repository
+            .findById( registration.getEventId() )
+            .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
+          ;
+          return Optional.empty();
+        }
+      }
+      ```
+
+      Run the tests.  **The same tests should fail**.
+
+   1. Create new entity
+
+      Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.AllArgsConstructor;
+
+      import java.time.LocalDate;
+      import java.util.Optional;
+
+      @AllArgsConstructor
+      public class EventRegistrationService {
+
+        private final EventRepository repository;
+
+        public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
+          repository
+            .findById( registration.getEventId() )
+            .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
+            .map( event -> {
+              final EventAttendeeEntity attendee = new EventAttendeeEntity();
+              // attendee.setId(  ); /* TODO: we need to get this from a service */
+              attendee.setName( registration.getName() );
+              attendee.setFoodPreference( registration.getFoodPreference() );
+              attendee.setEvent( event );
+              event.addAttendee( attendee );
+              /* TODO: Save event through the repository */
+              return attendee;
+            } );
+          ;
+          return Optional.empty();
+        }
+      }
+      ```
+
+      The above change requires the id service.  Run the tests and confirm that the same test fail, while all other still pass.
+
+   1. Use the `UuidGeneratorService` service
+
+      We need to modify two files.
+
+      Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+      {% include custom/project_dose_not_compile.html %}
+
+      Add the property
+
+      ```java
+        private final UuidGeneratorService uuidGeneratorService;
+      ```
+
+      Following is the complete example.
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.AllArgsConstructor;
+
+      import java.time.LocalDate;
+      import java.util.Optional;
+
+      @AllArgsConstructor
+      public class EventRegistrationService {
+
+        private final EventRepository repository;
+        private final UuidGeneratorService uuidGeneratorService;
+
+        public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) { /* ... */ }
+      }
+      ```
+
+      The above change will break our test class, `EventRegistrationServiceTest`
+
+      Add the new service, `UuidGeneratorService`, to the `EventRegistrationService` constructor.  This effects all three tests.  Furthermore, the `UuidGeneratorService` mock is missing in the first two tests, which needs to be added.
+
+      Update file: `src/test/java/demo/boot/event/EventRegistrationServiceTest.java`
+
+      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
+
+      ```java
+      package demo.boot.event;
+
+      import org.junit.jupiter.api.DisplayName;
+      import org.junit.jupiter.api.Test;
+
+      import java.time.LocalDate;
+      import java.util.Optional;
+      import java.util.UUID;
+
+      import static org.junit.jupiter.api.Assertions.assertEquals;
+      import static org.mockito.ArgumentMatchers.eq;
+      import static org.mockito.Mockito.doNothing;
+      import static org.mockito.Mockito.mock;
+      import static org.mockito.Mockito.times;
+      import static org.mockito.Mockito.verify;
+      import static org.mockito.Mockito.verifyNoMoreInteractions;
+      import static org.mockito.Mockito.when;
+
+      @DisplayName( "Event registration service" )
+      public class EventRegistrationServiceTest {
+
+        @Test
+        @DisplayName( "should return Optional empty when registering to an non existing event" )
+        public void shouldReturnOptionalEmptyWhenNotFound() {
+          final EventRepository eventRepository = mock( EventRepository.class );
+      /**/final UuidGeneratorService uuidGeneratorService = mock( UuidGeneratorService.class );
+
+          final UUID eventId = UUID.randomUUID();
+          final String name = "Aden Attard";
+          final FoodPreference foodPreference = FoodPreference.MEAT;
+          final RegistrationDetails details = new RegistrationDetails( eventId, name, foodPreference );
+
+          when( eventRepository.findById( eq( eventId ) ) ).thenReturn( Optional.empty() );
+
+      /**/final EventRegistrationService service = new EventRegistrationService( eventRepository, uuidGeneratorService );
+          final Optional<RegistrationConfirmation> confirmation = service.register( details );
+          assertEquals( Optional.empty(), confirmation );
+
+          verify( eventRepository, times( 1 ) ).findById( eventId );
+      /**/verifyNoMoreInteractions( eventRepository, uuidGeneratorService );
+        }
+
+        @Test
+        @DisplayName( "should return Optional empty when registering to an expired event" )
+        public void shouldReturnOptionalEmptyWhenExpired() {
+          final EventRepository eventRepository = mock( EventRepository.class );
+          final EventEntity eventEntity = mock( EventEntity.class );
+      /**/final UuidGeneratorService uuidGeneratorService = mock( UuidGeneratorService.class );
+
+          final UUID eventId = UUID.randomUUID();
+          final String name = "Jade Attard";
+          final FoodPreference foodPreference = FoodPreference.VEGETARIAN;
+          final RegistrationDetails details = new RegistrationDetails( eventId, name, foodPreference );
+
+          when( eventRepository.findById( eq( eventId ) ) ).thenReturn( Optional.of( eventEntity ) );
+          when( eventEntity.getDate() ).thenReturn( LocalDate.now().minusDays( 1 ) );
+
+      /**/final EventRegistrationService service = new EventRegistrationService( eventRepository, uuidGeneratorService );
+          final Optional<RegistrationConfirmation> confirmation = service.register( details );
+          assertEquals( Optional.empty(), confirmation );
+
+          verify( eventRepository, times( 1 ) ).findById( eventId );
+          verify( eventEntity, times( 1 ) ).getDate();
+      /**/verifyNoMoreInteractions( eventRepository, eventEntity, uuidGeneratorService );
+        }
+
+        @Test
+        @DisplayName( "should return the registration confirmation when registering to an active event" )
+        public void shouldReturnConfirmationWhenActive() {
+          final EventRepository eventRepository = mock( EventRepository.class );
+          final EventEntity eventEntity = mock( EventEntity.class );
+          final UuidGeneratorService uuidGeneratorService = mock( UuidGeneratorService.class );
+
+          final UUID eventId = UUID.randomUUID();
+          final UUID attendeeId = UUID.randomUUID();
+          final String name = "Aden Attard";
+          final FoodPreference foodPreference = FoodPreference.VEGAN;
+          final RegistrationDetails details = new RegistrationDetails( eventId, name, foodPreference );
+          final EventAttendeeEntity attendeeEntity = new EventAttendeeEntity( attendeeId, name, foodPreference, eventEntity );
+
+          when( eventRepository.findById( eq( eventId ) ) ).thenReturn( Optional.of( eventEntity ) );
+          when( eventEntity.getDate() ).thenReturn( LocalDate.now().plusDays( 1 ) );
+          when( uuidGeneratorService.nextAttendeeId() ).thenReturn( attendeeId );
+          doNothing().when( eventEntity ).addAttendee( attendeeEntity );
+          when( eventRepository.save( eq( eventEntity ) ) ).thenReturn( eventEntity );
+
+      /**/final EventRegistrationService service = new EventRegistrationService( eventRepository, uuidGeneratorService );
+          final Optional<RegistrationConfirmation> confirmation = service.register( details );
+          assertEquals( Optional.of( new RegistrationConfirmation( attendeeId ) ), confirmation );
+
+          verify( eventRepository, times( 1 ) ).findById( eventId );
+          verify( eventEntity, times( 1 ) ).getDate();
+          verify( uuidGeneratorService, times( 1 ) ).nextAttendeeId();
+          verify( eventEntity, times( 1 ) ).addAttendee( attendeeEntity );
+          verify( eventRepository, times( 1 ) ).save( eventEntity );
+          verifyNoMoreInteractions( eventRepository, eventEntity, uuidGeneratorService );
+        }
+      }
+      ```
+
+      The project should now compile.  Run the tests again.  The same test is still expected to fail.
+
+   1. Generate the attendee id
+
+      Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.AllArgsConstructor;
+
+      import java.time.LocalDate;
+      import java.util.Optional;
+
+      @AllArgsConstructor
+      public class EventRegistrationService {
+
+        private final EventRepository repository;
+        private final UuidGeneratorService uuidGeneratorService;
+
+        public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
+          repository
+            .findById( registration.getEventId() )
+            .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
+            .map( event -> {
+              final EventAttendeeEntity attendee = new EventAttendeeEntity();
+      /**/    attendee.setId( uuidGeneratorService.nextAttendeeId() );
+              attendee.setName( registration.getName() );
+              attendee.setFoodPreference( registration.getFoodPreference() );
+              attendee.setEvent( event );
+              event.addAttendee( attendee );
+              /* TODO: Save event through the repository */
+              return attendee;
+            } );
+          ;
+          return Optional.empty();
+        }
+      }
+      ```
+
+      Run the tests again.  The same test is still expected to fail.
+
+   1. Return the confirmation
+
+      Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.AllArgsConstructor;
+
+      import java.time.LocalDate;
+      import java.util.Optional;
+
+      @AllArgsConstructor
+      public class EventRegistrationService {
+
+        private final EventRepository repository;
+        private final UuidGeneratorService uuidGeneratorService;
+
+        public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
+      /**/return repository
+            .findById( registration.getEventId() )
+            .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
+            .map( event -> {
+              final EventAttendeeEntity attendee = new EventAttendeeEntity();
+              attendee.setId( uuidGeneratorService.nextAttendeeId() );
+              attendee.setName( registration.getName() );
+              attendee.setFoodPreference( registration.getFoodPreference() );
+              attendee.setEvent( event );
+              event.addAttendee( attendee );
+              /* TODO: Save event through the repository */
+              return attendee;
+            } )
+      /**/  .map( attendee -> new RegistrationConfirmation( attendee.getId() ) )
+            ;
+      /* DELETE: return Optional.empty(); */
+        }
+      }
+      ```
+
+      Our implementation is now returning the confirmation together with the generated attendee id.  The same test should still fail as we are not saving the event yet.
+
+   1. Save the event
+
+      Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
+
+      ```java
+      ```
+
+
 
 ## Repository
 
