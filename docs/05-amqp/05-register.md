@@ -1081,8 +1081,6 @@ The controller is ready and the service is next in line.
 
       Following is the complete example.
 
-      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
-
       ```java
       package demo.boot.event;
 
@@ -1111,8 +1109,6 @@ The controller is ready and the service is next in line.
    1. Create new entity.
 
       Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
-
-      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
 
       ```java
       package demo.boot.event;
@@ -1165,8 +1161,6 @@ The controller is ready and the service is next in line.
 
       Following is the complete example.
 
-      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
-
       ```java
       package demo.boot.event;
 
@@ -1190,8 +1184,6 @@ The controller is ready and the service is next in line.
       Add the new service, `UuidGeneratorService`, to the `EventRegistrationService` constructor.  This effect all three tests.  Furthermore, the `UuidGeneratorService` mock is missing in the first two tests, which needs to be added.
 
       Update file: `src/test/java/demo/boot/event/EventRegistrationServiceTest.java`
-
-      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
 
       ```java
       package demo.boot.event;
@@ -1300,8 +1292,6 @@ The controller is ready and the service is next in line.
 
       Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
 
-      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
-
       ```java
       package demo.boot.event;
 
@@ -1341,8 +1331,6 @@ The controller is ready and the service is next in line.
    1. Return the confirmation
 
       Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
-
-      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
 
       ```java
       package demo.boot.event;
@@ -1384,8 +1372,6 @@ The controller is ready and the service is next in line.
    1. Save the event
 
       Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
-
-      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
 
       ```java
       package demo.boot.event;
@@ -1438,4 +1424,402 @@ The service is for now complete.  It retrieves the event from the repository and
 
 ## Repository
 
-{% include custom/pending.html %}
+With the [controller](#controller) and [service](#service) ready, we turn our attention on the last part of the puzzle, the repository.
+
+1. Create the database migration script
+
+   Create file: `src/main/resources/db/migration/V3__create_events_and_attendees_tables.sql`
+
+   {% include custom/note.html details="The following migraiton script adds an event which is used later on.  Please make sure that the event id, <code>47705b9b-518b-4dc2-a517-3dbbcab13fe7</code>, is not changed." %}
+
+   ```sql
+   CREATE TABLE "events" (
+     "id"          UUID PRIMARY KEY,
+     "office"      VARCHAR(255) NOT NULL,
+     "date"        DATE NOT NULL,
+     "caption"     VARCHAR(64),
+     "description" VARCHAR(255)
+   );
+
+   CREATE TABLE "events_attendees" (
+     "id"               UUID PRIMARY KEY,
+     "event"            UUID NOT NULL,
+     "name"             VARCHAR(64),
+     "food_preference"  VARCHAR(64)
+   );
+
+   INSERT INTO "events" ("id","office","date","caption","description") VALUES ('47705b9b-518b-4dc2-a517-3dbbcab13fe7','ThoughtWorks Cologne','2077-04-27','Spring Boot','Deep Dive into Spring Boot technologies');
+   ```
+
+   The above [Flyway migration script](https://flywaydb.org/documentation/migrations) creates two tables and adds an event to the events table.
+
+   **Why are we not using foreign keys?**
+
+   Foreign keys will ensure that our data is consisted event at the database level.  Foreign keys were not used here for simplicity.  Furthermore, adding foreign keys will not require any changed to the code.  If you feel bold, please refer to the [PostgreSQL documentation](https://www.postgresql.org/docs/9.2/ddl-constraints.html#DDL-CONSTRAINTS-FK) to see how use foreign keys.
+
+1. Create
+
+   Create file: `src/test-integration/java/demo/boot/event/EventRepositoryTest.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+   import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
+   @DataJpaTest
+   @DisplayName( "Event repository" )
+   @AutoConfigureTestDatabase( replace = AutoConfigureTestDatabase.Replace.NONE )
+   public class EventRepositoryTest {
+
+   }
+   ```
+
+1. Test
+
+   Update file: `src/test-integration/java/demo/boot/event/EventRepositoryTest.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+   import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
+   import java.util.Optional;
+   import java.util.UUID;
+
+   import static org.assertj.core.api.Assertions.assertThat;
+
+   @DataJpaTest
+   @DisplayName( "Event repository" )
+   @AutoConfigureTestDatabase( replace = AutoConfigureTestDatabase.Replace.NONE )
+   public class EventRepositoryTest {
+
+     @Autowired
+     private EventRepository repository;
+
+     @Test
+     @DisplayName( "should return the hard coded event" )
+     public void shouldReturnAll() {
+       final UUID eventId = UUID.fromString( "47705b9b-518b-4dc2-a517-3dbbcab13fe7" );
+       final Optional<EventEntity> optional = repository.findById( eventId );
+       assertThat( optional.isPresent() ).isTrue();
+     }
+   }
+   ```
+
+   ```bash
+   $ ./gradlew clean integrationTest "--tests" "*EventRepositoryTest"
+
+   ...
+
+   Event repository > should return the hard coded event FAILED
+       org.springframework.beans.factory.BeanCreationException at EventRepositoryTest.java:25
+
+   ...
+
+   BUILD FAILED in 8s
+   6 actionable tasks: 6 executed
+   ```
+
+   ```bash
+   $ open "build/reports/tests/integrationTest/classes/demo.boot.event.EventRepositoryTest.html"
+   ```
+
+   ```bash
+   ...
+   Caused by: java.lang.IllegalArgumentException: Not a managed type: class demo.boot.event.EventEntity
+   	 at org.hibernate.metamodel.internal.MetamodelImpl.managedType(MetamodelImpl.java:582)
+   	 at org.hibernate.metamodel.internal.MetamodelImpl.managedType(MetamodelImpl.java:85)
+   ...
+   ```
+
+1. Entity
+
+   Update file: `src/main/java/demo/boot/event/EventEntity.java`
+
+   ```java
+   package demo.boot.event;
+
+   import lombok.Data;
+
+   import javax.persistence.Entity;
+   import javax.persistence.Id;
+   import javax.persistence.Table;
+   import java.time.LocalDate;
+   import java.util.UUID;
+
+   @Data
+   /**/@Entity
+   /**/@Table( name = "events" )
+   public class EventEntity {
+
+   /**/@Id
+   /**/private UUID id;
+     private LocalDate date;
+
+     public void addAttendee( final EventAttendeeEntity attendee ) {
+     }
+   }
+   ```
+
+   ```bash
+   $ ./gradlew clean integrationTest "--tests" "*EventRepositoryTest"
+
+   ...
+
+   BUILD SUCCESSFUL in 16s
+   6 actionable tasks: 6 executed
+   ```
+
+1. Link to office
+
+   Update file: `src/test-integration/java/demo/boot/event/EventRepositoryTest.java`
+
+   {% include custom/dose_not_compile.html %}
+
+   ```java
+   package demo.boot.event;
+
+   import demo.boot.office.OfficeEntity;
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+   import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
+   import java.util.Optional;
+   import java.util.UUID;
+
+   import static org.assertj.core.api.Assertions.assertThat;
+
+   @DataJpaTest
+   @DisplayName( "Event repository" )
+   @AutoConfigureTestDatabase( replace = AutoConfigureTestDatabase.Replace.NONE )
+   public class EventRepositoryTest {
+
+     @Autowired
+     private EventRepository repository;
+
+   /**/private static final OfficeEntity COLOGNE = new OfficeEntity(
+   /**/  "ThoughtWorks Cologne",
+   /**/  "Lichtstr. 43i, 50825 Cologne, Germany",
+   /**/  "Germany",
+   /**/  "+49 221 64 30 70 63",
+   /**/  "contact-de@thoughtworks.com",
+   /**/  "https://www.thoughtworks.com/locations/cologne"
+   /**/);
+
+     @Test
+     @DisplayName( "should return the hard coded event" )
+     public void shouldReturnAll() {
+       final UUID eventId = UUID.fromString( "47705b9b-518b-4dc2-a517-3dbbcab13fe7" );
+       final Optional<EventEntity> optional = repository.findById( eventId );
+       assertThat( optional.isPresent() ).isTrue();
+
+   /**/final EventEntity entity = optional.get();
+   /**/assertThat( entity.getOffice() ).isEqualTo( COLOGNE );
+     }
+   }
+   ```
+
+   Update file: `src/main/java/demo/boot/event/EventEntity.java`
+
+   ```java
+   package demo.boot.event;
+
+   import demo.boot.office.OfficeEntity;
+   import lombok.Data;
+
+   import javax.persistence.Entity;
+   import javax.persistence.Id;
+   import javax.persistence.JoinColumn;
+   import javax.persistence.ManyToOne;
+   import javax.persistence.Table;
+   import java.time.LocalDate;
+   import java.util.UUID;
+
+   @Data
+   @Entity
+   @Table( name = "events" )
+   public class EventEntity {
+
+     @Id
+     private UUID id;
+     private LocalDate date;
+
+   /**/@ManyToOne
+   /**/@JoinColumn( name = "office", nullable = false )
+   /**/private OfficeEntity office;
+
+     public void addAttendee( final EventAttendeeEntity attendee ) {
+     }
+   }
+   ```
+
+   ```bash
+   $ ./gradlew clean integrationTest "--tests" "*EventRepositoryTest"
+   ...
+   BUILD SUCCESSFUL in 9s
+   6 actionable tasks: 6 executed
+   ```
+
+1. Add attendee
+
+   Update file: `src/test-integration/java/demo/boot/event/EventRepositoryTest.java`
+
+   {% include custom/dose_not_compile.html %}
+
+   ```java
+   package demo.boot.event;
+
+   import demo.boot.office.OfficeEntity;
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+   import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
+   import java.util.List;
+   import java.util.Optional;
+   import java.util.UUID;
+
+   import static org.assertj.core.api.Assertions.assertThat;
+
+   @DataJpaTest
+   @DisplayName( "Event repository" )
+   @AutoConfigureTestDatabase( replace = AutoConfigureTestDatabase.Replace.NONE )
+   public class EventRepositoryTest {
+
+     @Autowired
+     private EventRepository repository;
+
+     private static final OfficeEntity COLOGNE = new OfficeEntity(
+       "ThoughtWorks Cologne",
+       "Lichtstr. 43i, 50825 Cologne, Germany",
+       "Germany",
+       "+49 221 64 30 70 63",
+       "contact-de@thoughtworks.com",
+       "https://www.thoughtworks.com/locations/cologne"
+     );
+
+     @Test
+     @DisplayName( "should return the hard coded event" )
+     public void shouldReturnAll() { /* ... */ }
+
+     @Test
+     @DisplayName( "should add attendee to event" )
+     public void shouldAddAttendeeToEvent() {
+       final UUID eventId = UUID.fromString( "47705b9b-518b-4dc2-a517-3dbbcab13fe7" );
+       final Optional<EventEntity> optional = repository.findById( eventId );
+       assertThat( optional.isPresent() ).isTrue();
+       final EventEntity event = optional.get();
+
+       final EventAttendeeEntity attendee = new EventAttendeeEntity();
+       attendee.setId( UUID.randomUUID() );
+       attendee.setName( "Jade Attard" );
+       attendee.setFoodPreference( FoodPreference.NO_FOOD );
+       attendee.setEvent( event );
+       event.addAttendee( attendee );
+
+       final EventEntity saved = repository.save( event );
+       final List<EventAttendeeEntity> attendees = saved.getAttendees();
+       assertThat( attendees )
+         .isNotNull()
+         .contains( attendee );
+     }
+   }
+   ```
+
+   Update file: `src/main/java/demo/boot/event/EventAttendeeEntity.java`
+
+   ```java
+   package demo.boot.event;
+
+   import lombok.AllArgsConstructor;
+   import lombok.Data;
+   import lombok.NoArgsConstructor;
+
+   import javax.persistence.Entity;
+   import javax.persistence.EnumType;
+   import javax.persistence.Enumerated;
+   import javax.persistence.Id;
+   import javax.persistence.JoinColumn;
+   import javax.persistence.ManyToOne;
+   import javax.persistence.Table;
+   import java.util.UUID;
+
+   @Data
+   /**/@Entity
+   /**/@Table( name = "events_attendees" )
+   @AllArgsConstructor
+   @NoArgsConstructor
+   public class EventAttendeeEntity {
+
+   /**/@Id
+     private UUID id;
+     private String name;
+
+   /**/@Enumerated( EnumType.STRING )
+     private FoodPreference foodPreference;
+
+   /**/@ManyToOne
+   /**/@JoinColumn( name = "event", nullable = false )
+     private EventEntity event;
+   }
+   ```
+
+   Update file: `src/main/java/demo/boot/event/EventEntity.java`
+
+   ```java
+   package demo.boot.event;
+
+   import demo.boot.office.OfficeEntity;
+   import lombok.Data;
+
+   import javax.persistence.CascadeType;
+   import javax.persistence.Entity;
+   import javax.persistence.Id;
+   import javax.persistence.JoinColumn;
+   import javax.persistence.ManyToOne;
+   import javax.persistence.OneToMany;
+   import javax.persistence.Table;
+   import java.time.LocalDate;
+   import java.util.ArrayList;
+   import java.util.List;
+   import java.util.UUID;
+
+   @Data
+   @Entity
+   @Table( name = "events" )
+   public class EventEntity {
+
+     @Id
+     private UUID id;
+     private LocalDate date;
+
+     @ManyToOne
+     @JoinColumn( name = "office", nullable = false )
+     private OfficeEntity office;
+
+   /**/@OneToMany( mappedBy = "event", cascade = CascadeType.ALL )
+   /**/private List<EventAttendeeEntity> attendees = new ArrayList<>();
+
+     public void addAttendee( final EventAttendeeEntity attendee ) {
+   /**/attendees.add( attendee );
+     }
+   }
+   ```
+
+   ```bash
+   $ ./gradlew clean integrationTest "--tests" "*EventRepositoryTest"
+
+   ...
+
+   BUILD SUCCESSFUL in 8s
+   6 actionable tasks: 6 executed
+   ```
