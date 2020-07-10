@@ -77,15 +77,13 @@ The service will process the registration and will reply to the controller.  The
 
 The service will use a repository to interact with the database.  The object that is received from the controller is mapped to an entity, which is then passed to the repository.  The service needs to first verify that the event exists and is not expired.  In these two cases, the service should simply return an empty optional.
 
-{% include custom/pending.html details="Missing image" %}
-
-In this example, we have two entities.
+We have two entities.
 * Events
 * Attendees
 
 One or more attendees may attend an event.  We need to represent these into two tables, as shown next.
 
-{% include custom/pending.html details="Missing image" %}
+![One-Event-Many-Attendees.png]({{ '/assets/images/One-Event-Many-Attendees.png' | absolute_url }})
 
 We can take advantage of JPA and use one repository to persist both the events and attendees entities.
 
