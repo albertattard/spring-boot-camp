@@ -294,7 +294,7 @@ We will start from the frontend, the controller, and we will work our way back.
       }
       ```
 
-   The test should not compile.  Run the test.
+   The test should now compile.  Run the test.
 
    ```bash
    $ ./gradlew clean test
@@ -588,6 +588,164 @@ The controller is complete.  It parses the request into Java objects and invokes
 ## Service
 
 {% include custom/pending.html %}
+
+1. Create test class
+
+   Create file: `src/test/java/demo/boot/event/EventRegistrationServiceTest.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+
+   @DisplayName( "Event registration service" )
+   public class EventRegistrationServiceTest {
+
+   }
+   ```
+
+1. Test for registration for an event that does not exist
+
+   {% include custom/note.html details="The service needs two tests to cover events that do not exist and expired events.  In the latter, the repository will return an optional with the expired entity, while in the former case the repository will return an empty optional." %}
+
+   Update file: `src/test/java/demo/boot/event/EventRegistrationServiceTest.java`
+
+   {% include custom/dose_not_compile.html %}
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+
+   import java.util.Optional;
+   import java.util.UUID;
+
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+   import static org.mockito.ArgumentMatchers.eq;
+   import static org.mockito.Mockito.mock;
+   import static org.mockito.Mockito.times;
+   import static org.mockito.Mockito.verify;
+   import static org.mockito.Mockito.verifyNoMoreInteractions;
+   import static org.mockito.Mockito.when;
+
+   @DisplayName( "Event registration service" )
+   public class EventRegistrationServiceTest {
+
+     @Test
+     @DisplayName( "should return Optional empty when registering to an non existing event" )
+     public void shouldReturnOptionalEmptyWhenNotFound() {
+       final EventRepository eventRepository = mock( EventRepository.class );
+
+       final UUID eventId = UUID.randomUUID();
+       final String name = "Albert Attard";
+       final FoodPreference foodPreference = FoodPreference.MEAT;
+       final RegistrationDetails details = new RegistrationDetails( eventId, name, foodPreference );
+
+       when( eventRepository.findById( eq( eventId ) ) ).thenReturn( Optional.empty() );
+
+       final EventRegistrationService service = new EventRegistrationService( eventRepository );
+       final Optional<RegistrationConfirmation> confirmation = service.register( details );
+       assertEquals( Optional.empty(), confirmation );
+
+       verify( eventRepository, times( 1 ) ).findById( eventId );
+       verifyNoMoreInteractions( eventRepository );
+     }
+   }
+   ```
+
+   Make the test compile.
+
+   1. Create file: `src/main/java/demo/boot/event/EventRepository.java`
+
+      {% include custom/note.html details="We are using an <code>Object</code> (<code>extends JpaRepository&lt;Object, UUID&gt;</code>) and not our entity, which is not yet created." %}
+
+      ```java
+      package demo.boot.event;
+
+      import org.springframework.data.jpa.repository.JpaRepository;
+
+      import java.util.UUID;
+
+      public interface EventRepository extends JpaRepository<Object, UUID> {
+      }
+      ```
+
+   1. Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.AllArgsConstructor;
+
+      import java.util.Optional;
+
+      @AllArgsConstructor
+      public class EventRegistrationService {
+
+        private final EventRepository repository;
+
+        public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
+          return Optional.empty();
+        }
+      }
+      ```
+
+   The test should now compile.  Run the test.
+
+   ```bash
+   $ ./gradlew clean test
+
+   ...
+
+   Event registration service > should return Optional empty when registering to an non existing event FAILED
+       org.mockito.exceptions.verification.WantedButNotInvoked at EventRegistrationServiceTest.java:36
+
+   ...
+
+   BUILD FAILED in 9s
+   5 actionable tasks: 5 executed
+   ```
+
+   The test will fail, as expected.
+
+1. Make the test pass
+
+   Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+   {% include custom/note.html details="The following example is just enough to make the test pass." %}
+
+   ```java
+   package demo.boot.event;
+
+   import lombok.AllArgsConstructor;
+
+   import java.util.Optional;
+
+   @AllArgsConstructor
+   public class EventRegistrationService {
+
+     private final EventRepository repository;
+
+     public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
+       repository.findById( registration.getEventId() );
+       return Optional.empty();
+     }
+   }
+   ```
+
+   Run the tests.
+
+   ```bash
+   ./gradlew clean test
+
+   ...
+
+   BUILD SUCCESSFUL in 7s
+   5 actionable tasks: 5 executed
+   ```
+
+   All tests should now pass.
 
 ## Repository
 
