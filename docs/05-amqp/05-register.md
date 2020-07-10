@@ -587,7 +587,7 @@ The controller is complete.  It parses the request into Java objects and invokes
 
 ## Service
 
-{% include custom/pending.html %}
+The controller is ready and the service is next in line.
 
 1. Create test class
 
@@ -658,7 +658,7 @@ The controller is complete.  It parses the request into Java objects and invokes
 
    1. Create file: `src/main/java/demo/boot/event/EventRepository.java`
 
-      {% include custom/note.html details="We are using an <code>Object</code> (<code>extends JpaRepository&lt;Object, UUID&gt;</code>) and not our entity, which is not yet created.  We will replace this with a proper entity class later on." %}
+      {% include custom/note.html details="We are using an <code>Object</code> (<code>extends JpaRepository&lt;Object, UUID&gt;</code>) and not our entity, which is not yet created.  We will replace this with a proper entity class later on.  We are taking this approach as we want to test the service with the bare minimum code.  Entities will be added and enhances in later stages." %}
 
       ```java
       package demo.boot.event;
@@ -698,7 +698,7 @@ The controller is complete.  It parses the request into Java objects and invokes
 
    ...
 
-   Event registration service > should return Optional empty when registering to an non existing event FAILED
+   Event registration service > should return Optional empty when registering to a non existing event FAILED
        org.mockito.exceptions.verification.WantedButNotInvoked at EventRegistrationServiceTest.java:36
 
    ...
@@ -850,11 +850,13 @@ The controller is complete.  It parses the request into Java objects and invokes
    5 actionable tasks: 5 executed
    ```
 
+   As expected, the test should fail
+
 1. Make the test pass
 
    Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
 
-   {% include custom/note.html details="The following example simply makes teh test pass.  Later on we make good use of the event date." %}
+   {% include custom/note.html details="The following example simply makes the test pass.  Later on, we make good use of the event date.  We are taking this approach so that we only include the bare minimum required just to make the test pass." %}
 
    ```java
    package demo.boot.event;
@@ -894,6 +896,8 @@ The controller is complete.  It parses the request into Java objects and invokes
 1. Test registration for an active event
 
    Update file: `src/test/java/demo/boot/event/EventRegistrationServiceTest.java`
+
+   {% include custom/note.html details="The new test is more complex than the previous two and introduces new classes." %}
 
    ```java
    package demo.boot.event;
@@ -960,9 +964,15 @@ The controller is complete.  It parses the request into Java objects and invokes
    }
    ```
 
-   This test is more complicated than the previous two.  When we register a new attendee, we need to create a new entity objects and also create an id (of type `UUID`).  If we create this from within the service's `regiater()` method, then we will have no way to asscertain that the right objects are used and passed around.
+   This test is more complicated than the previous two.  When we register a new attendee, we need to create a new entity object (of type `EventAttendeeEntity`) and also create an id (of type `UUID`).  If we create this id from within the service's `register()` method, then we will have no way to ascertain that the right objects are used and passed around.
 
-   To address this problem, we need to have a new service that generates the ids for us.  Having a service that provides this, we can mock the service and control its behaviour for our tests.
+   For example, our test ascertains that the correct `` is returned.
+
+   ```java
+       assertEquals( Optional.of( new RegistrationConfirmation( attendeeId ) ), confirmation );
+   ```
+
+   The above assertion would not be possible if we create the id from within the service's `register()` method.  To address this problem, we need to have a new service that generates the ids for us.  Having a service that provides this, we can mock the service and control its behaviour for our tests.
 
    Make the test compile.
 
@@ -980,7 +990,9 @@ The controller is complete.  It parses the request into Java objects and invokes
       }
       ```
 
-      While it is heigly improbable to produce the same UUID twice, it is important to check that our UUIDs are unique and once produces we are certain that these are not reproduced.  We can do that by saving all generated ids in a dedicated table (such as `generated_ids`) and check with the table before returning the newly generated id.  This will ensure that an ID is only generated once
+      While it is highly improbable to produce the same UUID twice, it is important to check that our UUIDs are unique and once produces, we are certain that these UUIDs are not reproduced/reused.  We can do that by saving all generated UUIDs in a dedicated table, such as `generated_ids`, and check with the table before returning the newly generated UUID.  This will ensure that an UUID is only generated once and never reused.
+
+      We are not doing checking for uniqueness in this example, for simplicity.
 
    1. Create file: `src/main/java/demo/boot/event/EventAttendeeEntity.java`
 
@@ -1024,6 +1036,7 @@ The controller is complete.  It parses the request into Java objects and invokes
         private LocalDate date;
 
         public void addAttendee( final EventAttendeeEntity attendee ) {
+          /* TODO: Implement */
         }
       }
       ```
@@ -1050,7 +1063,7 @@ The controller is complete.  It parses the request into Java objects and invokes
 
    This test requires a long and complicated change.  We will do it in several iterations.  Most of the changes shown next apply to the same file, `src/main/java/demo/boot/event/EventRegistrationService.java`.
 
-   1. Filter expired events
+   1. Filter expired events.
 
       Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
 
@@ -1068,6 +1081,8 @@ The controller is complete.  It parses the request into Java objects and invokes
 
       Following is the complete example.
 
+      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
+
       ```java
       package demo.boot.event;
 
@@ -1084,7 +1099,7 @@ The controller is complete.  It parses the request into Java objects and invokes
         public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
           repository
             .findById( registration.getEventId() )
-            .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
+      /**/  .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
           ;
           return Optional.empty();
         }
@@ -1093,9 +1108,11 @@ The controller is complete.  It parses the request into Java objects and invokes
 
       Run the tests.  **The same tests should fail**.
 
-   1. Create new entity
+   1. Create new entity.
 
       Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
 
       ```java
       package demo.boot.event;
@@ -1114,27 +1131,27 @@ The controller is complete.  It parses the request into Java objects and invokes
           repository
             .findById( registration.getEventId() )
             .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
-            .map( event -> {
-              final EventAttendeeEntity attendee = new EventAttendeeEntity();
-              // attendee.setId(  ); /* TODO: we need to get this from a service */
-              attendee.setName( registration.getName() );
-              attendee.setFoodPreference( registration.getFoodPreference() );
-              attendee.setEvent( event );
-              event.addAttendee( attendee );
-              /* TODO: Save event through the repository */
-              return attendee;
-            } );
+      /**/  .map( event -> {
+      /**/    final EventAttendeeEntity attendee = new EventAttendeeEntity();
+      /**/    // attendee.setId(  ); /* TODO: we need to get this from a service */
+      /**/    attendee.setName( registration.getName() );
+      /**/    attendee.setFoodPreference( registration.getFoodPreference() );
+      /**/    attendee.setEvent( event );
+      /**/    event.addAttendee( attendee );
+      /**/    /* TODO: Save event through the repository */
+      /**/    return attendee;
+      /**/  } );
           ;
           return Optional.empty();
         }
       }
       ```
 
-      The above change requires the id service.  Run the tests and confirm that the same test fail, while all other still pass.
+      The above change requires the id service, which we do not have here yet.  Run the tests and confirm that the same test fail, while all other tests still pass.
 
    1. Use the `UuidGeneratorService` service
 
-      We need to modify two files.
+      We need to modify two files this time.
 
       Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
 
@@ -1148,6 +1165,8 @@ The controller is complete.  It parses the request into Java objects and invokes
 
       Following is the complete example.
 
+      {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
+
       ```java
       package demo.boot.event;
 
@@ -1160,7 +1179,7 @@ The controller is complete.  It parses the request into Java objects and invokes
       public class EventRegistrationService {
 
         private final EventRepository repository;
-        private final UuidGeneratorService uuidGeneratorService;
+      /**/private final UuidGeneratorService uuidGeneratorService;
 
         public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) { /* ... */ }
       }
@@ -1168,7 +1187,7 @@ The controller is complete.  It parses the request into Java objects and invokes
 
       The above change will break our test class, `EventRegistrationServiceTest`
 
-      Add the new service, `UuidGeneratorService`, to the `EventRegistrationService` constructor.  This effects all three tests.  Furthermore, the `UuidGeneratorService` mock is missing in the first two tests, which needs to be added.
+      Add the new service, `UuidGeneratorService`, to the `EventRegistrationService` constructor.  This effect all three tests.  Furthermore, the `UuidGeneratorService` mock is missing in the first two tests, which needs to be added.
 
       Update file: `src/test/java/demo/boot/event/EventRegistrationServiceTest.java`
 
@@ -1369,9 +1388,53 @@ The controller is complete.  It parses the request into Java objects and invokes
       {% include custom/note.html details="Lines that were affected are prefixed with <code>/**/</code>.  This should help you identify the effected lines." %}
 
       ```java
+      package demo.boot.event;
+
+      import lombok.AllArgsConstructor;
+
+      import java.time.LocalDate;
+      import java.util.Optional;
+
+      @AllArgsConstructor
+      public class EventRegistrationService {
+
+        private final EventRepository repository;
+        private final UuidGeneratorService uuidGeneratorService;
+
+        public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
+          return repository
+            .findById( registration.getEventId() )
+            .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
+            .map( event -> {
+              final EventAttendeeEntity attendee = new EventAttendeeEntity();
+              attendee.setId( uuidGeneratorService.nextAttendeeId() );
+              attendee.setName( registration.getName() );
+              attendee.setFoodPreference( registration.getFoodPreference() );
+              attendee.setEvent( event );
+              event.addAttendee( attendee );
+      /**/    repository.save( event );
+              return attendee;
+            } )
+            .map( attendee -> new RegistrationConfirmation( attendee.getId() ) )
+            ;
+        }
+      }
       ```
 
+      Our service is finally complete.  Run the test.
 
+      {% include custom/note.html details="We are only running the tests and not the integration tests.  The integration will fail as we have not yet properly implemented the <a href='#repository'>repository</a> and annotated our newly created services." %}
+
+      ```bash
+      $ ./gradlew clean test
+
+      ...
+
+      BUILD SUCCESSFUL in 13s
+      5 actionable tasks: 5 executed
+      ```
+
+The service is for now complete.  It retrieves the event from the repository and if an active event exists then it creates a new attendee.  Finally, it returns the confirmation back to the caller, in our case the [controller](#controller).
 
 ## Repository
 
