@@ -590,3 +590,464 @@ We will start from the service and then we will implement the gateway.
    ```
 
    All three tests should still pass.
+
+The service is ready, and all hooked up.  It invokes the gateway with the food preference after the attendee has successfully registered to an event.  The gateway is still blank and still needs to be implement.
+
+## Gateway
+
+Spring framework provides an [`AmqpTemplate`](https://docs.spring.io/spring-amqp/api/org/springframework/amqp/core/AmqpTemplate.html) which we can use to send messaged to a queue.
+
+1. Add the [AMQP starter](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-amqp) dependency
+
+   Update file: `build.gradle`
+
+   {% include custom/project_dose_not_compile.html %}
+
+   ```groovy
+     /* MQ */
+     implementation 'org.springframework.boot:spring-boot-starter-amqp'
+   ```
+
+   Spring now expects the queue configuration details.
+
+1. Update the application properties
+
+   Update file: `src/main/resources/application.yaml`
+
+   ```yaml
+   spring:
+
+     rabbitmq:
+       host: ${MESSAGE_QUEUE_HOST}
+       port: ${MESSAGE_QUEUE_PORT}
+       username: ${MESSAGE_QUEUE_USERNAME}
+       password: ${MESSAGE_QUEUE_PASSWORD}
+   ```
+
+   Spring use the environment variables [defined in the `.env` file]({{ '/docs/amqp/rabbit-mq/#docker-compose-setup-rabbitmq-management' | absolute_url }}).
+
+1. Start the dependencies (_if these are not already running_)
+
+   {% include custom/proceed_with_caution.html details="The following command will delete <strong>all</strong> stopped containers.  If you do not want to delete old containers, please do not run the <code>docker system prune -f</code> command." %}
+
+   ```bash
+   $ docker-compose stop && docker system prune -f && docker-compose up -d
+   ```
+
+1. Create an integration test
+
+   Create file: `src/test-integration/java/demo/boot/event/EventFoodGatewayTest.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+
+   @DisplayName( "Event food gateway" )
+   public class EventFoodGatewayTest {
+   }
+   ```
+
+1. Add the gateway to the test
+
+   Update file: `src/test-integration/java/demo/boot/event/EventFoodGatewayTest.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.context.SpringBootTest;
+
+   @DisplayName( "Event food gateway" )
+   @SpringBootTest( webEnvironment = SpringBootTest.WebEnvironment.NONE )
+   public class EventFoodGatewayTest {
+
+     @Autowired
+     private EventFoodGateway gateway;
+
+     @Test
+     @DisplayName( "should send the given preference to the queue" )
+     public void shouldSendMessage() {
+     }
+   }
+   ```
+
+   Run the integration test
+
+   ```bash
+   $ ./gradlew clean integrationTest "--tests" "*EventFoodGatewayTest"
+
+   ...
+
+   Event food gateway > should send the given preference to the queue FAILED
+     java.lang.IllegalStateException at DefaultCacheAwareContextLoaderDelegate.java:132
+       Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException at ConstructorResolver.java:798
+         Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException at ConstructorResolver.java:798
+           Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException at DefaultListableBeanFactory.java:1716
+
+   ...
+
+   BUILD FAILED in 9s
+   6 actionable tasks: 6 executed
+   ```
+
+   Spring will fail to wire the `EventFoodGateway`, as shown above.
+
+1. Make the test pass
+
+   Update file: `src/main/java/demo/boot/event/EventFoodGateway.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.springframework.stereotype.Service;
+
+   /**/@Service
+   public class EventFoodGateway { /* ... */ }
+   ```
+
+   Run all tests
+
+   ```bash
+   $ ./gradlew clean check
+
+   ...
+
+   BUILD SUCCESSFUL in 16s
+   7 actionable tasks: 7 executed
+   ```
+
+   {% include custom/note.html details="The integration tests will fail if we miss configure the Rabbit MQ as the health check will return a 503." %}
+
+1. Assert that a message is actually sent to the queue
+
+   Update file: `src/test-integration/java/demo/boot/event/EventFoodGatewayTest.java`
+
+   {% include custom/note.html details="The following test is not asserting anything on purpose." %}
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.context.SpringBootTest;
+
+   import java.util.UUID;
+
+   @DisplayName( "Event food gateway" )
+   @SpringBootTest( webEnvironment = SpringBootTest.WebEnvironment.NONE )
+   public class EventFoodGatewayTest {
+
+     @Autowired
+     private EventFoodGateway gateway;
+
+     @Test
+     @DisplayName( "should send the given preference to the queue" )
+     public void shouldSendMessage() {
+       final AttendeeFoodPreference sent =
+         new AttendeeFoodPreference( UUID.randomUUID(), UUID.randomUUID(), FoodPreference.NO_FOOD );
+
+       gateway.submit( sent );
+     }
+   }
+   ```
+
+   Run the test
+
+   ```bash
+   $ ./gradlew clean integrationTest "--tests" "*EventFoodGatewayTest"
+
+   ...
+
+   BUILD SUCCESSFUL in 9s
+   6 actionable tasks: 6 executed
+   ```
+
+   The test succeeds despite the fact the message is not being sent (as our `EventFoodGateway` is not doing anything).  Update the test and use `AmqpTemplate` to verify that the message is sent.
+
+   Update file: `src/test-integration/java/demo/boot/event/EventFoodGatewayTest.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.junit.jupiter.api.DisplayName;
+   import org.junit.jupiter.api.Test;
+   import org.springframework.amqp.core.AmqpTemplate;
+   import org.springframework.beans.factory.annotation.Autowired;
+   import org.springframework.boot.test.context.SpringBootTest;
+   import org.springframework.core.ParameterizedTypeReference;
+
+   import java.util.UUID;
+
+   import static org.junit.jupiter.api.Assertions.assertEquals;
+
+   @DisplayName( "Event food gateway" )
+   @SpringBootTest( webEnvironment = SpringBootTest.WebEnvironment.NONE )
+   public class EventFoodGatewayTest {
+
+     @Autowired
+     private EventFoodGateway gateway;
+
+     @Autowired
+     private AmqpTemplate template;
+
+     @Test
+     @DisplayName( "should send the given preference to the queue" )
+     public void shouldSendMessage() {
+       final AttendeeFoodPreference sent =
+         new AttendeeFoodPreference( UUID.randomUUID(), UUID.randomUUID(), FoodPreference.NO_FOOD );
+
+       gateway.submit( sent );
+
+       final AttendeeFoodPreference received =
+         template.receiveAndConvert( "food", 5000, ParameterizedTypeReference.forType( AttendeeFoodPreference.class ) );
+       assertEquals( sent, received );
+     }
+   }
+   ```
+
+   The test first submits the food preference using the gateway, then reads the queue using the `AmqpTemplate`.  Running the tests now will fail.
+
+   ```bash
+   $ ./gradlew clean integrationTest "--tests" "*EventFoodGatewayTest"
+
+   ...
+
+   Event food gateway > should send the given preference to the queue FAILED
+       org.opentest4j.AssertionFailedError at EventFoodGatewayTest.java:34
+
+   ...
+
+   BUILD FAILED in 14s
+   6 actionable tasks: 6 executed
+   ```
+
+   The `AmqpTemplate` will timeout as nothing is being sent, and the template will return `null`, as shown next.
+
+   ```bash
+   org.opentest4j.AssertionFailedError: expected: <AttendeeFoodPreference(eventId=e3866e45-94d8-484f-8264-853d0d072490, attendeeId=0a547db1-7e7d-49d4-b1bf-b46d04e2d042, foodPreference=NO_FOOD)> but was: <null>
+     at org.junit.jupiter.api.AssertionUtils.fail(AssertionUtils.java:55)
+     at org.junit.jupiter.api.AssertionUtils.failNotEqual(AssertionUtils.java:62)
+     at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:182)
+     at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:177)
+   ```
+
+1. Make the test pass
+
+   Update file: `src/main/java/demo/boot/event/EventFoodGateway.java`
+
+   {% include custom/note.html details="The queue name is currently hard-coded.  We will parametrise this once we make the test pass." %}
+
+   ```java
+   package demo.boot.event;
+
+   import lombok.AllArgsConstructor;
+   import org.springframework.amqp.core.AmqpTemplate;
+   import org.springframework.stereotype.Service;
+
+   @Service
+   @AllArgsConstructor
+   public class EventFoodGateway {
+
+     private final AmqpTemplate template;
+
+     public void submit( final AttendeeFoodPreference preference ) {
+   /**/template.convertAndSend( "food", preference );
+     }
+   }
+   ```
+
+   Run the test
+
+   ```bash
+   $ ./gradlew clean integrationTest "--tests" "*EventFoodGatewayTest"
+
+   ...
+
+   Event food gateway > should send the given preference to the queue FAILED
+     java.lang.IllegalArgumentException at EventFoodGatewayTest.java:30
+
+   ...
+
+   BUILD FAILED in 8s
+   6 actionable tasks: 6 executed
+   ```
+
+   To our surprise, the test fails as Spring is not able to convert our non-Serializable object into a message.
+
+   ```bash
+   java.lang.IllegalArgumentException: SimpleMessageConverter only supports String, byte[] and Serializable payloads, received: demo.boot.event.AttendeeFoodPreference
+     at org.springframework.amqp.support.converter.SimpleMessageConverter.createMessage(SimpleMessageConverter.java:161)
+     at org.springframework.amqp.support.converter.AbstractMessageConverter.createMessage(AbstractMessageConverter.java:88)
+     at org.springframework.amqp.support.converter.AbstractMessageConverter.toMessage(AbstractMessageConverter.java:70)
+     at org.springframework.amqp.support.converter.AbstractMessageConverter.toMessage(AbstractMessageConverter.java:58)
+   ```
+
+1. Add a JSON to Object converter
+
+   Create file: `src/main/java/demo/boot/event/MessageQueueConfiguration.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+   import org.springframework.amqp.support.converter.MessageConverter;
+   import org.springframework.context.annotation.Bean;
+   import org.springframework.context.annotation.Configuration;
+
+   @Configuration
+   public class MessageQueueConfiguration {
+
+     @Bean
+     public MessageConverter jsonMessageConverter() {
+       return new Jackson2JsonMessageConverter();
+     }
+   }
+   ```
+
+   Run the test
+
+   ```bash
+   $ ./gradlew clean integrationTest "--tests" "*EventFoodGatewayTest"
+
+   ...
+
+   BUILD SUCCESSFUL in 11s
+   6 actionable tasks: 6 executed
+   ```
+
+   The test should now pass.
+
+1. Parametrise the queue name
+
+   We hardcoded the queue name, `food`, in both the test and the gateway.  We can parametrise this instead.
+
+   1. Add new environment variable
+
+      Update file: `.env`
+
+      ```properties
+      # Application queues name
+      APP_FOOD_QUEUE_NAME=food
+      APP_EVENT_QUEUE_NAME=event
+      ```
+
+   1. Create application properties
+
+      Update file: `src/main/resources/application.yaml`
+
+      ```yaml
+      app:
+        queue:
+          food: ${APP_FOOD_QUEUE_NAME}
+          event: ${APP_EVENT_QUEUE_NAME}
+      ```
+
+   1. Use the properties from within the test
+
+      Update file: `src/test-integration/java/demo/boot/event/EventFoodGatewayTest.java`
+
+      ```java
+      package demo.boot.event;
+
+      import org.junit.jupiter.api.DisplayName;
+      import org.junit.jupiter.api.Test;
+      import org.springframework.amqp.core.AmqpTemplate;
+      import org.springframework.beans.factory.annotation.Autowired;
+      import org.springframework.beans.factory.annotation.Value;
+      import org.springframework.boot.test.context.SpringBootTest;
+      import org.springframework.core.ParameterizedTypeReference;
+
+      import java.util.UUID;
+
+      import static org.junit.jupiter.api.Assertions.assertEquals;
+
+      @DisplayName( "Event food gateway" )
+      @SpringBootTest( webEnvironment = SpringBootTest.WebEnvironment.NONE )
+      public class EventFoodGatewayTest {
+
+        @Autowired
+        private EventFoodGateway gateway;
+
+        @Autowired
+        private AmqpTemplate template;
+
+      /**/@Value( "${app.queue.food}" )
+      /**/private String queueName;
+
+        @Test
+        @DisplayName( "should send the given preference to the queue" )
+        public void shouldSendMessage() {
+          final AttendeeFoodPreference sent =
+            new AttendeeFoodPreference( UUID.randomUUID(), UUID.randomUUID(), FoodPreference.NO_FOOD );
+
+          gateway.submit( sent );
+
+          final AttendeeFoodPreference received =
+      /**/  template.receiveAndConvert( queueName, 5000, ParameterizedTypeReference.forType( AttendeeFoodPreference.class ) );
+          assertEquals( sent, received );
+        }
+      }
+      ```
+
+      Run the test
+
+      ```bash
+      $ ./gradlew clean integrationTest "--tests" "*EventFoodGatewayTest"
+
+      ...
+
+      BUILD SUCCESSFUL in 8s
+      6 actionable tasks: 6 executed
+      ```
+
+      The test should still pass.
+
+   1. Use the properties from within the gateway
+
+      Update file: `src/main/java/demo/boot/event/EventFoodGateway.java`
+
+      {% include custom/note.html details="We stopped making use of lombok and instead created our constructor and annotated the <code>queueName</code> parameter." %}
+
+      ```java
+      package demo.boot.event;
+
+      import org.springframework.amqp.core.AmqpTemplate;
+      import org.springframework.beans.factory.annotation.Value;
+      import org.springframework.stereotype.Service;
+
+      @Service
+      /* DELETE @AllArgsConstructor */
+      public class EventFoodGateway {
+
+      /**/private final String queueName;
+        private final AmqpTemplate template;
+
+      /**/public EventFoodGateway(
+      /**/@Value( "${app.queue.food}" ) final String queueName,
+      /**/final AmqpTemplate template ) {
+      /**/this.queueName = queueName;
+      /**/this.template = template;
+      /**/}
+
+        public void submit( final AttendeeFoodPreference preference ) {
+      /**/template.convertAndSend( queueName, preference );
+        }
+      }
+      ```
+
+      Run all tests
+
+      ```bash
+      $ ./gradlew clean check
+
+      ...
+
+      BUILD SUCCESSFUL in 8s
+      6 actionable tasks: 6 executed
+      ```
+
+      All test should still pass.
