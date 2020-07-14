@@ -1420,6 +1420,62 @@ The controller is ready, and the service is next in line.
       5 actionable tasks: 5 executed
       ```
 
+   1. Refactor the service
+
+      ```java
+      package demo.boot.event;
+
+      import lombok.AllArgsConstructor;
+
+      import java.time.LocalDate;
+      import java.util.Optional;
+      import java.util.function.Function;
+
+      @AllArgsConstructor
+      public class EventRegistrationService {
+
+        private final EventRepository repository;
+        private final UuidGeneratorService uuidGeneratorService;
+
+        public Optional<RegistrationConfirmation> register( final RegistrationDetails registration ) {
+          return repository
+            .findById( registration.getEventId() )
+            .filter( event -> LocalDate.now().isBefore( event.getDate() ) )
+      /**/  .map( registerAttendee( registration ) )
+            .map( attendee -> new RegistrationConfirmation( attendee.getId() ) )
+            ;
+        }
+
+      /**/private Function<EventEntity, EventAttendeeEntity> registerAttendee( final RegistrationDetails registration ) {
+      /**/return event -> {
+      /**/  final EventAttendeeEntity attendee = new EventAttendeeEntity();
+      /**/  attendee.setId( uuidGeneratorService.nextAttendeeId() );
+      /**/  attendee.setName( registration.getName() );
+      /**/  attendee.setFoodPreference( registration.getFoodPreference() );
+      /**/  attendee.setEvent( event );
+      /**/  event.addAttendee( attendee );
+      /**/  repository.save( event );
+      /**/  return attendee;
+      /**/};
+      /**/}
+      }
+      ```
+
+      We can refactor further and split the `registerAttendee()` method into smaller parts, but that will not add mush to the example.
+
+      Run the test again.
+
+      ```bash
+      $ ./gradlew clean test
+
+      ...
+
+      BUILD SUCCESSFUL in 13s
+      5 actionable tasks: 5 executed
+      ```
+
+      The test should still pass.
+
 The service is for now complete.  It retrieves the event from the repository and if an active event exists then it creates a new attendee.  Finally, it returns the confirmation back to the caller, in our case the [controller](#controller).
 
 ## Repository
