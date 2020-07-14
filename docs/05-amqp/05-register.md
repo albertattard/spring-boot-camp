@@ -587,7 +587,7 @@ The controller is complete.  It parses the request into Java objects and invokes
 
 ## Service
 
-The controller is ready and the service is next in line.
+The controller is ready, and the service is next in line.
 
 1. Create test class
 
@@ -1823,3 +1823,91 @@ With the [controller](#controller) and [service](#service) ready, we turn our at
    BUILD SUCCESSFUL in 8s
    6 actionable tasks: 6 executed
    ```
+
+The repository is complete too. It retrieves the event from the database and is able to add attendees.
+
+## Wire things together
+
+If we run the integration tests, these will fail as our application is not yet wired up.  We need to annotate the service and repository.
+
+1. Run integration test
+
+   ```bash
+   $ ./gradlew clean integrationTest
+
+   ...
+
+   BUILD FAILED in 17s
+   6 actionable tasks: 6 executed
+   ```
+
+   The integration tests fail as the application cannot start.
+
+   ```bash
+   ...
+   Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'demo.boot.event.EventRegistrationService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+     at org.springframework.beans.factory.support.DefaultListableBeanFactory.raiseNoMatchingBeanFound(DefaultListableBeanFactory.java:1716)
+     at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1272)
+     at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1226)
+     at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:885)
+     at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:789)
+     ... 109 more
+   ```
+
+1. Add the `@Service` annotation
+
+   Update file: `src/main/java/demo/boot/event/EventRegistrationService.java`
+
+   ```java
+   package demo.boot.event;
+
+   import lombok.AllArgsConstructor;
+   import org.springframework.stereotype.Service;
+
+   import java.time.LocalDate;
+   import java.util.Optional;
+
+   /**/@Service
+   @AllArgsConstructor
+   public class EventRegistrationService { /* ... */ }
+   ```
+
+   Run the integration test again.  This time will fail because of another service.
+
+   ```bash
+   Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'demo.boot.event.UuidGeneratorService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+       at org.springframework.beans.factory.support.DefaultListableBeanFactory.raiseNoMatchingBeanFound(DefaultListableBeanFactory.java:1716)
+     at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1272)
+     at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1226)
+     at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:885)
+     at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:789)
+     ... 123 more
+   ```
+
+1. Add the `@Service` annotation
+
+   Update file: `src/main/java/demo/boot/event/UuidGeneratorService.java`
+
+   ```java
+   package demo.boot.event;
+
+   import org.springframework.stereotype.Service;
+
+   import java.util.UUID;
+
+   /**/@Service
+   public class UuidGeneratorService { /* ... */ }
+   ```
+
+   Run the integration tests.
+
+   ```bash
+   $ ./gradlew clean integrationTest
+
+   ...
+
+   BUILD SUCCESSFUL in 25s
+   6 actionable tasks: 6 executed
+   ```
+
+   This time the integration test should all pass and our application should be able to start.
