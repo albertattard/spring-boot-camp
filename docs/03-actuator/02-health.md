@@ -127,14 +127,16 @@ Following is an implementation of such health indicator.
 ```java
 package demo.boot;
 
-import io.vavr.control.Either;
-import lombok.AllArgsConstructor;
+import io.vavr.CheckedFunction0;
+import io.vavr.control.Try;
 import lombok.Data;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.function.Function;
 
@@ -143,38 +145,32 @@ public class AstronautsCountHealthIndicator implements HealthIndicator {
 
   private final RestTemplate restTemplate;
 
-  public AstronautsCountHealthIndicator( final RestTemplateBuilder builder ){
-    builder.setConnectTimeout( Duration.ofSeconds( 5 ) );
+  public AstronautsCountHealthIndicator( final RestTemplateBuilder builder ) {
     builder.setReadTimeout( Duration.ofSeconds( 5 ) );
+    builder.setConnectTimeout( Duration.ofSeconds( 5 ) );
     restTemplate = builder.build();
   }
 
   @Override
   public Health health() {
-    return astros()
-      .fold( mapError(), mapAstros() );
+    return Try.of( astrosHealth() )
+      .recover( mapError() )
+      .get();
   }
 
-  private Function<Astros, Health> mapAstros() {
-    return astros ->
-      "success".equals( astros.message )
-        ? Health.up().withDetail( "astronauts", astros.people ).build()
-        : Health.outOfService().build();
-  }
-
-  private Function<Exception, Health> mapError() {
-    return e -> Health.down( e ).build();
-  }
-
-  private Either<Exception, Astros> astros() {
-    /* TODO: Is this idiomatic? */
-    try {
+  private CheckedFunction0<Health> astrosHealth() {
+    return () -> {
       final Astros astros =
         restTemplate.getForObject( "http://api.open-notify.org/astros.json", Astros.class );
-      return Either.right( astros );
-    } catch ( final Exception e ) {
-      return Either.left( e );
-    }
+
+      return "success".equals( astros.message )
+        ? Health.up().withDetail( "astronauts", astros.people ).build()
+        : Health.outOfService().withDetail( "message", astros.message ).build();
+    };
+  }
+
+  private Function<Throwable, Health> mapError() {
+    return e -> Health.down( new RuntimeException( "Failed to retrieve the astronauts", e ) ).build();
   }
 
   @Data
@@ -192,7 +188,7 @@ public class AstronautsCountHealthIndicator implements HealthIndicator {
 }
 ```
 
-The above example makes use from the [`vavr`](https://mvnrepository.com/artifact/io.vavr/vavr) dependency that provides the [`Either`](https://www.javadoc.io/doc/io.vavr/vavr/latest/io/vavr/control/Either.html) functional type.
+The above example makes use from the [`vavr`](https://mvnrepository.com/artifact/io.vavr/vavr) dependency that provides the [`Try`](https://www.javadoc.io/doc/io.vavr/vavr/latest/io/vavr/control/Try.html) functional type.
 
 ```groovy
 dependencies {
