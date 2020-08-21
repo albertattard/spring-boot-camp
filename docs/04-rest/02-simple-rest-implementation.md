@@ -29,9 +29,6 @@ compile('org.springframework.boot:spring-boot-starter-we    b')
 Here is a sample of simple REST controller (Level 0 according to Richardson Maturity Model)
 
 ```Java
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 @RestController
 public class OfficeController {
 
@@ -59,7 +56,7 @@ Before testing the responsibilities of the REST controller have to be determined
 1. Call the Business Logic: The controller must call the expected business logic;
 1. Serialize the Output: The controller takes the output of the business logic and serializes it into an HTTP response;
 
-The only responsibility the Unit Test is able to check is the calling of the business logics. For other the integration test is needed. The main mocking tool that can be used for integration tests is [MockMvc](https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/testing.html#spring-mvc-test-framework).
+The only responsibility the Unit Test is able to check is the calling of the business logics. For other ones the integration test is needed. The main mocking tool that can be used for integration tests is [MockMvc](https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/testing.html#spring-mvc-test-framework).
 
 
 ### Test HTTP Request Matching
@@ -67,11 +64,15 @@ The only responsibility the Unit Test is able to check is the calling of the bus
 We have to check the URL which the Controller is listening for, and the accepted HTTP Method (GET by default):
 
 ```Java
-@Test
-@DisplayName( "should match URL and HTTP method for the request" )
-public void shouldMatchUrlAndMethod() throws Exception {
-  mockMvc.perform(get("/offices"))
-    .andExpect(status().isOk());
+@WebMvcTest( OfficesController.class )
+public class OfficesControllerTest {
+
+  @Test
+  @DisplayName( "should match URL and HTTP method for the request" )
+  public void shouldMatchUrlAndMethod() {
+    mockMvc.perform(get("/offices"))
+      .andExpect(status().isOk());
+  }
 }
 ```
 We expect the response with HTTP Status Code ```200 OK```.
@@ -79,18 +80,21 @@ We expect the response with HTTP Status Code ```200 OK```.
 
 ### Test calling the business logics
 
-To test if the business logics is called the mock on business service can be used. We can check which method of the service class is called and how many times.
+To test the call of a business logic, the mock on business service can be used. We can check which method of the service class is called and how many times.
 
 ```Java
-@Test
+@WebMvcTest( OfficesController.class )
+public class OfficesControllerTest {
+
   @DisplayName( "should verify the call for business logics" )
-  public void shouldCallBusinessLogics() throws Exception {
+  public void shouldCallBusinessLogics() {
     mockMvc.perform(get("/offices"))
       .andExpect(status().isOk());
 
     verify(service, times(1)).list();
     verifyNoMoreInteractions(service);
   }
+}
 ```
 Also, we can check that no more interactions with the business service happened.
 
@@ -100,9 +104,12 @@ Also, we can check that no more interactions with the business service happened.
 The Controller have to serialize the output from object to JSON. We have to test if the serialization was correct. For this purpose we can self serialize the output and compare with the result from the Controller.
 
 ```Java
-@Test
+@WebMvcTest( OfficesController.class )
+public class OfficesControllerTest {
+
+  @Test
   @DisplayName( "should verify the serialization of output" )
-  public void shouldSerializeOutput() throws Exception {
+  public void shouldSerializeOutput() {
     final Office cologne =
       new Office( "ThoughtWorks Cologne",
         "Lichtstr. 43i, 50825 Cologne, Germany",
@@ -115,14 +122,14 @@ The Controller have to serialize the output from object to JSON. We have to test
       .andReturn();
     String actualResponseBody = mvcResult.getResponse().getContentAsString();
 
-    assertThat(actualResponseBody).isEqualToIgnoringWhitespace(
-      objectMapper.writeValueAsString(List.of( cologne )));
+    assertThat(objectMapper.readValue( actualResponseBody, Office.class )).isEqualTo(office);
     verify(service, times(1)).list();
     verifyNoMoreInteractions(service);
   }
+}
 ```
 
-Here the Object Mapper is a Spring component which is used for some object serialization or deserialization.
+Here the _Object Mapper_ is a Spring component which is used for some object serialization or deserialization.
 
 
 ### Full Integration test
@@ -130,9 +137,12 @@ Here the Object Mapper is a Spring component which is used for some object seria
 All the three tests are quite similar. Sometimes may be simpler to use the one test only. This test can check all the responsibilities.
 
 ```Java
-@Test
+@WebMvcTest( OfficesController.class )
+public class OfficesControllerTest {
+
+  @Test
   @DisplayName( "should return the list of offices returned by the service" )
-  public void shouldReturnTheOffices() throws Exception {
+  public void shouldReturnTheOffices() {
     final Office cologne =
       new Office( "ThoughtWorks Cologne",
         "Lichtstr. 43i, 50825 Cologne, Germany",
@@ -147,12 +157,12 @@ All the three tests are quite similar. Sometimes may be simpler to use the one t
       .andExpect( jsonPath( "$.[0].name", is( cologne.getName() ) ) )
       .andExpect( jsonPath( "$.[0].address", is( cologne.getAddress() ) ) )
       .andExpect( jsonPath( "$.[0].phone", is( cologne.getPhone() ) ) )
-      .andExpect( jsonPath( "$.[0].email", is( cologne.getEmail() ) ) )
-    ;
+      .andExpect( jsonPath( "$.[0].email", is( cologne.getEmail() ) ) );
 
     verify( service, times( 1 ) ).list();
     verifyNoMoreInteractions(service);
   }
+}
 ```
 
-Please pay the attention, in this test we don't use Object Mapper. Instead, we check the values of JSON directly with MockMvc. This is also one option to use.
+Please pay the attention, in this test we don't use _Object Mapper_. Instead, we check the values of JSON directly with MockMvc. This is also one option to use.
