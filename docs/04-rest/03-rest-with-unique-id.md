@@ -6,7 +6,7 @@ nav_order: 3
 permalink: docs/rest/with-id/
 ---
 
-# Simple REST implementation
+# REST implementation with unique ID
 {: .no_toc }
 
 Spring Boot provides us with options to customise the URL of the request. This way we can assign a unique URL to each resource. Such an implementation could be considered as a level 1 of the Richardson Maturity Model.

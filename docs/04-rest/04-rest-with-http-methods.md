@@ -6,7 +6,7 @@ nav_order: 4
 permalink: docs/rest/with-http-methods/
 ---
 
-# Simple REST implementation
+# REST with HTTP Methods
 {: .no_toc }
 
 Spring Boot allows us to use **HTTP Methods** for a resource manipulating. Such an implementation of a REST Controller could be considered as a level 2 of the Richardson Maturity Model.
