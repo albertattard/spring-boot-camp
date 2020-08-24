@@ -23,7 +23,7 @@ The main component provided by Spring Boot is [RestController](https://docs.spri
 
 The __RestController__ and other related components can be found in the Spring Boot Starter Web dependency:
 ```
-compile('org.springframework.boot:spring-boot-starter-web')
+implementation 'org.springframework.boot:spring-boot-starter-web'
 ```
 
 Here is a sample of simple REST controller (Level 0 according to Richardson Maturity Model)
